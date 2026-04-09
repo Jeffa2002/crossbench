@@ -1,3 +1,16 @@
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+}
+
+enum SubscriptionTier {
+  FREE
+  PRO
+  TEAM
+}
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -48,6 +61,11 @@ model User {
   image           String?
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
+  stripeCustomerId    String?  @unique
+  subscriptionStatus  SubscriptionStatus @default(TRIAL)
+  subscriptionTier    SubscriptionTier   @default(FREE)
+  trialEndsAt         DateTime?
+  subscriptionId      String?
   votes           Vote[]
   accounts        Account[]
   sessions        Session[]
