@@ -1,6 +1,63 @@
 import { prisma } from "@/lib/prisma";
+import Nav from "@/components/Nav";
 import Link from "next/link";
+
 export const revalidate = 300;
-async function getStats() { const [billCount, voteCount, electorateCount] = await Promise.all([prisma.bill.count(), prisma.vote.count(), prisma.electorate.count()]); return { billCount, voteCount, electorateCount }; }
-async function getActiveBills() { return prisma.bill.findMany({ take: 6, orderBy: { lastUpdatedAt: "desc" }, include: { _count: { select: { votes: true } } } }); }
-export default async function HomePage() { const [stats, bills] = await Promise.all([getStats(), getActiveBills()]); return (<main className="min-h-screen bg-gray-50"><header className="bg-white border-b border-gray-200"><div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between"><div><h1 className="text-2xl font-bold text-gray-900">Crossbench</h1><p className="text-sm text-gray-500">Your voice in Australian parliament</p></div><Link href="/login" className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">Sign in to vote</Link></div></header><section className="bg-blue-700 text-white py-16"><div className="max-w-6xl mx-auto px-4"><h2 className="text-4xl font-bold mb-4">Make parliament listen.</h2><p className="text-xl text-blue-100 mb-8 max-w-2xl">Vote on bills before parliament. Your MP can see exactly what their electorate thinks — in real time.</p><Link href="/bills" className="bg-white text-blue-700 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50">Browse current bills →</Link></div></section><section className="bg-white border-b border-gray-200"><div className="max-w-6xl mx-auto px-4 py-8 grid grid-cols-3 gap-8 text-center"><div><div className="text-3xl font-bold text-blue-700">{stats.billCount}</div><div className="text-gray-500 text-sm mt-1">Bills before parliament</div></div><div><div className="text-3xl font-bold text-blue-700">{stats.voteCount.toLocaleString()}</div><div className="text-gray-500 text-sm mt-1">Citizen votes cast</div></div><div><div className="text-3xl font-bold text-blue-700">{stats.electorateCount}</div><div className="text-gray-500 text-sm mt-1">Electorates represented</div></div></div></section><section className="max-w-6xl mx-auto px-4 py-12"><div className="flex items-center justify-between mb-6"><h3 className="text-xl font-bold text-gray-900">Currently before parliament</h3><Link href="/bills" className="text-blue-600 text-sm hover:underline">View all bills →</Link></div><div className="grid gap-4">{bills.length === 0 ? <div className="bg-white rounded-lg border border-gray-200 p-8 text-center text-gray-500">Bills are being loaded — check back soon.</div> : bills.map((bill) => (<Link key={bill.id} href={`/bills/${bill.id}`} className="bg-white rounded-lg border border-gray-200 p-5 hover:border-blue-300 hover:shadow-sm transition-all"><div className="flex items-start justify-between gap-4"><div className="flex-1 min-w-0"><h4 className="font-medium text-gray-900 mb-1 line-clamp-2">{bill.title}</h4><div className="flex items-center gap-3 text-sm text-gray-500"><span className="bg-gray-100 px-2 py-0.5 rounded text-xs">{bill.chamber}</span><span>{bill.status}</span>{bill.portfolio && <span>· {bill.portfolio}</span>}</div></div><div className="text-right shrink-0"><div className="text-lg font-bold text-gray-900">{bill._count.votes}</div><div className="text-xs text-gray-500">votes</div></div></div></Link>))}</div></section><footer className="border-t border-gray-200 mt-16 py-8"><div className="max-w-6xl mx-auto px-4 text-center text-sm text-gray-500">Crossbench is an independent, nonpartisan civic platform. Not affiliated with the Australian Government or any political party.</div></footer></main>); }
+
+export default async function HomePage() {
+  const [billCount, voteCount, electorateCount, bills] = await Promise.all([
+    prisma.bill.count(),
+    prisma.vote.count(),
+    prisma.electorate.count({ where: { mpName: { not: null } } }),
+    prisma.bill.findMany({ take: 6, orderBy: { lastUpdatedAt: "desc" }, include: { _count: { select: { votes: true } } } }),
+  ]);
+
+  return (
+    <main style={{ backgroundColor: "#0B1220", minHeight: "100vh", color: "#F5F7FB" }}>
+      <Nav />
+      <section style={{ borderBottom: "1px solid #25324D", padding: "80px 0" }}>
+        <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 24px" }}>
+          <div style={{ maxWidth: "640px" }}>
+            <p style={{ color: "#2E8B57", fontSize: "13px", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "20px" }}>Australian civic tech</p>
+            <h1 style={{ fontSize: "clamp(36px, 6vw, 56px)", fontWeight: 700, lineHeight: 1.1, marginBottom: "20px" }}>Your voice in parliament.</h1>
+            <p style={{ fontSize: "18px", color: "#B6C0D1", lineHeight: 1.6, marginBottom: "36px", maxWidth: "520px" }}>Vote on live federal bills and see how people in your electorate are responding. MPs get a live read too.</p>
+            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+              <Link href="/bills" style={{ backgroundColor: "#2E8B57", color: "#fff", padding: "14px 28px", borderRadius: "8px", fontWeight: 600, fontSize: "15px", textDecoration: "none", display: "inline-block" }}>Browse live bills</Link>
+              <Link href="/about" style={{ backgroundColor: "transparent", color: "#B6C0D1", padding: "14px 28px", borderRadius: "8px", fontWeight: 500, fontSize: "15px", textDecoration: "none", border: "1px solid #25324D", display: "inline-block" }}>How it works</Link>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section style={{ borderBottom: "1px solid #25324D", padding: "32px 0" }}>
+        <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 24px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "32px", textAlign: "center" }}>
+          {[{ value: billCount, label: "Bills before parliament" }, { value: voteCount.toLocaleString(), label: "Citizen votes cast" }, { value: electorateCount, label: "Electorates with MPs" }].map(({ value, label }) => (<div key={label}><div style={{ fontSize: "36px", fontWeight: 700, color: "#D6A94A" }}>{value}</div><div style={{ color: "#7E8AA3", fontSize: "13px", marginTop: "4px" }}>{label}</div></div>))}
+        </div>
+      </section>
+      <section style={{ borderBottom: "1px solid #25324D", padding: "64px 0" }}>
+        <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 24px" }}>
+          <h2 style={{ fontSize: "24px", fontWeight: 700, marginBottom: "40px" }}>How it works</h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "24px" }}>
+            {[{ step: "01", title: "Read the bill", desc: "Browse bills currently before federal parliament with plain-language context." }, { step: "02", title: "Vote your view", desc: "Support, oppose, or abstain. One vote per bill, per verified citizen." }, { step: "03", title: "See your electorate", desc: "Real-time breakdown of how your community and the nation are voting." }].map(({ step, title, desc }) => (<div key={step} style={{ backgroundColor: "#111A2E", border: "1px solid #25324D", borderRadius: "12px", padding: "28px" }}><div style={{ color: "#2E8B57", fontSize: "13px", fontWeight: 700, marginBottom: "12px", letterSpacing: "0.05em" }}>{step}</div><h3 style={{ fontSize: "18px", fontWeight: 600, marginBottom: "8px" }}>{title}</h3><p style={{ color: "#B6C0D1", fontSize: "14px", lineHeight: 1.6 }}>{desc}</p></div>))}
+          </div>
+        </div>
+      </section>
+      <section style={{ padding: "64px 0" }}>
+        <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 24px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+            <h2 style={{ fontSize: "24px", fontWeight: 700 }}>Currently before parliament</h2>
+            <Link href="/bills" style={{ color: "#2E8B57", fontSize: "14px", textDecoration: "none" }}>View all →</Link>
+          </div>
+          <div style={{ display: "grid", gap: "12px" }}>
+            {bills.length === 0 ? (<div style={{ backgroundColor: "#111A2E", border: "1px solid #25324D", borderRadius: "12px", padding: "48px", textAlign: "center", color: "#7E8AA3" }}>No live bills right now. Check back soon.</div>) : bills.map(bill => (<Link key={bill.id} href={`/bills/${bill.id}`} style={{ backgroundColor: "#111A2E", border: "1px solid #25324D", borderRadius: "12px", padding: "20px 24px", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px" }}><div style={{ flex: 1, minWidth: 0 }}><div style={{ display: "flex", gap: "8px", marginBottom: "8px", flexWrap: "wrap" }}><span style={{ backgroundColor: "#16213A", color: "#B6C0D1", fontSize: "11px", padding: "2px 8px", borderRadius: "4px" }}>{bill.chamber}</span><span style={{ backgroundColor: "rgba(46,139,87,0.14)", color: "#2E8B57", fontSize: "11px", padding: "2px 8px", borderRadius: "4px" }}>{bill.status}</span></div><p style={{ color: "#F5F7FB", fontWeight: 500, fontSize: "15px", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{bill.title}</p></div><div style={{ textAlign: "right", flexShrink: 0 }}><div style={{ fontSize: "20px", fontWeight: 700, color: "#D6A94A" }}>{bill._count.votes}</div><div style={{ fontSize: "11px", color: "#7E8AA3" }}>votes</div></div></Link>))}
+          </div>
+        </div>
+      </section>
+      <section style={{ borderTop: "1px solid #25324D", padding: "32px 0", backgroundColor: "#111A2E" }}>
+        <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 24px", display: "flex", gap: "32px", flexWrap: "wrap", justifyContent: "center" }}>
+          {["Nonpartisan by design", "Privacy-first participation", "Electorate-level, not identity-level", "Independent — not government-run"].map(item => (<span key={item} style={{ color: "#7E8AA3", fontSize: "13px", display: "flex", alignItems: "center", gap: "6px" }}><span style={{ color: "#2E8B57" }}>✓</span> {item}</span>))}
+        </div>
+      </section>
+      <footer style={{ borderTop: "1px solid #25324D", padding: "24px", textAlign: "center" }}><p style={{ color: "#7E8AA3", fontSize: "13px", margin: 0 }}>Crossbench is independent and nonpartisan. Not affiliated with the Australian Government or any political party.</p></footer>
+    </main>
+  );
+}
