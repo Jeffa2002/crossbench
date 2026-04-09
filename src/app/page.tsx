@@ -16,13 +16,13 @@ export default async function HomePage() {
   return (
     <main style={{ backgroundColor: "#0B1220", minHeight: "100vh", color: "#F5F7FB" }}>
       <Nav />
-      <section style={{ borderBottom: "1px solid #25324D", padding: "80px 0" }}>
-        <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 24px" }}>
+      <section style={{ borderBottom: "1px solid #25324D", padding: "clamp(40px, 8vw, 80px) 0" }}>
+        <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 20px" }}>
           <div style={{ maxWidth: "640px" }}>
             <p style={{ color: "#2E8B57", fontSize: "13px", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "20px" }}>Australian civic tech</p>
             <h1 style={{ fontSize: "clamp(36px, 6vw, 56px)", fontWeight: 700, lineHeight: 1.1, marginBottom: "20px" }}>Your voice in parliament.</h1>
             <p style={{ fontSize: "18px", color: "#B6C0D1", lineHeight: 1.6, marginBottom: "36px", maxWidth: "520px" }}>Vote on live federal bills and see how people in your electorate are responding. MPs get a live read too.</p>
-            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+            <div className="hero-ctas">
               <Link href="/bills" style={{ backgroundColor: "#2E8B57", color: "#fff", padding: "14px 28px", borderRadius: "8px", fontWeight: 600, fontSize: "15px", textDecoration: "none", display: "inline-block" }}>Browse live bills</Link>
               <Link href="/about" style={{ backgroundColor: "transparent", color: "#B6C0D1", padding: "14px 28px", borderRadius: "8px", fontWeight: 500, fontSize: "15px", textDecoration: "none", border: "1px solid #25324D", display: "inline-block" }}>How it works</Link>
             </div>
@@ -31,17 +31,17 @@ export default async function HomePage() {
       </section>
 
       <section style={{ borderBottom: "1px solid #25324D", padding: "32px 0" }}>
-        <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 24px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "32px", textAlign: "center" }}>
+        <div className="stats-grid" style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 20px" }}>
           {[{ value: billCount, label: "Bills before parliament" }, { value: voteCount.toLocaleString(), label: "Citizen votes cast" }, { value: electorateCount, label: "Electorates with MPs" }].map(({ value, label }) => (
-            <div key={label}><div style={{ fontSize: "36px", fontWeight: 700, color: "#D6A94A" }}>{value}</div><div style={{ color: "#7E8AA3", fontSize: "13px", marginTop: "4px" }}>{label}</div></div>
+            <div key={label}><div style={{ fontSize: "clamp(28px, 7vw, 36px)", fontWeight: 700, color: "#D6A94A" }}>{value}</div><div style={{ color: "#7E8AA3", fontSize: "13px", marginTop: "4px" }}>{label}</div></div>
           ))}
         </div>
       </section>
 
-      <section style={{ borderBottom: "1px solid #25324D", padding: "64px 0" }}>
-        <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 24px" }}>
+      <section style={{ borderBottom: "1px solid #25324D", padding: "clamp(32px, 5vw, 64px) 0" }}>
+        <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 20px" }}>
           <h2 style={{ fontSize: "24px", fontWeight: 700, marginBottom: "40px" }}>How it works</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "24px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px" }}>
             {[
               { step: "01", title: "Read the bill", desc: "Browse bills currently before federal parliament with plain-language context." },
               { step: "02", title: "Vote your view", desc: "Support, oppose, or abstain. One vote per bill, per verified citizen." },
@@ -57,8 +57,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section style={{ padding: "64px 0" }}>
-        <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 24px" }}>
+      <section style={{ padding: "clamp(32px, 5vw, 64px) 0" }}>
+        <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 20px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
             <h2 style={{ fontSize: "24px", fontWeight: 700 }}>Currently before parliament</h2>
             <Link href="/bills" style={{ color: "#2E8B57", fontSize: "14px", textDecoration: "none" }}>View all →</Link>
@@ -93,7 +93,7 @@ export default async function HomePage() {
       </section>
 
       <section style={{ borderTop: "1px solid #25324D", padding: "32px 0", backgroundColor: "#111A2E" }}>
-        <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 24px", display: "flex", gap: "32px", flexWrap: "wrap", justifyContent: "center" }}>
+        <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 20px", display: "flex", gap: "32px", flexWrap: "wrap", justifyContent: "center" }}>
           {["Nonpartisan by design", "Privacy-first participation", "Electorate-level, not identity-level", "Independent — not government-run"].map(item => (
             <span key={item} style={{ color: "#7E8AA3", fontSize: "13px", display: "flex", alignItems: "center", gap: "6px" }}><span style={{ color: "#2E8B57" }}>✓</span> {item}</span>
           ))}

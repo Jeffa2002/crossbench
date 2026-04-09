@@ -77,7 +77,7 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
   return (
     <main style={{ backgroundColor: '#0B1220', minHeight: '100vh', color: '#F5F7FB' }}>
       <Nav />
-      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 24px' }}>
+      <div className='page-container'>
         <Link href="/bills" style={{ color: '#2E8B57', fontSize: '13px', textDecoration: 'none', display: 'block', marginBottom: '24px' }}>
           ← Back to bills
         </Link>
@@ -184,7 +184,7 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
           <p style={{ fontSize: '10px', fontWeight: 600, color: '#3A4A6A', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
             Audit History
           </p>
-          <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+          <div className='audit-row'>
             {b.introducedAt && (
               <div>
                 <p style={{ fontSize: '10px', color: '#3A4A6A', margin: '0 0 2px' }}>Introduced</p>

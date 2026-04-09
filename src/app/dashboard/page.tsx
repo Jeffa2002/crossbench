@@ -127,7 +127,7 @@ export default async function DashboardPage() {
   return (
     <main style={{ backgroundColor: '#0B1220', minHeight: '100vh', color: '#F5F7FB' }}>
       <Nav />
-      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 24px' }}>
+      <div className='page-container'>
 
         {/* Header */}
         <div style={{ marginBottom: '32px' }}>
@@ -139,7 +139,7 @@ export default async function DashboardPage() {
           </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '16px', alignItems: 'start' }}>
+        <div className='dashboard-grid'>
 
           {/* Left column: electorate + MP card */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

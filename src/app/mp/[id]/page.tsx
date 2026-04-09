@@ -93,19 +93,19 @@ export default async function MPPage({ params }: { params: Promise<{ id: string 
   return (
     <main style={{ backgroundColor: '#0B1220', minHeight: '100vh', color: '#F5F7FB' }}>
       <Nav />
-      <div style={{ maxWidth: '860px', margin: '0 auto', padding: '40px 24px' }}>
+      <div className='page-container'>
         <Link href="/electorates" style={{ color: '#2E8B57', fontSize: '13px', textDecoration: 'none', display: 'block', marginBottom: '24px' }}>
           ← All electorates
         </Link>
 
         {/* MP header */}
         <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '28px', marginBottom: '16px' }}>
-          <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
+          <div className='mp-header'>
             {electorate.mpPhotoUrl && (
               <img
                 src={electorate.mpPhotoUrl}
                 alt={electorate.mpName}
-                style={{ width: '110px', height: '134px', borderRadius: '10px', objectFit: 'cover', objectPosition: 'top', border: '2px solid #25324D', flexShrink: 0 }}
+                className='mp-photo' style={{ width: '110px', height: '134px', borderRadius: '10px', objectFit: 'cover', objectPosition: 'top', border: '2px solid #25324D', flexShrink: 0 }}
               />
             )}
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -243,7 +243,7 @@ export default async function MPPage({ params }: { params: Promise<{ id: string 
                     </div>
 
                     {/* Side-by-side bars */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div className='compare-grid'>
                       {/* Electorate */}
                       <div>
                         <p style={{ fontSize: '10px', color: '#3A4A6A', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>

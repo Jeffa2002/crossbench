@@ -84,19 +84,19 @@ export default async function ElectoratePage({ params }: { params: Promise<{ id:
   return (
     <main style={{ backgroundColor: '#0B1220', minHeight: '100vh', color: '#F5F7FB' }}>
       <Nav />
-      <div style={{ maxWidth: '860px', margin: '0 auto', padding: '40px 24px' }}>
+      <div className='page-container'>
         <Link href="/electorates" style={{ color: '#2E8B57', fontSize: '13px', textDecoration: 'none', display: 'block', marginBottom: '24px' }}>
           ← All electorates
         </Link>
 
         {/* Header */}
         <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '28px', marginBottom: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
+          <div className='mp-header'>
             {electorate.mpPhotoUrl && (
               <img
                 src={electorate.mpPhotoUrl}
                 alt={electorate.mpName || ''}
-                style={{ width: '88px', height: '108px', borderRadius: '8px', objectFit: 'cover', objectPosition: 'top', border: '2px solid #25324D', flexShrink: 0 }}
+                className='mp-photo' style={{ width: '88px', height: '108px', borderRadius: '8px', objectFit: 'cover', objectPosition: 'top', border: '2px solid #25324D', flexShrink: 0 }}
               />
             )}
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -226,7 +226,7 @@ export default async function ElectoratePage({ params }: { params: Promise<{ id:
                       </span>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <div className='compare-grid'>
                       {[
                         { label: `📍 ${electorate.name}`, data: elect },
                         { label: '🇦🇺 National', data: natl },

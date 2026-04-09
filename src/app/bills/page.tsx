@@ -22,11 +22,11 @@ export default async function BillsPage({ searchParams }: { searchParams: Promis
   return (
     <main style={{ backgroundColor: "#0B1220", minHeight: "100vh", color: "#F5F7FB" }}>
       <Nav />
-      <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "40px 24px" }}>
+      <div className='page-container-wide'>
         <h1 style={{ fontSize: "28px", fontWeight: 700, marginBottom: "24px" }}>Bills before parliament</h1>
 
-        <form style={{ backgroundColor: "#111A2E", border: "1px solid #25324D", borderRadius: "10px", padding: "16px", marginBottom: "24px", display: "flex", gap: "12px", flexWrap: "wrap" }}>
-          <input name="q" defaultValue={q} placeholder="Search bills..." style={{ flex: 1, minWidth: "200px", backgroundColor: "#16213A", border: "1px solid #25324D", borderRadius: "6px", padding: "10px 14px", color: "#F5F7FB", fontSize: "14px" }} />
+        <form className="search-form" style={{ backgroundColor: "#111A2E", border: "1px solid #25324D", borderRadius: "10px", padding: "14px 16px", marginBottom: "24px" }}>
+          <input name="q" defaultValue={q} placeholder="Search bills..." style={{ flex: 1, minWidth: 0, backgroundColor: "#16213A", border: "1px solid #25324D", borderRadius: "6px", padding: "10px 14px", color: "#F5F7FB", fontSize: "14px" }} />
           <select name="chamber" defaultValue={chamber} style={{ backgroundColor: "#16213A", border: "1px solid #25324D", borderRadius: "6px", padding: "10px 14px", color: "#F5F7FB", fontSize: "14px" }}>
             <option value="">All chambers</option>
             <option value="HOUSE">House of Reps</option>

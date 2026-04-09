@@ -19,7 +19,7 @@ export default async function AccountPage() {
   return (
     <main style={{ backgroundColor: '#0B1220', minHeight: '100vh', color: '#F5F7FB' }}>
       <Nav />
-      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <h1 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px' }}>My account</h1>
         <p style={{ color: '#7E8AA3', fontSize: '14px', marginBottom: '8px' }}>{user.email}</p>
 

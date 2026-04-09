@@ -33,3 +33,286 @@ html, body {
 body {
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ── Nav ──────────────────────────────────────────────────── */
+.nav-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 16px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: nowrap;
+}
+
+.nav-link {
+  color: #b6c0d1;
+  font-size: 14px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.nav-cta {
+  background-color: #2e8b57;
+  color: #fff;
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .nav-link-hide-xs {
+    display: none;
+  }
+  .nav-link {
+    font-size: 13px;
+    padding: 8px 8px;
+  }
+  .nav-cta {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}
+
+/* ── Page containers ──────────────────────────────────────── */
+.page-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.page-container-wide {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+@media (max-width: 600px) {
+  .page-container,
+  .page-container-wide {
+    padding: 24px 16px;
+  }
+}
+
+/* ── Dashboard 2-col layout ───────────────────────────────── */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 720px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── 2-col comparison grid (electorate vs national) ───────── */
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 540px) {
+  .compare-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+/* ── Stats row (3 up) ─────────────────────────────────────── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  text-align: center;
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    text-align: left;
+  }
+  .stats-grid > div {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: #111a2e;
+    border-radius: 10px;
+    border: 1px solid #25324d;
+  }
+  .stats-value {
+    margin-bottom: 0 !important;
+  }
+}
+
+/* ── How it works (auto-fit) ──────────────────────────────── */
+.howto-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+/* ── Bill list row ────────────────────────────────────────── */
+.bill-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.bill-row-arrow {
+  flex-shrink: 0;
+  color: #7e8aa3;
+  font-size: 18px;
+}
+
+@media (max-width: 540px) {
+  .bill-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .bill-row-arrow {
+    display: none;
+  }
+}
+
+/* ── MP header (photo + info) ─────────────────────────────── */
+.mp-header {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+@media (max-width: 480px) {
+  .mp-header {
+    flex-direction: column;
+    gap: 14px;
+  }
+  .mp-photo {
+    width: 72px !important;
+    height: 88px !important;
+  }
+}
+
+/* ── Vote bars row ────────────────────────────────────────── */
+.vote-count-row {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+/* ── Audit trail ──────────────────────────────────────────── */
+.audit-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+/* ── Bill detail tag row ──────────────────────────────────── */
+.bill-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+/* ── Sponsor + links row ──────────────────────────────────── */
+.bill-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ── Search form ──────────────────────────────────────────── */
+.search-form {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 540px) {
+  .search-form {
+    flex-direction: column;
+  }
+  .search-input {
+    width: 100%;
+  }
+}
+
+/* ── Dashboard vote quick stats ───────────────────────────── */
+.vote-stat-row {
+  display: flex;
+  gap: 8px;
+}
+
+.vote-stat-row > div {
+  flex: 1;
+}
+
+/* ── Typography scaling ───────────────────────────────────── */
+@media (max-width: 480px) {
+  h1 { font-size: 22px !important; }
+  .page-title { font-size: 20px !important; }
+  .hero-title { font-size: 32px !important; line-height: 1.15 !important; }
+  .hero-sub { font-size: 16px !important; }
+  .section-header { font-size: 20px !important; }
+  .card-padding { padding: 16px !important; }
+}
+
+/* ── Hero CTA buttons ─────────────────────────────────────── */
+.hero-ctas {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+  .hero-ctas {
+    flex-direction: column;
+  }
+  .hero-ctas a {
+    text-align: center;
+  }
+}
+
+/* ── Utility ──────────────────────────────────────────────── */
+.truncate-1 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hide-mobile {
+  display: block;
+}
+
+@media (max-width: 540px) {
+  .hide-mobile {
+    display: none;
+  }
+}
