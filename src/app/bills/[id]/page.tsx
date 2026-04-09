@@ -20,6 +20,31 @@ async function getBillResults(billId: string) {
   return { total, support, oppose, abstain };
 }
 
+function fmt(d: Date | null | undefined) {
+  if (!d) return null;
+  return new Date(d).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function fmtRel(d: Date | null | undefined) {
+  if (!d) return null;
+  const diff = Math.round((Date.now() - new Date(d).getTime()) / 86400000);
+  if (diff === 0) return 'today';
+  if (diff === 1) return 'yesterday';
+  if (diff < 7) return `${diff} days ago`;
+  if (diff < 30) return `${Math.round(diff / 7)} weeks ago`;
+  return fmt(d);
+}
+
+function fmtNext(d: Date | null | undefined) {
+  if (!d) return null;
+  const diff = Math.round((new Date(d).getTime() - Date.now()) / 86400000);
+  if (diff <= 0) return 'overdue';
+  if (diff === 1) return 'tomorrow';
+  if (diff < 7) return `in ${diff} days`;
+  if (diff < 30) return `in ${Math.round(diff / 7)} weeks`;
+  return fmt(d);
+}
+
 export default async function BillPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
@@ -46,6 +71,9 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
 
   const b = bill as any;
 
+  const chamberLabel = bill.chamber === 'HOUSE' ? '🏛 House of Representatives'
+    : bill.chamber === 'SENATE' ? '🔱 Senate' : '⚖️ Joint';
+
   return (
     <main style={{ backgroundColor: '#0B1220', minHeight: '100vh', color: '#F5F7FB' }}>
       <Nav />
@@ -54,14 +82,15 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
           ← Back to bills
         </Link>
 
-        {/* Bill header */}
+        {/* ── Bill header ── */}
         <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '28px', marginBottom: '16px' }}>
-          {/* Tags row */}
+
+          {/* Status badges */}
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
             <span style={{ backgroundColor: '#16213A', color: '#B6C0D1', fontSize: '11px', padding: '3px 10px', borderRadius: '4px' }}>
-              {bill.chamber === 'HOUSE' ? '🏛 House of Reps' : bill.chamber === 'SENATE' ? '🔱 Senate' : '⚖️ Joint'}
+              {chamberLabel}
             </span>
-            <span style={{ backgroundColor: 'rgba(46,139,87,0.14)', color: '#2E8B57', fontSize: '11px', padding: '3px 10px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ backgroundColor: 'rgba(46,139,87,0.14)', color: '#2E8B57', fontSize: '11px', padding: '3px 10px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
               <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#2E8B57', display: 'inline-block' }} />
               {bill.status}
             </span>
@@ -82,30 +111,33 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
             )}
           </div>
 
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#F5F7FB', marginBottom: '16px', lineHeight: 1.3 }}>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#F5F7FB', marginBottom: '20px', lineHeight: 1.35 }}>
             {bill.title}
           </h1>
 
-          {/* AI Summary */}
+          {/* AI plain-English breakdown */}
           {b.aiSummary && (
             <div style={{
-              backgroundColor: 'rgba(46,139,87,0.07)', border: '1px solid rgba(46,139,87,0.2)',
-              borderRadius: '8px', padding: '16px', marginBottom: '16px'
+              backgroundColor: 'rgba(46,139,87,0.07)',
+              border: '1px solid rgba(46,139,87,0.2)',
+              borderRadius: '8px',
+              padding: '18px',
+              marginBottom: '18px',
             }}>
-              <p style={{ fontSize: '11px', fontWeight: 700, color: '#2E8B57', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              <p style={{ fontSize: '11px', fontWeight: 700, color: '#2E8B57', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
                 ✦ Plain-English Summary
               </p>
-              <p style={{ color: '#C8D4E8', lineHeight: 1.7, margin: 0, fontSize: '15px' }}>
+              <div style={{ color: '#C8D4E8', lineHeight: 1.75, fontSize: '14px', whiteSpace: 'pre-wrap' }}>
                 {b.aiSummary}
-              </p>
+              </div>
             </div>
           )}
 
-          {/* Official APH description */}
+          {/* Official description */}
           {b.aphDescription && (
-            <div style={{ marginBottom: '14px' }}>
-              <p style={{ fontSize: '11px', color: '#4A5568', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Official description
+            <div style={{ marginBottom: '16px' }}>
+              <p style={{ fontSize: '10px', fontWeight: 600, color: '#3A4A6A', margin: '0 0 5px', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                Official Description
               </p>
               <p style={{ color: '#7E8AA3', lineHeight: 1.65, margin: 0, fontSize: '13px' }}>
                 {b.aphDescription}
@@ -115,31 +147,80 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
 
           {/* Committee referrals */}
           {b.committees && (
-            <div style={{ marginBottom: '14px' }}>
-              <p style={{ fontSize: '11px', color: '#4A5568', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Committee referrals
+            <div style={{ marginBottom: '16px' }}>
+              <p style={{ fontSize: '10px', fontWeight: 600, color: '#3A4A6A', margin: '0 0 5px', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                Committee Referrals
               </p>
               <p style={{ color: '#7E8AA3', fontSize: '13px', margin: 0 }}>{b.committees}</p>
             </div>
           )}
 
-          {/* Sponsor + APH link */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', marginTop: '14px' }}>
+          {/* Sponsor + links */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', paddingTop: '16px', borderTop: '1px solid #1C2940' }}>
             {bill.sponsorName && (
               <p style={{ fontSize: '13px', color: '#7E8AA3', margin: 0 }}>
                 Introduced by <strong style={{ color: '#B6C0D1' }}>{bill.sponsorName}</strong>
               </p>
             )}
-            {bill.aphUrl && (
-              <a href={bill.aphUrl} target="_blank" rel="noopener noreferrer"
-                style={{ color: '#2E8B57', fontSize: '13px', textDecoration: 'none', marginLeft: 'auto' }}>
-                Full details on APH →
-              </a>
+            <div style={{ display: 'flex', gap: '14px', marginLeft: 'auto' }}>
+              {b.pdfUrl && (
+                <a href={b.pdfUrl} target="_blank" rel="noopener noreferrer"
+                  style={{ color: '#7B93D4', fontSize: '13px', textDecoration: 'none' }}>
+                  Full bill PDF →
+                </a>
+              )}
+              {bill.aphUrl && (
+                <a href={bill.aphUrl} target="_blank" rel="noopener noreferrer"
+                  style={{ color: '#2E8B57', fontSize: '13px', textDecoration: 'none' }}>
+                  APH page →
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Audit trail ── */}
+        <div style={{ backgroundColor: '#0E1628', border: '1px solid #1C2940', borderRadius: '10px', padding: '16px 20px', marginBottom: '16px' }}>
+          <p style={{ fontSize: '10px', fontWeight: 600, color: '#3A4A6A', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+            Audit History
+          </p>
+          <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+            {b.introducedAt && (
+              <div>
+                <p style={{ fontSize: '10px', color: '#3A4A6A', margin: '0 0 2px' }}>Introduced</p>
+                <p style={{ fontSize: '13px', color: '#7E8AA3', margin: 0 }}>{fmt(b.introducedAt)}</p>
+              </div>
+            )}
+            {bill.lastUpdatedAt && (
+              <div>
+                <p style={{ fontSize: '10px', color: '#3A4A6A', margin: '0 0 2px' }}>Last updated on APH</p>
+                <p style={{ fontSize: '13px', color: '#7E8AA3', margin: 0 }}>{fmt(bill.lastUpdatedAt)}</p>
+              </div>
+            )}
+            {b.lastCheckedAt && (
+              <div>
+                <p style={{ fontSize: '10px', color: '#3A4A6A', margin: '0 0 2px' }}>Last checked by Crossbench</p>
+                <p style={{ fontSize: '13px', color: '#B6C0D1', margin: 0 }}>{fmtRel(b.lastCheckedAt)}</p>
+              </div>
+            )}
+            {b.nextReviewAt && (
+              <div>
+                <p style={{ fontSize: '10px', color: '#3A4A6A', margin: '0 0 2px' }}>Next review</p>
+                <p style={{ fontSize: '13px', color: fmtNext(b.nextReviewAt) === 'overdue' ? '#D95C4B' : '#2E8B57', margin: 0, fontWeight: 500 }}>
+                  {fmtNext(b.nextReviewAt)}
+                </p>
+              </div>
+            )}
+            {b.fullTextFetchedAt && (
+              <div>
+                <p style={{ fontSize: '10px', color: '#3A4A6A', margin: '0 0 2px' }}>Full text indexed</p>
+                <p style={{ fontSize: '13px', color: '#7E8AA3', margin: 0 }}>{fmtRel(b.fullTextFetchedAt)}</p>
+              </div>
             )}
           </div>
         </div>
 
-        {/* Vote results */}
+        {/* ── Vote results ── */}
         <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '28px', marginBottom: '16px' }}>
           <h2 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F7FB', marginBottom: '20px' }}>
             Citizen votes
