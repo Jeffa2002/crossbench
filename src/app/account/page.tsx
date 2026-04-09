@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import Nav from '@/components/Nav';
 
 export default async function AccountPage() {
   const session = await auth();
@@ -16,47 +17,60 @@ export default async function AccountPage() {
   if (!user) redirect('/login');
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold text-gray-900">Crossbench</Link>
-          <span className="text-sm text-gray-500">{user.email}</span>
-        </div>
-      </header>
-      <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Electorate verification</h2>
+    <main style={{ backgroundColor: '#0B1220', minHeight: '100vh', color: '#F5F7FB' }}>
+      <Nav />
+      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px' }}>My account</h1>
+        <p style={{ color: '#7E8AA3', fontSize: '14px', marginBottom: '8px' }}>{user.email}</p>
+
+        {/* Verification */}
+        <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '24px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px', color: '#F5F7FB' }}>Electorate verification</h2>
           {user.verifiedAt && user.electorate ? (
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">✅</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ fontSize: '24px' }}>✅</span>
               <div>
-                <p className="font-medium text-gray-900">Verified — {user.electorate.name}</p>
-                <p className="text-sm text-gray-500">{user.electorate.state}{user.electorate.mpName ? ` · ${user.electorate.mpName}` : ''}</p>
+                <p style={{ fontWeight: 600, color: '#F5F7FB', margin: 0 }}>Verified — {user.electorate.name}</p>
+                <p style={{ fontSize: '13px', color: '#7E8AA3', margin: '4px 0 0' }}>{user.electorate.state}{user.electorate.mpName ? ` · ${user.electorate.mpName}` : ''}</p>
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">⚠️</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '24px' }}>⚠️</span>
                 <div>
-                  <p className="font-medium text-gray-900">Not verified</p>
-                  <p className="text-sm text-gray-500">Verify your address to vote on bills</p>
+                  <p style={{ fontWeight: 600, color: '#F5F7FB', margin: 0 }}>Not verified</p>
+                  <p style={{ fontSize: '13px', color: '#7E8AA3', margin: '4px 0 0' }}>Verify your address to vote on bills</p>
                 </div>
               </div>
-              <Link href="/account/verify" className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">Verify now →</Link>
+              <Link href="/account/verify" style={{ backgroundColor: '#2E8B57', color: '#fff', padding: '10px 20px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none' }}>
+                Verify now →
+              </Link>
             </div>
           )}
         </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Your votes</h2>
+
+        {/* Votes */}
+        <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '24px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px', color: '#F5F7FB' }}>Your votes</h2>
           {user.votes.length === 0 ? (
-            <p className="text-gray-500 text-sm">No votes yet. <Link href="/bills" className="text-blue-600 hover:underline">Browse bills →</Link></p>
+            <p style={{ color: '#7E8AA3', fontSize: '14px', margin: 0 }}>
+              No votes yet. <Link href="/bills" style={{ color: '#2E8B57', textDecoration: 'none' }}>Browse bills →</Link>
+            </p>
           ) : (
-            <div className="space-y-3">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {user.votes.map(vote => (
-                <Link key={vote.id} href={`/bills/${vote.bill.id}`} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:border-blue-200 hover:bg-blue-50 transition-all">
-                  <span className="text-sm text-gray-800 line-clamp-1 flex-1 mr-4">{vote.bill.title}</span>
-                  <span className={`text-xs font-medium px-2 py-1 rounded shrink-0 ${vote.position === 'SUPPORT' ? 'bg-green-100 text-green-700' : vote.position === 'OPPOSE' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'}`}>{vote.position}</span>
+                <Link key={vote.id} href={`/bills/${vote.bill.id}`} style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '12px 16px', borderRadius: '8px', border: '1px solid #25324D',
+                  textDecoration: 'none', gap: '12px'
+                }}>
+                  <span style={{ fontSize: '14px', color: '#B6C0D1', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{vote.bill.title}</span>
+                  <span style={{
+                    fontSize: '11px', fontWeight: 600, padding: '3px 10px', borderRadius: '4px', flexShrink: 0,
+                    backgroundColor: vote.position === 'SUPPORT' ? 'rgba(46,139,87,0.2)' : vote.position === 'OPPOSE' ? 'rgba(217,92,75,0.2)' : 'rgba(111,125,149,0.2)',
+                    color: vote.position === 'SUPPORT' ? '#2E8B57' : vote.position === 'OPPOSE' ? '#D95C4B' : '#6F7D95',
+                  }}>{vote.position}</span>
                 </Link>
               ))}
             </div>

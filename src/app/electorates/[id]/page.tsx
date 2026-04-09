@@ -14,7 +14,6 @@ export default async function ElectoratePage({ params }: { params: Promise<{ id:
 
   if (!electorate) notFound();
 
-  // Get vote breakdown for this electorate
   const votes = await prisma.vote.groupBy({
     by: ['position'],
     where: { electorateId: id },
@@ -27,8 +26,8 @@ export default async function ElectoratePage({ params }: { params: Promise<{ id:
   const abstain = votes.find(v => v.position === 'ABSTAIN')?._count || 0;
   const supportPct = total > 0 ? Math.round((support / total) * 100) : 0;
   const opposePct = total > 0 ? Math.round((oppose / total) * 100) : 0;
+  const abstainPct = total > 0 ? Math.round((abstain / total) * 100) : 0;
 
-  // Most voted bills in this electorate
   const topBills = await prisma.vote.groupBy({
     by: ['billId'],
     where: { electorateId: id },
@@ -44,29 +43,30 @@ export default async function ElectoratePage({ params }: { params: Promise<{ id:
   }) : [];
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main style={{ backgroundColor: '#0B1220', minHeight: '100vh', color: '#F5F7FB' }}>
       <Nav />
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <Link href="/electorates" className="text-sm text-blue-600 hover:underline mb-4 block">← All electorates</Link>
+      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 24px' }}>
+        <Link href="/electorates" style={{ color: '#2E8B57', fontSize: '13px', textDecoration: 'none', display: 'block', marginBottom: '24px' }}>← All electorates</Link>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-          <div className="flex items-start justify-between gap-4">
+        {/* Electorate header */}
+        <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '28px', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginBottom: '16px' }}>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{electorate.name}</h1>
-              <p className="text-gray-500 mt-1">{electorate.state}</p>
+              <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#F5F7FB', margin: 0 }}>{electorate.name}</h1>
+              <p style={{ color: '#7E8AA3', margin: '4px 0 0', fontSize: '14px' }}>{electorate.state}</p>
             </div>
-            <span className="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-medium shrink-0">
+            <span style={{ backgroundColor: 'rgba(46,139,87,0.14)', color: '#2E8B57', fontSize: '11px', padding: '4px 12px', borderRadius: '20px', fontWeight: 600, flexShrink: 0 }}>
               Federal electorate
             </span>
           </div>
 
           {electorate.mpName && (
-            <div className="mt-4 pt-4 border-t border-gray-100">
-              <p className="text-sm text-gray-500 mb-1">Current MP</p>
-              <p className="font-medium text-gray-900">{electorate.mpName}</p>
-              {electorate.mpParty && <p className="text-sm text-gray-500">{electorate.mpParty}</p>}
+            <div style={{ borderTop: '1px solid #25324D', paddingTop: '16px' }}>
+              <p style={{ fontSize: '12px', color: '#7E8AA3', marginBottom: '4px' }}>Current MP</p>
+              <p style={{ fontWeight: 600, color: '#F5F7FB', margin: 0 }}>{electorate.mpName}</p>
+              {electorate.mpParty && <p style={{ fontSize: '13px', color: '#B6C0D1', margin: '2px 0 0' }}>{electorate.mpParty}</p>}
               {electorate.mpEmail && (
-                <a href={`mailto:${electorate.mpEmail}`} className="text-sm text-blue-600 hover:underline mt-1 block">
+                <a href={`mailto:${electorate.mpEmail}`} style={{ color: '#2E8B57', fontSize: '13px', textDecoration: 'none', display: 'block', marginTop: '4px' }}>
                   {electorate.mpEmail}
                 </a>
               )}
@@ -75,55 +75,51 @@ export default async function ElectoratePage({ params }: { params: Promise<{ id:
         </div>
 
         {/* Vote breakdown */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">
+        <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '28px', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F7FB', marginBottom: '20px' }}>
             How {electorate.name} is voting
-            {total > 0 && <span className="text-gray-400 font-normal text-base ml-2">({total} votes across all bills)</span>}
+            {total > 0 && <span style={{ color: '#7E8AA3', fontWeight: 400, fontSize: '14px', marginLeft: '8px' }}>({total} votes across all bills)</span>}
           </h2>
           {total === 0 ? (
-            <p className="text-gray-500 text-sm">No votes yet from this electorate. <Link href="/bills" className="text-blue-600 hover:underline">Be the first →</Link></p>
+            <p style={{ color: '#7E8AA3', fontSize: '14px', margin: 0 }}>
+              No votes yet from this electorate. <Link href="/bills" style={{ color: '#2E8B57', textDecoration: 'none' }}>Be the first →</Link>
+            </p>
           ) : (
-            <div className="space-y-3">
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="font-medium text-green-700">Support</span>
-                  <span className="text-gray-500">{support} ({supportPct}%)</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {[
+                { label: 'Support', pct: supportPct, count: support, color: '#2E8B57' },
+                { label: 'Oppose', pct: opposePct, count: oppose, color: '#D95C4B' },
+                { label: 'Abstain', pct: abstainPct, count: abstain, color: '#6F7D95' },
+              ].map(({ label, pct, count, color }) => (
+                <div key={label}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 600, color }}>{label}</span>
+                    <span style={{ fontSize: '13px', color: '#7E8AA3' }}>{count} ({pct}%)</span>
+                  </div>
+                  <div style={{ height: '8px', backgroundColor: '#16213A', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', backgroundColor: color, borderRadius: '4px', width: `${pct}%` }} />
+                  </div>
                 </div>
-                <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-green-500 rounded-full" style={{ width: `${supportPct}%` }} />
-                </div>
-              </div>
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="font-medium text-red-700">Oppose</span>
-                  <span className="text-gray-500">{oppose} ({opposePct}%)</span>
-                </div>
-                <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-red-500 rounded-full" style={{ width: `${opposePct}%` }} />
-                </div>
-              </div>
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="font-medium text-gray-600">Abstain</span>
-                  <span className="text-gray-500">{abstain}</span>
-                </div>
-              </div>
+              ))}
             </div>
           )}
         </div>
 
-        {/* Most active bills */}
+        {/* Top bills */}
         {bills.length > 0 && (
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Most voted bills in {electorate.name}</h2>
-            <div className="space-y-3">
+          <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '28px' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F7FB', marginBottom: '16px' }}>Most voted bills in {electorate.name}</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {bills.map(bill => (
-                <Link key={bill.id} href={`/bills/${bill.id}`} className="flex items-start gap-3 p-3 rounded-lg border border-gray-100 hover:border-blue-200 hover:bg-blue-50 transition-all">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 line-clamp-2">{bill.title}</p>
-                    <div className="flex gap-2 mt-1">
-                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{bill.chamber}</span>
-                      <span className="text-xs text-gray-400">{bill.status}</span>
+                <Link key={bill.id} href={`/bills/${bill.id}`} style={{
+                  display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '12px 16px',
+                  borderRadius: '8px', border: '1px solid #25324D', textDecoration: 'none'
+                }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: '14px', fontWeight: 500, color: '#F5F7FB', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{bill.title}</p>
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                      <span style={{ fontSize: '11px', backgroundColor: '#16213A', color: '#B6C0D1', padding: '2px 8px', borderRadius: '4px' }}>{bill.chamber}</span>
+                      <span style={{ fontSize: '11px', color: '#7E8AA3' }}>{bill.status}</span>
                     </div>
                   </div>
                 </Link>
