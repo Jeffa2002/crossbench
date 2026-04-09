@@ -11,9 +11,19 @@ export async function POST(req: NextRequest) {
   const electorate = await prisma.electorate.findUnique({ where: { id: electorateId } });
   if (!electorate) return NextResponse.json({ error: 'Invalid electorate' }, { status: 400 });
   const finalHash = createHash('sha256').update(addressHash + process.env.NEXTAUTH_SECRET).digest('hex');
+
+  // Fetch current termsAcceptedAt so we don't overwrite an existing timestamp
+  const userId = (session.user as any).id;
+  const existing = await prisma.user.findUnique({ where: { id: userId }, select: { termsAcceptedAt: true } });
+
   await prisma.user.update({
-    where: { id: (session.user as any).id },
-    data: { electorateId, verifiedAt: new Date(), addressHash: finalHash },
+    where: { id: userId },
+    data: {
+      electorateId,
+      verifiedAt: new Date(),
+      addressHash: finalHash,
+      termsAcceptedAt: existing?.termsAcceptedAt ?? new Date(),
+    },
   });
   return NextResponse.json({ ok: true });
 }

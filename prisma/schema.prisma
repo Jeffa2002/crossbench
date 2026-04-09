@@ -35,21 +35,22 @@ enum BillChamber {
 }
 
 model User {
-  id            String     @id @default(cuid())
-  email         String     @unique
-  emailVerified DateTime?
-  role          UserRole   @default(CITIZEN)
-  verifiedAt    DateTime?
-  electorateId  String?
-  electorate    Electorate? @relation(fields: [electorateId], references: [id], onDelete: SetNull)
-  addressHash   String?    @unique
-  name          String?
-  image         String?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  votes         Vote[]
-  accounts      Account[]
-  sessions      Session[]
+  id              String      @id @default(cuid())
+  email           String      @unique
+  emailVerified   DateTime?
+  role            UserRole    @default(CITIZEN)
+  verifiedAt      DateTime?
+  termsAcceptedAt DateTime?
+  electorateId    String?
+  electorate      Electorate? @relation(fields: [electorateId], references: [id], onDelete: SetNull)
+  addressHash     String?     @unique
+  name            String?
+  image           String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  votes           Vote[]
+  accounts        Account[]
+  sessions        Session[]
 
   @@index([role])
   @@index([electorateId])
