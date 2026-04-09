@@ -15,7 +15,10 @@ export default async function Nav() {
           <Link href="/electorates" style={{ color: "#B6C0D1", fontSize: "14px", padding: "8px 12px", borderRadius: "6px", textDecoration: "none" }}>Electorates</Link>
           <Link href="/about" style={{ color: "#B6C0D1", fontSize: "14px", padding: "8px 12px", borderRadius: "6px", textDecoration: "none" }}>About</Link>
           {session?.user ? (
-            <Link href="/account" style={{ backgroundColor: "#2E8B57", color: "#fff", fontSize: "13px", padding: "8px 16px", borderRadius: "6px", textDecoration: "none", fontWeight: 600 }}>My account</Link>
+            <>
+              <Link href="/dashboard" style={{ color: "#B6C0D1", fontSize: "14px", padding: "8px 12px", borderRadius: "6px", textDecoration: "none" }}>Dashboard</Link>
+              <Link href="/account" style={{ backgroundColor: "#2E8B57", color: "#fff", fontSize: "13px", padding: "8px 16px", borderRadius: "6px", textDecoration: "none", fontWeight: 600 }}>Account</Link>
+            </>
           ) : (
             <Link href="/login" style={{ backgroundColor: "#2E8B57", color: "#fff", fontSize: "13px", padding: "8px 16px", borderRadius: "6px", textDecoration: "none", fontWeight: 600 }}>Sign in</Link>
           )}
