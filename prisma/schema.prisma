@@ -84,6 +84,11 @@ model Bill {
   sponsorName   String?
   portfolio     String?
   aphUrl        String      @unique
+  aphDescription String?
+  aiSummary      String?
+  revisionsCount Int     @default(0)
+  hasAmendments  Boolean @default(false)
+  committees     String?
   introducedAt  DateTime?
   lastUpdatedAt DateTime?
   createdAt     DateTime    @default(now())
