@@ -1,0 +1,25 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 203.57.50.240
+          username: root
+          key: ${{ secrets.PROD_SSH_KEY }}
+          port: 2222
+          script: |
+            cd /var/www/crossbench
+            git pull origin main
+            npm install --production=false
+            npx prisma generate
+            npm run build
+            pm2 restart crossbench --update-env
+            echo "Deployed at $(date)"
