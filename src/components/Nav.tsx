@@ -13,6 +13,7 @@ export default async function Nav() {
         <nav style={{ display: "flex", alignItems: "center", gap: "4px" }}>
           <Link href="/bills" style={{ color: "#B6C0D1", fontSize: "14px", padding: "8px 12px", borderRadius: "6px", textDecoration: "none" }}>Bills</Link>
           <Link href="/electorates" style={{ color: "#B6C0D1", fontSize: "14px", padding: "8px 12px", borderRadius: "6px", textDecoration: "none" }}>Electorates</Link>
+          <Link href="/about" style={{ color: "#B6C0D1", fontSize: "14px", padding: "8px 12px", borderRadius: "6px", textDecoration: "none" }}>About</Link>
           {session?.user ? (
             <Link href="/account" style={{ backgroundColor: "#2E8B57", color: "#fff", fontSize: "13px", padding: "8px 16px", borderRadius: "6px", textDecoration: "none", fontWeight: 600 }}>My account</Link>
           ) : (
