@@ -102,7 +102,7 @@ export default function TermsPage() {
         <Section title="3. What Crossbench provides">
           <P>We provide the service in good faith. We may change, improve, suspend, or remove features over time.</P>
           <P>We may suspend or remove accounts that violate these Terms or that we reasonably believe pose a risk to platform integrity.</P>
-          <P>Vote data is used for civic insight only and is <strong style={{ color: '#F5F7FB' }}>never sold</strong>. Crossbench is not affiliated with the Australian Parliament, any political party, or any candidate.</P>
+          <P>We may share or commercialise <strong style={{ color: "#F5F7FB" }}>aggregated, anonymised vote and electorate data</strong> (e.g. how an electorate voted on a bill). We will <strong style={{ color: "#F5F7FB" }}>never sell or share personal information</strong> — your name, email address, or address hash will never be sold, shared with third parties, or used for commercial purposes. Crossbench is not affiliated with the Australian Parliament, any political party, or any candidate.</P>
         </Section>
 
         <Section title="4. Service availability">

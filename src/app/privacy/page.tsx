@@ -129,7 +129,7 @@ export default function PrivacyPage() {
             <li>Aggregated vote results (e.g. "64% of Grayndler supports this bill")</li>
             <li>Anonymised electorate-level opinion data</li>
           </ul>
-          <P>We may share information with trusted service providers (hosting, database) who help us run Crossbench. We do <strong style={{ color: '#F5F7FB' }}>not</strong> sell personal information.</P>
+          <P>We may share information with trusted service providers (hosting, database) who help us run Crossbench. We may also share or commercialise <strong style={{ color: '#F5F7FB' }}>aggregated, anonymised vote and electorate data</strong> — for example, how an electorate voted on a bill. We will <strong style={{ color: '#F5F7FB' }}>never sell personal information</strong> such as your name, email address, or address hash.</P>
         </Section>
 
         <Section title="7. Cookies">
