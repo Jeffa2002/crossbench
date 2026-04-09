@@ -1,15 +1,6 @@
-export default function HomePage() {
-  return (
-    <main className="min-h-screen bg-white">
-      <div className="max-w-4xl mx-auto px-4 py-16">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">Crossbench</h1>
-        <p className="text-xl text-gray-600 mb-8">
-          Your voice in Australian parliament. Vote on bills. Make your MP listen.
-        </p>
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <p className="text-blue-800 font-medium">🚧 Coming soon — setting up now</p>
-        </div>
-      </div>
-    </main>
-  );
-}
+import { prisma } from "@/lib/prisma";
+import Link from "next/link";
+export const revalidate = 300;
+async function getStats() { const [billCount, voteCount, electorateCount] = await Promise.all([prisma.bill.count(), prisma.vote.count(), prisma.electorate.count()]); return { billCount, voteCount, electorateCount }; }
+async function getActiveBills() { return prisma.bill.findMany({ take: 6, orderBy: { lastUpdatedAt: "desc" }, include: { _count: { select: { votes: true } } } }); }
+export default async function HomePage() { const [stats, bills] = await Promise.all([getStats(), getActiveBills()]); return (<main className="min-h-screen bg-gray-50"><header className="bg-white border-b border-gray-200"><div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between"><div><h1 className="text-2xl font-bold text-gray-900">Crossbench</h1><p className="text-sm text-gray-500">Your voice in Australian parliament</p></div><Link href="/login" className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">Sign in to vote</Link></div></header><section className="bg-blue-700 text-white py-16"><div className="max-w-6xl mx-auto px-4"><h2 className="text-4xl font-bold mb-4">Make parliament listen.</h2><p className="text-xl text-blue-100 mb-8 max-w-2xl">Vote on bills before parliament. Your MP can see exactly what their electorate thinks — in real time.</p><Link href="/bills" className="bg-white text-blue-700 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50">Browse current bills →</Link></div></section><section className="bg-white border-b border-gray-200"><div className="max-w-6xl mx-auto px-4 py-8 grid grid-cols-3 gap-8 text-center"><div><div className="text-3xl font-bold text-blue-700">{stats.billCount}</div><div className="text-gray-500 text-sm mt-1">Bills before parliament</div></div><div><div className="text-3xl font-bold text-blue-700">{stats.voteCount.toLocaleString()}</div><div className="text-gray-500 text-sm mt-1">Citizen votes cast</div></div><div><div className="text-3xl font-bold text-blue-700">{stats.electorateCount}</div><div className="text-gray-500 text-sm mt-1">Electorates represented</div></div></div></section><section className="max-w-6xl mx-auto px-4 py-12"><div className="flex items-center justify-between mb-6"><h3 className="text-xl font-bold text-gray-900">Currently before parliament</h3><Link href="/bills" className="text-blue-600 text-sm hover:underline">View all bills →</Link></div><div className="grid gap-4">{bills.length === 0 ? <div className="bg-white rounded-lg border border-gray-200 p-8 text-center text-gray-500">Bills are being loaded — check back soon.</div> : bills.map((bill) => (<Link key={bill.id} href={`/bills/${bill.id}`} className="bg-white rounded-lg border border-gray-200 p-5 hover:border-blue-300 hover:shadow-sm transition-all"><div className="flex items-start justify-between gap-4"><div className="flex-1 min-w-0"><h4 className="font-medium text-gray-900 mb-1 line-clamp-2">{bill.title}</h4><div className="flex items-center gap-3 text-sm text-gray-500"><span className="bg-gray-100 px-2 py-0.5 rounded text-xs">{bill.chamber}</span><span>{bill.status}</span>{bill.portfolio && <span>· {bill.portfolio}</span>}</div></div><div className="text-right shrink-0"><div className="text-lg font-bold text-gray-900">{bill._count.votes}</div><div className="text-xs text-gray-500">votes</div></div></div></Link>))}</div></section><footer className="border-t border-gray-200 mt-16 py-8"><div className="max-w-6xl mx-auto px-4 text-center text-sm text-gray-500">Crossbench is an independent, nonpartisan civic platform. Not affiliated with the Australian Government or any political party.</div></footer></main>); }

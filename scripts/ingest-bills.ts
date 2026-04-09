@@ -7,8 +7,9 @@
  */
 
 import { PrismaClient, BillChamber } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }) });
 const APH_BILLS_URL = "https://www.aph.gov.au/Parliamentary_Business/Bills_Legislation/Bills_before_Parliament";
 const OA_API_BASE = "https://www.openaustralia.org.au/api";
 const OA_API_KEY = process.env.OPENAUSTRALIA_API_KEY || "demo";
