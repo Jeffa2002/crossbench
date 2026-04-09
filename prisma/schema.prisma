@@ -62,7 +62,10 @@ model Electorate {
   state     String
   mpName    String?
   mpParty   String?
-  mpEmail   String?
+  mpEmail     String?
+  mpPhotoUrl  String?
+  mpChamber   String?
+  mpId        String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   users     User[]
