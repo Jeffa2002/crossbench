@@ -406,14 +406,45 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
           };
           const divisions: Division[] = b.divisionsData ? JSON.parse(b.divisionsData) : [];
 
-          // Prefer third/second reading divisions; fall back to all, dedupe by name
-          const keyDivisions = divisions.filter(d =>
-            /third reading|second reading|third-reading|be read a third|be now read|be agreed to/i.test(d.name)
+          // Final reading divisions: passage votes only
+          const finalDivisions = divisions.filter(d =>
+            /third reading|be read a third|be now read a third/i.test(d.name)
           );
-          const toShow = keyDivisions.length > 0 ? keyDivisions : divisions;
-          // Dedupe: if same name appears (both houses), keep both but limit total
-          const shown = toShow.slice(0, 6);
-          if (shown.length === 0) return null;
+          // Second reading (substantive agreement votes)
+          const secondReadingDivisions = divisions.filter(d =>
+            /second reading.*agreed|second reading.*agreement|be read a second time/i.test(d.name)
+          );
+          // Amendment/committee/procedural votes (not passage)
+          const amendmentDivisions = divisions.filter(d =>
+            /in committee|consideration in detail|committee of the whole|second reading - |reference to committee/i.test(d.name)
+          );
+
+          // Priority: third reading > second reading > nothing (don't show amendment-only noise)
+          const finalVotes = finalDivisions.length > 0 ? finalDivisions
+            : secondReadingDivisions.length > 0 ? secondReadingDivisions
+            : [];
+
+          // Only show passage votes — hide amendment-only noise entirely
+          const shown = finalVotes.slice(0, 6);
+          if (shown.length === 0) {
+            // For passed/not-passed bills, explain the voice vote
+            if (b.status === 'Passed' || b.status === 'Not Passed') {
+              return (
+                <div style={{ backgroundColor: '#0E1628', border: '1px solid #1C2940', borderRadius: '10px', padding: '16px 20px', marginBottom: '16px', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                  <span style={{ fontSize: '16px', flexShrink: 0 }}>🗳️</span>
+                  <div>
+                    <p style={{ fontSize: '12px', fontWeight: 600, color: '#7E8AA3', margin: '0 0 3px' }}>No formal division recorded</p>
+                    <p style={{ fontSize: '12px', color: '#4E5A73', margin: 0, lineHeight: '1.5' }}>
+                      This bill {b.status === 'Passed' ? 'passed' : 'was voted down'} by voice vote — parliament agreed without calling a formal count.
+                      A division is only recorded when a member explicitly requests one.
+                    </p>
+                  </div>
+                </div>
+              );
+            }
+            return null;
+          }
+          const isAmendmentOnly = false;
 
           const partyColour = (party: string): string => {
             const p = party.toLowerCase();
@@ -431,9 +462,14 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
 
           return (
             <div style={{ backgroundColor: '#0E1628', border: '1px solid #1C2940', borderRadius: '10px', padding: '20px 24px', marginBottom: '16px' }}>
-              <p style={{ fontSize: '10px', fontWeight: 600, color: '#3A4A6A', margin: '0 0 16px', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+              <p style={{ fontSize: '10px', fontWeight: 600, color: '#3A4A6A', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
                 How Parliament Voted
               </p>
+              {isAmendmentOnly && (
+                <p style={{ fontSize: '11px', color: '#4E5A73', margin: '0 0 14px', lineHeight: '1.5' }}>
+                  This bill passed by voice vote — no formal division on final passage. Votes below are on amendments proposed during debate.
+                </p>
+              )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 {shown.map(div => (
                   <div key={`${div.id}-${div.house}`}>
@@ -489,9 +525,9 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
                   </div>
                 ))}
               </div>
-              {toShow.length > 6 && (
+              {finalVotes.length > 6 && (
                 <p style={{ fontSize: '11px', color: '#4E5A73', marginTop: '12px', marginBottom: 0 }}>
-                  + {toShow.length - 6} more division{toShow.length - 6 !== 1 ? 's' : ''} on this bill
+                  + {finalVotes.length - 6} more division{finalVotes.length - 6 !== 1 ? 's' : ''} on this bill
                 </p>
               )}
             </div>

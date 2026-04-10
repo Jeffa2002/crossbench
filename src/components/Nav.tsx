@@ -12,6 +12,7 @@ export default async function Nav() {
         </Link>
         <nav className="nav-links">
           <Link href="/bills" className="nav-link">Bills</Link>
+          <Link href="/stats" className="nav-link nav-link-hide-xs">Stats</Link>
           <Link href="/electorates" className="nav-link nav-link-hide-xs">Electorates</Link>
           <Link href="/about" className="nav-link nav-link-hide-xs">About</Link>
           {session?.user ? (
