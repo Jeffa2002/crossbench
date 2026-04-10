@@ -398,72 +398,102 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
 
         {/* ── How MPs voted (Divisions) ── */}
         {(() => {
-          const divisions: Array<{
-            divisionId: number; question: string; ayes: number; noes: number;
-            date: string; passed: boolean;
-            byParty: Array<{ party: string; colour: string; ayes: number; noes: number }>;
-          }> = b.divisionsData ? JSON.parse(b.divisionsData) : [];
+          type Division = {
+            id: number; house: string; name: string; date: string;
+            ayes: number; noes: number; passed: boolean;
+            byParty: Array<{ party: string; ayes: number; noes: number }>;
+            memberVotes: Array<{ name: string; electorate: string; party: string; vote: string }>;
+          };
+          const divisions: Division[] = b.divisionsData ? JSON.parse(b.divisionsData) : [];
 
-          // Only show key divisions: third reading, second reading agreed to — filter by question
+          // Prefer third/second reading divisions; fall back to all, dedupe by name
           const keyDivisions = divisions.filter(d =>
-            /third reading|second reading agreed|be now read|be agreed to/i.test(d.question)
+            /third reading|second reading|third-reading|be read a third|be now read|be agreed to/i.test(d.name)
           );
-          const toShow = keyDivisions.length > 0 ? keyDivisions : divisions.slice(0, 3);
-          if (toShow.length === 0) return null;
+          const toShow = keyDivisions.length > 0 ? keyDivisions : divisions;
+          // Dedupe: if same name appears (both houses), keep both but limit total
+          const shown = toShow.slice(0, 6);
+          if (shown.length === 0) return null;
+
+          const partyColour = (party: string): string => {
+            const p = party.toLowerCase();
+            if (p.includes('labor') || p.includes('labour')) return '#E53935';
+            if (p.includes('liberal') && !p.includes('national')) return '#1565C0';
+            if (p.includes('national')) return '#2E7D32';
+            if (p.includes('green')) return '#43A047';
+            if (p.includes('teal') || p.includes('independent') || p.includes('crossbench')) return '#00ACC1';
+            if (p.includes('one nation')) return '#F57C00';
+            if (p.includes('katter')) return '#6D4C41';
+            return '#7E8AA3';
+          };
+
+          const houseLabel = (h: string) => h === 'representatives' ? 'House' : 'Senate';
 
           return (
             <div style={{ backgroundColor: '#0E1628', border: '1px solid #1C2940', borderRadius: '10px', padding: '20px 24px', marginBottom: '16px' }}>
               <p style={{ fontSize: '10px', fontWeight: 600, color: '#3A4A6A', margin: '0 0 16px', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-                How MPs Voted — Parliamentary Divisions
+                How Parliament Voted
               </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                {toShow.map(div => (
-                  <div key={div.divisionId}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '12px', color: '#7E8AA3', marginBottom: '4px' }}>
-                          {new Date(div.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}
-                        </div>
-                        <div style={{ fontSize: '13px', color: '#B6C0D1', fontStyle: 'italic' }}>{div.question}</div>
-                      </div>
-                      <div style={{ display: 'flex', gap: '12px', flexShrink: 0 }}>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ fontSize: '20px', fontWeight: 700, color: '#2E8B57' }}>{div.ayes}</div>
-                          <div style={{ fontSize: '10px', color: '#2E8B57', fontWeight: 600 }}>AYES</div>
-                        </div>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ fontSize: '20px', fontWeight: 700, color: '#D95C4B' }}>{div.noes}</div>
-                          <div style={{ fontSize: '10px', color: '#D95C4B', fontWeight: 600 }}>NOES</div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                          <span style={{
-                            fontSize: '11px', fontWeight: 700, padding: '4px 10px', borderRadius: '4px',
-                            backgroundColor: div.passed ? 'rgba(46,139,87,0.2)' : 'rgba(217,92,75,0.2)',
-                            color: div.passed ? '#2E8B57' : '#D95C4B',
-                          }}>
-                            {div.passed ? 'PASSED' : 'FAILED'}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                {shown.map(div => (
+                  <div key={`${div.id}-${div.house}`}>
+                    {/* Header row */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '4px' }}>
+                          <span style={{ fontSize: '10px', fontWeight: 600, padding: '2px 7px', borderRadius: '3px', backgroundColor: '#1C2940', color: '#7E8AA3', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            {houseLabel(div.house)}
+                          </span>
+                          <span style={{ fontSize: '11px', color: '#4E5A73' }}>
+                            {new Date(div.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}
                           </span>
                         </div>
+                        <div style={{ fontSize: '12px', color: '#8A96B0', lineHeight: '1.4' }}>
+                          {div.name.replace(/^Bills? — /, '').replace(/^Business — /, '')}
+                        </div>
+                      </div>
+                      {/* Vote counts */}
+                      <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexShrink: 0 }}>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ fontSize: '22px', fontWeight: 700, color: '#2E8B57', lineHeight: 1 }}>{div.ayes}</div>
+                          <div style={{ fontSize: '9px', color: '#2E8B57', fontWeight: 600, letterSpacing: '0.05em' }}>AYES</div>
+                        </div>
+                        <div style={{ fontSize: '14px', color: '#3A4A6A' }}>–</div>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ fontSize: '22px', fontWeight: 700, color: '#D95C4B', lineHeight: 1 }}>{div.noes}</div>
+                          <div style={{ fontSize: '9px', color: '#D95C4B', fontWeight: 600, letterSpacing: '0.05em' }}>NOES</div>
+                        </div>
+                        <span style={{
+                          fontSize: '11px', fontWeight: 700, padding: '3px 9px', borderRadius: '4px', marginLeft: '4px',
+                          backgroundColor: div.passed ? 'rgba(46,139,87,0.18)' : 'rgba(217,92,75,0.18)',
+                          color: div.passed ? '#2E8B57' : '#D95C4B', border: `1px solid ${div.passed ? 'rgba(46,139,87,0.3)' : 'rgba(217,92,75,0.3)'}`,
+                        }}>
+                          {div.passed ? 'PASSED' : 'FAILED'}
+                        </span>
                       </div>
                     </div>
                     {/* Party breakdown */}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
                       {div.byParty.map(p => (
                         <div key={p.party} style={{
-                          backgroundColor: '#111A2E', border: '1px solid #25324D',
-                          borderRadius: '6px', padding: '6px 10px', fontSize: '11px',
+                          backgroundColor: '#0A1020', border: '1px solid #1C2940',
+                          borderRadius: '5px', padding: '4px 9px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '5px',
                         }}>
-                          <span style={{ color: p.colour, fontWeight: 700 }}>●</span>{' '}
-                          <span style={{ color: '#B6C0D1' }}>{p.party}</span>{' '}
-                          {p.ayes > 0 && <span style={{ color: '#2E8B57', fontWeight: 600 }}>{p.ayes} aye</span>}
-                          {p.ayes > 0 && p.noes > 0 && <span style={{ color: '#4E5A73' }}> / </span>}
-                          {p.noes > 0 && <span style={{ color: '#D95C4B', fontWeight: 600 }}>{p.noes} noe</span>}
+                          <span style={{ color: partyColour(p.party), fontSize: '8px' }}>●</span>
+                          <span style={{ color: '#8A96B0' }}>{p.party}</span>
+                          {p.ayes > 0 && <span style={{ color: '#2E8B57', fontWeight: 600 }}>{p.ayes}✓</span>}
+                          {p.noes > 0 && <span style={{ color: '#D95C4B', fontWeight: 600 }}>{p.noes}✗</span>}
                         </div>
                       ))}
                     </div>
                   </div>
                 ))}
               </div>
+              {toShow.length > 6 && (
+                <p style={{ fontSize: '11px', color: '#4E5A73', marginTop: '12px', marginBottom: 0 }}>
+                  + {toShow.length - 6} more division{toShow.length - 6 !== 1 ? 's' : ''} on this bill
+                </p>
+              )}
             </div>
           );
         })()}
