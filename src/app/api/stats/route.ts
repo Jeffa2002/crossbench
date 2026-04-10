@@ -7,23 +7,71 @@ export const dynamic = 'force-dynamic';
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
 
-export async function GET() {
-  const bills = await (prisma.bill as any).findMany({
-    select: {
-      id: true,
-      title: true,
-      status: true,
-      chamber: true,
-      introducedAt: true,
-      divisionsData: true,
+// Known parliament seat compositions (from APH + election results)
+const PARLIAMENT_COMPOSITION: Record<number, {
+  label: string;
+  dates: string;
+  hor: Record<string, number>;
+  senate: Record<string, number>;
+}> = {
+  48: {
+    label: '48th Parliament',
+    dates: 'July 2025 – present',
+    hor: {
+      'Australian Labor Party': 94,
+      'Liberal Party': 28,
+      'Liberal National Party': 9,
+      'National Party': 15,
+      'Australian Greens': 1,
+      'Independent': 4,
+      "Katter's Australian Party": 1,
     },
-  });
+    senate: {
+      'Australian Labor Party': 28,
+      'Liberal Party': 19,
+      'National Party': 6,
+      'Australian Greens': 11,
+      "Pauline Hanson's One Nation Party": 2,
+      'Independent': 3,
+      'Jacqui Lambie Network': 1,
+      'Liberal National Party': 4,
+      'Country Liberal Party': 2,
+    },
+  },
+  47: {
+    label: '47th Parliament',
+    dates: 'July 2022 – May 2025',
+    hor: {
+      'Australian Labor Party': 77,
+      'Liberal Party': 24,
+      'National Party': 16,
+      'Liberal National Party': 23,
+      'Australian Greens': 4,
+      'Independent': 10,
+      "Katter's Australian Party": 1,
+      'Centre Alliance': 1,
+    },
+    senate: {
+      'Australian Labor Party': 26,
+      'Liberal Party': 18,
+      'National Party': 6,
+      'Australian Greens': 12,
+      "Pauline Hanson's One Nation Party": 2,
+      'Independent': 4,
+      'Jacqui Lambie Network': 1,
+      'United Australia Party': 1,
+      'Liberal National Party': 5,
+      'Country Liberal Party': 1,
+    },
+  },
+};
 
+function computeStats(bills: any[]) {
   const passed = bills.filter((b: any) => b.status === 'Passed');
   const notPassed = bills.filter((b: any) => b.status === 'Not Passed');
   const before = bills.filter((b: any) => b.status === 'Before Parliament');
 
-  // Time to passage: intro date → last division date (proxy for passage date)
+  // Timing: intro date → last division date
   const durations: Array<{ days: number; title: string; id: string }> = [];
   for (const b of passed) {
     if (!b.introducedAt) continue;
@@ -32,22 +80,13 @@ export async function GET() {
     const divDates = divs.map((d: any) => d.date).filter(Boolean).sort();
     const lastDate = divDates[divDates.length - 1];
     if (!lastDate) continue;
-    const d1 = new Date(b.introducedAt);
-    const d2 = new Date(lastDate);
-    const days = Math.round((d2.getTime() - d1.getTime()) / 86400000);
+    const days = Math.round((new Date(lastDate).getTime() - new Date(b.introducedAt).getTime()) / 86400000);
     if (days >= 0) durations.push({ days, title: b.title, id: b.id });
   }
   durations.sort((a, b) => a.days - b.days);
 
-  const avgDays = durations.length
-    ? Math.round(durations.reduce((s, d) => s + d.days, 0) / durations.length)
-    : null;
-  const medDays = durations.length
-    ? durations[Math.floor(durations.length / 2)].days
-    : null;
-
   // Division counts per bill
-  const divisionCounts: Array<{ count: number; title: string; id: string }> = bills
+  const divisionCounts = bills
     .map((b: any) => {
       let divs: any[] = [];
       try { divs = JSON.parse(b.divisionsData || '[]'); } catch {}
@@ -56,32 +95,21 @@ export async function GET() {
     .filter((b: any) => b.count > 0)
     .sort((a: any, b: any) => b.count - a.count);
 
-  // Voice vote vs formal division for passed bills
   const passedWithDivision = passed.filter((b: any) => {
     let divs: any[] = [];
     try { divs = JSON.parse(b.divisionsData || '[]'); } catch {}
     return divs.length > 0;
   }).length;
 
-  // Chamber origin
-  const houseOrigin = bills.filter((b: any) =>
-    b.chamber && b.chamber.toLowerCase().includes('representatives')
-  ).length;
-  const senateOrigin = bills.filter((b: any) =>
-    b.chamber && b.chamber.toLowerCase().includes('senate')
-  ).length;
+  const houseOrigin = bills.filter((b: any) => b.chamber?.toLowerCase().includes('representatives')).length;
+  const senateOrigin = bills.filter((b: any) => b.chamber?.toLowerCase().includes('senate')).length;
 
-  return NextResponse.json({
-    totals: {
-      all: bills.length,
-      passed: passed.length,
-      notPassed: notPassed.length,
-      before: before.length,
-    },
-    passRate: Math.round((passed.length / bills.length) * 100),
+  return {
+    totals: { all: bills.length, passed: passed.length, notPassed: notPassed.length, before: before.length },
+    passRate: bills.length ? Math.round((passed.length / bills.length) * 100) : 0,
     timing: {
-      avg: avgDays,
-      median: medDays,
+      avg: durations.length ? Math.round(durations.reduce((s, d) => s + d.days, 0) / durations.length) : null,
+      median: durations.length ? durations[Math.floor(durations.length / 2)].days : null,
       fastest: durations[0] ?? null,
       slowest: durations[durations.length - 1] ?? null,
       count: durations.length,
@@ -91,10 +119,35 @@ export async function GET() {
       passedByVoice: passed.length - passedWithDivision,
       mostContested: divisionCounts.slice(0, 3),
     },
-    origin: {
-      house: houseOrigin,
-      senate: senateOrigin,
-      unknown: bills.length - houseOrigin - senateOrigin,
-    },
+    origin: { house: houseOrigin, senate: senateOrigin },
+  };
+}
+
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const parlParam = searchParams.get('parliament');
+  const parlNum = parlParam ? parseInt(parlParam) : null;
+
+  const bills = await (prisma.bill as any).findMany({
+    where: parlNum ? { parliamentNumber: parlNum } : undefined,
+    select: { id: true, title: true, status: true, chamber: true, introducedAt: true, divisionsData: true, parliamentNumber: true },
+  });
+
+  // Available parliaments
+  const allBills = await (prisma.bill as any).findMany({
+    select: { parliamentNumber: true },
+  });
+  const parliamentNumbers = [...new Set(
+    allBills.map((b: any) => b.parliamentNumber).filter(Boolean)
+  )].sort((a: any, b: any) => b - a);
+
+  const stats = computeStats(bills);
+  const composition = parlNum ? (PARLIAMENT_COMPOSITION[parlNum] ?? null) : null;
+
+  return NextResponse.json({
+    ...stats,
+    parliament: parlNum,
+    parliaments: parliamentNumbers,
+    composition,
   });
 }
