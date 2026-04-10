@@ -94,7 +94,7 @@ async function scrapePage(page: any, url: string): Promise<ScrapedBill[]> {
     aphUrl: `${BASE}/Parliamentary_Business/Bills_Legislation/Bills_Search_Results/Result?bId=${b.bid}`,
     status: '', // filled by caller
     parliamentNumber: 0, // filled by caller
-  })).filter(b => b.title && b.bid);
+  })).filter((b: any) => b.title && b.bid);
 }
 
 async function main() {

@@ -64,6 +64,32 @@ const PARLIAMENT_COMPOSITION: Record<number, {
       'Country Liberal Party': 1,
     },
   },
+  46: {
+    label: '46th Parliament',
+    dates: 'July 2019 – May 2022',
+    hor: {
+      'Australian Labor Party': 69,
+      'Liberal Party': 58,
+      'National Party': 10,
+      'Liberal National Party': 23,
+      'Country Liberal Party': 1,
+      'Australian Greens': 1,
+      'Centre Alliance': 1,
+      "Katter's Australian Party": 1,
+      'Independent': 6,
+    },
+    senate: {
+      'Australian Labor Party': 26,
+      'Liberal Party': 17,
+      'National Party': 7,
+      'Liberal National Party': 5,
+      'Country Liberal Party': 1,
+      'Australian Greens': 9,
+      "Pauline Hanson's One Nation Party": 2,
+      'Centre Alliance': 2,
+      'Jacqui Lambie Network': 1,
+    },
+  },
 };
 
 function computeStats(bills: any[]) {
