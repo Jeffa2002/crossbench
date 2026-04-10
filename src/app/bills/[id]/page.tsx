@@ -396,6 +396,78 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
           );
         })()}
 
+        {/* ── How MPs voted (Divisions) ── */}
+        {(() => {
+          const divisions: Array<{
+            divisionId: number; question: string; ayes: number; noes: number;
+            date: string; passed: boolean;
+            byParty: Array<{ party: string; colour: string; ayes: number; noes: number }>;
+          }> = b.divisionsData ? JSON.parse(b.divisionsData) : [];
+
+          // Only show key divisions: third reading, second reading agreed to — filter by question
+          const keyDivisions = divisions.filter(d =>
+            /third reading|second reading agreed|be now read|be agreed to/i.test(d.question)
+          );
+          const toShow = keyDivisions.length > 0 ? keyDivisions : divisions.slice(0, 3);
+          if (toShow.length === 0) return null;
+
+          return (
+            <div style={{ backgroundColor: '#0E1628', border: '1px solid #1C2940', borderRadius: '10px', padding: '20px 24px', marginBottom: '16px' }}>
+              <p style={{ fontSize: '10px', fontWeight: 600, color: '#3A4A6A', margin: '0 0 16px', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                How MPs Voted — Parliamentary Divisions
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {toShow.map(div => (
+                  <div key={div.divisionId}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '12px', color: '#7E8AA3', marginBottom: '4px' }}>
+                          {new Date(div.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </div>
+                        <div style={{ fontSize: '13px', color: '#B6C0D1', fontStyle: 'italic' }}>{div.question}</div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '12px', flexShrink: 0 }}>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ fontSize: '20px', fontWeight: 700, color: '#2E8B57' }}>{div.ayes}</div>
+                          <div style={{ fontSize: '10px', color: '#2E8B57', fontWeight: 600 }}>AYES</div>
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ fontSize: '20px', fontWeight: 700, color: '#D95C4B' }}>{div.noes}</div>
+                          <div style={{ fontSize: '10px', color: '#D95C4B', fontWeight: 600 }}>NOES</div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          <span style={{
+                            fontSize: '11px', fontWeight: 700, padding: '4px 10px', borderRadius: '4px',
+                            backgroundColor: div.passed ? 'rgba(46,139,87,0.2)' : 'rgba(217,92,75,0.2)',
+                            color: div.passed ? '#2E8B57' : '#D95C4B',
+                          }}>
+                            {div.passed ? 'PASSED' : 'FAILED'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Party breakdown */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                      {div.byParty.map(p => (
+                        <div key={p.party} style={{
+                          backgroundColor: '#111A2E', border: '1px solid #25324D',
+                          borderRadius: '6px', padding: '6px 10px', fontSize: '11px',
+                        }}>
+                          <span style={{ color: p.colour, fontWeight: 700 }}>●</span>{' '}
+                          <span style={{ color: '#B6C0D1' }}>{p.party}</span>{' '}
+                          {p.ayes > 0 && <span style={{ color: '#2E8B57', fontWeight: 600 }}>{p.ayes} aye</span>}
+                          {p.ayes > 0 && p.noes > 0 && <span style={{ color: '#4E5A73' }}> / </span>}
+                          {p.noes > 0 && <span style={{ color: '#D95C4B', fontWeight: 600 }}>{p.noes} noe</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* ── Vote results ── */}
         <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '28px', marginBottom: '16px' }}>
           <h2 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F7FB', marginBottom: '4px' }}>
