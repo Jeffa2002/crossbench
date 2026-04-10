@@ -114,6 +114,7 @@ model Bill {
   nextReviewAt   DateTime?
   introducedAt  DateTime?
   outcome       String?
+  parliamentaryProgress String?
   outcomeDate   DateTime?
   lastUpdatedAt DateTime?
   createdAt     DateTime    @default(now())

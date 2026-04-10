@@ -61,6 +61,14 @@ const OUTCOME_CONFIG: Record<string, {
     border: 'rgba(46,139,87,0.35)',
     color: '#2E8B57',
   },
+  'Assented': {
+    icon: '✅',
+    label: 'This bill passed parliament',
+    subtext: 'Royal Assent granted — this bill is now law.',
+    bg: 'rgba(46,139,87,0.10)',
+    border: 'rgba(46,139,87,0.35)',
+    color: '#2E8B57',
+  },
   'Not Passed': {
     icon: '❌',
     label: 'This bill did not pass parliament',
@@ -83,7 +91,7 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
 
   const b = bill as any;
   const isClosed = bill.status !== 'Before Parliament';
-  const outcomeConfig = b.outcome ? OUTCOME_CONFIG[b.outcome] : (isClosed ? OUTCOME_CONFIG['Not Passed'] : null);
+  const outcomeConfig = b.outcome ? (OUTCOME_CONFIG[b.outcome] ?? OUTCOME_CONFIG[bill.status]) : (isClosed ? OUTCOME_CONFIG['Not Passed'] : null);
 
   const results = await getBillResults(bill.id);
   const supportPct = results.total > 0 ? Math.round((results.support / results.total) * 100) : 0;
@@ -152,12 +160,12 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
                 borderTop: `1px solid ${outcomeConfig.border}`,
                 paddingLeft: '30px',
               }}>
-                {b.outcome === 'Passed' && majorityPosition === 'opposed' && (
+                {b.outcome === 'Assented' && majorityPosition === 'opposed' && (
                   <p style={{ margin: 0, fontSize: '13px', color: '#f87171' }}>
                     ⚠️ <strong>{opposePct}% of voters opposed this bill</strong> — parliament passed it anyway.
                   </p>
                 )}
-                {b.outcome === 'Passed' && majorityPosition === 'supported' && (
+                {b.outcome === 'Assented' && majorityPosition === 'supported' && (
                   <p style={{ margin: 0, fontSize: '13px', color: '#2E8B57' }}>
                     ✓ <strong>{supportPct}% of voters supported this bill</strong> — parliament agreed.
                   </p>
@@ -327,6 +335,66 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
             )}
           </div>
         </div>
+
+        {/* ── Parliamentary Progress ── */}
+        {(() => {
+          const progress: Array<{chamber: string; event: string; date: string | null}> = b.parliamentaryProgress
+            ? JSON.parse(b.parliamentaryProgress)
+            : [];
+          const mainStages = progress.filter((s: any) =>
+            /agreed to|negatived|passed both|withdrawn|lapsed|assent|Committee of the Whole|Consideration of Senate message|Referred to Committee|Committee report/i.test(s.event)
+          );
+          if (mainStages.length === 0) return null;
+
+          const CHAMBERS = ['House of Representatives', 'Senate', 'Both Houses'];
+          const grouped: Record<string, typeof mainStages> = {};
+          for (const c of CHAMBERS) grouped[c] = [];
+          for (const s of mainStages) {
+            if (grouped[s.chamber]) grouped[s.chamber].push(s);
+          }
+
+          const chamberIcon: Record<string, string> = {
+            'House of Representatives': '🏛',
+            'Senate': '🔱',
+            'Both Houses': '⚖️',
+          };
+
+          const eventColor = (event: string) => {
+            if (/agreed to|passed both/i.test(event)) return '#2E8B57';
+            if (/negatived|withdrawn|lapsed/i.test(event)) return '#D95C4B';
+            return '#B6C0D1';
+          };
+
+          const activeChambers = CHAMBERS.filter(c => grouped[c]?.length > 0);
+
+          return (
+            <div style={{ backgroundColor: '#0E1628', border: '1px solid #1C2940', borderRadius: '10px', padding: '20px 24px', marginBottom: '16px' }}>
+              <p style={{ fontSize: '10px', fontWeight: 600, color: '#3A4A6A', margin: '0 0 16px', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                How Parliament Voted
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${activeChambers.length}, 1fr)`, gap: '20px' }}>
+                {activeChambers.map(chamber => (
+                  <div key={chamber}>
+                    <div style={{ fontSize: '12px', fontWeight: 700, color: '#7E8AA3', marginBottom: '10px' }}>
+                      {chamberIcon[chamber]} {chamber}
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {grouped[chamber].map((s: any, i: number) => (
+                        <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                          <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: eventColor(s.event), flexShrink: 0, marginTop: '4px' }} />
+                          <div>
+                            <div style={{ fontSize: '13px', color: eventColor(s.event), fontWeight: 500 }}>{s.event}</div>
+                            {s.date && <div style={{ fontSize: '11px', color: '#4E5A73', marginTop: '2px' }}>{s.date}</div>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* ── Vote results ── */}
         <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '28px', marginBottom: '16px' }}>
