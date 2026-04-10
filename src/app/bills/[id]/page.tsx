@@ -45,6 +45,32 @@ function fmtNext(d: Date | null | undefined) {
   return fmt(d);
 }
 
+const OUTCOME_CONFIG: Record<string, {
+  icon: string;
+  label: string;
+  subtext: string;
+  bg: string;
+  border: string;
+  color: string;
+}> = {
+  Passed: {
+    icon: '✅',
+    label: 'This bill passed parliament',
+    subtext: 'Royal Assent granted — this bill is now law.',
+    bg: 'rgba(46,139,87,0.10)',
+    border: 'rgba(46,139,87,0.35)',
+    color: '#2E8B57',
+  },
+  'Not Passed': {
+    icon: '❌',
+    label: 'This bill did not pass parliament',
+    subtext: 'The bill was rejected or lapsed before becoming law.',
+    bg: 'rgba(185,28,28,0.10)',
+    border: 'rgba(185,28,28,0.30)',
+    color: '#f87171',
+  },
+};
+
 export default async function BillPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
@@ -55,10 +81,21 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
 
   if (!bill) notFound();
 
+  const b = bill as any;
+  const isClosed = bill.status !== 'Before Parliament';
+  const outcomeConfig = b.outcome ? OUTCOME_CONFIG[b.outcome] : (isClosed ? OUTCOME_CONFIG['Not Passed'] : null);
+
   const results = await getBillResults(bill.id);
   const supportPct = results.total > 0 ? Math.round((results.support / results.total) * 100) : 0;
   const opposePct = results.total > 0 ? Math.round((results.oppose / results.total) * 100) : 0;
   const abstainPct = results.total > 0 ? Math.round((results.abstain / results.total) * 100) : 0;
+
+  // Majority sentiment for comparison callout
+  const majorityPosition = results.total > 0
+    ? (results.support >= results.oppose && results.support >= results.abstain ? 'supported'
+      : results.oppose >= results.support && results.oppose >= results.abstain ? 'opposed'
+      : 'abstained from')
+    : null;
 
   const session = await auth();
   let userVote = null;
@@ -68,8 +105,6 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
     });
     userVote = existingVote?.position || null;
   }
-
-  const b = bill as any;
 
   const chamberLabel = bill.chamber === 'HOUSE' ? '🏛 House of Representatives'
     : bill.chamber === 'SENATE' ? '🔱 Senate' : '⚖️ Joint';
@@ -82,6 +117,71 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
           ← Back to bills
         </Link>
 
+        {/* ── Outcome banner (only for decided bills) ── */}
+        {outcomeConfig && (
+          <div style={{
+            backgroundColor: outcomeConfig.bg,
+            border: `1px solid ${outcomeConfig.border}`,
+            borderRadius: '12px',
+            padding: '20px 24px',
+            marginBottom: '16px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '6px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '20px' }}>{outcomeConfig.icon}</span>
+              <span style={{ fontSize: '16px', fontWeight: 700, color: outcomeConfig.color }}>
+                {outcomeConfig.label}
+              </span>
+              {b.outcomeDate && (
+                <span style={{ fontSize: '12px', color: '#7E8AA3', marginLeft: 'auto' }}>
+                  {fmt(b.outcomeDate)}
+                </span>
+              )}
+            </div>
+            <p style={{ margin: 0, fontSize: '13px', color: '#B6C0D1', paddingLeft: '30px' }}>
+              {outcomeConfig.subtext}
+            </p>
+
+            {/* Constituent sentiment vs outcome */}
+            {results.total > 0 && majorityPosition && (
+              <div style={{
+                marginTop: '10px',
+                paddingTop: '14px',
+                borderTop: `1px solid ${outcomeConfig.border}`,
+                paddingLeft: '30px',
+              }}>
+                {b.outcome === 'Passed' && majorityPosition === 'opposed' && (
+                  <p style={{ margin: 0, fontSize: '13px', color: '#f87171' }}>
+                    ⚠️ <strong>{opposePct}% of voters opposed this bill</strong> — parliament passed it anyway.
+                  </p>
+                )}
+                {b.outcome === 'Passed' && majorityPosition === 'supported' && (
+                  <p style={{ margin: 0, fontSize: '13px', color: '#2E8B57' }}>
+                    ✓ <strong>{supportPct}% of voters supported this bill</strong> — parliament agreed.
+                  </p>
+                )}
+                {b.outcome === 'Not Passed' && majorityPosition === 'supported' && (
+                  <p style={{ margin: 0, fontSize: '13px', color: '#f87171' }}>
+                    ⚠️ <strong>{supportPct}% of voters supported this bill</strong> — parliament rejected it anyway.
+                  </p>
+                )}
+                {b.outcome === 'Not Passed' && majorityPosition === 'opposed' && (
+                  <p style={{ margin: 0, fontSize: '13px', color: '#2E8B57' }}>
+                    ✓ <strong>{opposePct}% of voters opposed this bill</strong> — parliament agreed.
+                  </p>
+                )}
+                {majorityPosition === 'abstained from' && (
+                  <p style={{ margin: 0, fontSize: '13px', color: '#7E8AA3' }}>
+                    Most voters abstained on this bill ({abstainPct}%).
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ── Bill header ── */}
         <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '28px', marginBottom: '16px' }}>
 
@@ -90,10 +190,12 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
             <span style={{ backgroundColor: '#16213A', color: '#B6C0D1', fontSize: '11px', padding: '3px 10px', borderRadius: '4px' }}>
               {chamberLabel}
             </span>
-            <span style={{ backgroundColor: 'rgba(46,139,87,0.14)', color: '#2E8B57', fontSize: '11px', padding: '3px 10px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#2E8B57', display: 'inline-block' }} />
-              {bill.status}
-            </span>
+            {!isClosed && (
+              <span style={{ backgroundColor: 'rgba(46,139,87,0.14)', color: '#2E8B57', fontSize: '11px', padding: '3px 10px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#2E8B57', display: 'inline-block' }} />
+                {bill.status}
+              </span>
+            )}
             {bill.portfolio && (
               <span style={{ backgroundColor: 'rgba(214,169,74,0.14)', color: '#D6A94A', fontSize: '11px', padding: '3px 10px', borderRadius: '4px' }}>
                 {bill.portfolio}
@@ -197,13 +299,19 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
                 <p style={{ fontSize: '13px', color: '#7E8AA3', margin: 0 }}>{fmt(bill.lastUpdatedAt)}</p>
               </div>
             )}
+            {b.outcomeDate && (
+              <div>
+                <p style={{ fontSize: '10px', color: '#3A4A6A', margin: '0 0 2px' }}>Outcome date</p>
+                <p style={{ fontSize: '13px', color: '#B6C0D1', margin: 0, fontWeight: 500 }}>{fmt(b.outcomeDate)}</p>
+              </div>
+            )}
             {b.lastCheckedAt && (
               <div>
                 <p style={{ fontSize: '10px', color: '#3A4A6A', margin: '0 0 2px' }}>Last checked by Crossbench</p>
                 <p style={{ fontSize: '13px', color: '#B6C0D1', margin: 0 }}>{fmtRel(b.lastCheckedAt)}</p>
               </div>
             )}
-            {b.nextReviewAt && (
+            {b.nextReviewAt && !isClosed && (
               <div>
                 <p style={{ fontSize: '10px', color: '#3A4A6A', margin: '0 0 2px' }}>Next review</p>
                 <p style={{ fontSize: '13px', color: fmtNext(b.nextReviewAt) === 'overdue' ? '#D95C4B' : '#2E8B57', margin: 0, fontWeight: 500 }}>
@@ -222,19 +330,25 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
 
         {/* ── Vote results ── */}
         <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '28px', marginBottom: '16px' }}>
-          <h2 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F7FB', marginBottom: '20px' }}>
-            Citizen votes
+          <h2 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F7FB', marginBottom: '4px' }}>
+            Constituent votes
             {results.total > 0 && (
               <span style={{ color: '#7E8AA3', fontWeight: 400, fontSize: '14px', marginLeft: '8px' }}>
                 ({results.total.toLocaleString()} total)
               </span>
             )}
           </h2>
+          {isClosed && (
+            <p style={{ fontSize: '12px', color: '#7E8AA3', marginBottom: '20px', marginTop: '4px' }}>
+              Voting is closed — this bill has been decided by parliament.
+            </p>
+          )}
+          {!isClosed && <div style={{ marginBottom: '20px' }} />}
 
           {results.total === 0 ? (
             <div style={{ textAlign: 'center', padding: '32px 0', color: '#7E8AA3' }}>
               <p style={{ fontSize: '16px', marginBottom: '4px' }}>No votes yet.</p>
-              <p style={{ fontSize: '13px' }}>Be the first to vote on this bill.</p>
+              <p style={{ fontSize: '13px' }}>{isClosed ? 'No votes were recorded for this bill.' : 'Be the first to vote on this bill.'}</p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
@@ -256,8 +370,21 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
             </div>
           )}
 
+          {/* Voting CTA — locked when bill is decided */}
           <div style={{ borderTop: '1px solid #25324D', paddingTop: '20px' }}>
-            {session?.user ? (
+            {isClosed ? (
+              <div style={{
+                backgroundColor: '#0E1628',
+                border: '1px solid #1C2940',
+                borderRadius: '8px',
+                padding: '16px',
+                textAlign: 'center',
+                color: '#4E5A73',
+                fontSize: '13px',
+              }}>
+                🔒 Voting closed — this bill has been decided by parliament
+              </div>
+            ) : session?.user ? (
               <VoteButton
                 billId={bill.id}
                 currentVote={userVote as any}
