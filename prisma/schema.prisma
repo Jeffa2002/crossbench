@@ -113,6 +113,8 @@ model Bill {
   lastCheckedAt  DateTime?
   nextReviewAt   DateTime?
   introducedAt  DateTime?
+  outcome       String?
+  outcomeDate   DateTime?
   lastUpdatedAt DateTime?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt

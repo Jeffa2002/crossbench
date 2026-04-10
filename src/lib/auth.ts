@@ -13,7 +13,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   providers: [
     Resend({
-      from: 'Crossbench <onboarding@resend.dev>',
+      from: 'Crossbench <noreply@crossbench.io>',
       apiKey: process.env.RESEND_API_KEY,
     }),
   ],
