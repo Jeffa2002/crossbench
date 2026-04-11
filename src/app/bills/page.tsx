@@ -39,6 +39,8 @@ export default async function BillsPage({
 
   const where = {
     status: activeStatus === "all" ? undefined : activeStatus,
+    // Only show current parliament (48) when filtering by Before Parliament
+    ...(activeStatus === "Before Parliament" ? { parliamentNumber: 48 } : {}),
     ...(q ? { OR: [{ title: { contains: q, mode: "insensitive" as const } }, { sponsorName: { contains: q, mode: "insensitive" as const } }] } : {}),
     ...(chamber ? { chamber: chamber as any } : {}),
   };
@@ -52,11 +54,18 @@ export default async function BillsPage({
       include: { _count: { select: { votes: true } } },
     }),
     prisma.bill.count({ where }),
-    prisma.bill.groupBy({ by: ["status"], _count: true }),
+    // Count active bills (parl 48 only for Before Parliament)
+    Promise.all([
+      prisma.bill.count({ where: { status: "Before Parliament", parliamentNumber: 48 } }),
+      prisma.bill.count({ where: { status: "Passed" } }),
+      prisma.bill.count({ where: { status: "Not Passed" } }),
+      prisma.bill.count(),
+    ]),
   ]);
 
   const totalPages = Math.ceil(total / limit);
-  const countMap = Object.fromEntries(counts.map((c) => [c.status, c._count]));
+  const [activeCt, passedCt, notPassedCt, allCt] = counts;
+  const countMap: Record<string, number> = { "Before Parliament": activeCt, "Passed": passedCt, "Not Passed": notPassedCt, "all": allCt };
 
   function pageUrl(p: number) {
     const params = new URLSearchParams();
