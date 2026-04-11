@@ -525,7 +525,7 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
                     </div>
                     {/* Party breakdown */}
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
-                      {div.byParty.map(p => (
+                      {(div.byParty || []).map(p => (
                         <div key={p.party} style={{
                           backgroundColor: '#0A1020', border: '1px solid #1C2940',
                           borderRadius: '5px', padding: '4px 9px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '5px',
