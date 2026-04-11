@@ -7,10 +7,10 @@ export const revalidate = 300;
 
 export default async function HomePage() {
   const [billCount, voteCount, electorateCount, bills] = await Promise.all([
-    prisma.bill.count(),
+    prisma.bill.count({ where: { status: 'Before Parliament' } }),
     prisma.vote.count(),
     prisma.electorate.count({ where: { mpName: { not: null } } }),
-    prisma.bill.findMany({ take: 6, orderBy: { lastUpdatedAt: "desc" }, include: { _count: { select: { votes: true } } } }),
+    prisma.bill.findMany({ where: { status: 'Before Parliament' }, take: 6, orderBy: { lastUpdatedAt: 'desc' }, include: { _count: { select: { votes: true } } } }),
   ]);
 
   return (
