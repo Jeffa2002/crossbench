@@ -15,7 +15,15 @@ const OUTCOME_BADGE: Record<string, { label: string; bg: string; color: string }
   Passed: { label: "✅ Passed", bg: "rgba(46,139,87,0.2)", color: "#2E8B57" },
   "Not Passed": { label: "❌ Not Passed", bg: "rgba(185,28,28,0.15)", color: "#f87171" },
   "Before Parliament": { label: "🏛️ Active", bg: "rgba(59,130,246,0.15)", color: "#60a5fa" },
+  "Lapsed": { label: "⏹ Lapsed", bg: "rgba(100,116,139,0.15)", color: "#94a3b8" },
 };
+
+function getBadgeForBill(bill: any) {
+  if (bill.status === "Before Parliament" && bill.parliamentNumber && bill.parliamentNumber < 48) {
+    return OUTCOME_BADGE["Lapsed"];
+  }
+  return (bill.outcome ? OUTCOME_BADGE[bill.outcome] : null) ?? OUTCOME_BADGE[bill.status];
+}
 
 export default async function BillsPage({
   searchParams,
@@ -185,10 +193,9 @@ export default async function BillsPage({
           ) : (
             bills.map((bill) => {
               const tags = getBillTags(bill);
-              const outcomeBadge = (bill as any).outcome
-                ? OUTCOME_BADGE[(bill as any).outcome]
-                : OUTCOME_BADGE[bill.status];
-              const isClosed = bill.status !== "Before Parliament";
+              const outcomeBadge = getBadgeForBill(bill);
+              const isLapsed = bill.status === "Before Parliament" && (bill as any).parliamentNumber && (bill as any).parliamentNumber < 48;
+              const isClosed = bill.status !== "Before Parliament" || isLapsed;
 
               return (
                 <Link

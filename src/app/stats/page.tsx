@@ -63,7 +63,7 @@ function KpiCard({ value, label, sub, color }: { value: string | number; label: 
   );
 }
 
-function DonutChart({ passed, notPassed, before, total }: { passed: number; notPassed: number; before: number; total: number }) {
+function DonutChart({ passed, notPassed, before, total, selectedParl }: { passed: number; notPassed: number; before: number; total: number; selectedParl: number | null }) {
   const r = 52;
   const circ = 2 * Math.PI * r;
   const seg = (n: number) => (n / total) * circ;
@@ -92,7 +92,7 @@ function DonutChart({ passed, notPassed, before, total }: { passed: number; notP
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {[
           { label: 'Became law', count: passed, color: '#2E8B57' },
-          { label: 'Still before Parliament', count: before, color: '#2A3A5A' },
+          { label: selectedParl && selectedParl < 48 ? 'Lapsed' : 'Still before Parliament', count: before, color: '#2A3A5A' },
           { label: "Didn't pass", count: notPassed, color: '#D95C4B' },
         ].map(({ label, count, color }) => (
           <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -256,14 +256,14 @@ export default function StatsPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
             <KpiCard value={`${totals.passed}/${totals.all}`} label="Made it into law" sub={`${passRate}% pass rate`} color="#2E8B57" />
             <KpiCard value={timing.median !== null ? `${timing.median}d` : '—'} label="Median time to pass" sub={timing.avg !== null ? `Average ${timing.avg} days` : 'Not enough data'} />
-            <KpiCard value={totals.before} label="Still before Parliament" sub="Introduced but not yet voted on" color="#7E8AA3" />
+            <KpiCard value={totals.before} label={selectedParl && selectedParl < 48 ? 'Lapsed at dissolution' : 'Still before Parliament'} sub={selectedParl && selectedParl < 48 ? 'Introduced but not voted on before parliament dissolved' : 'Introduced but not yet voted on'} color="#7E8AA3" />
           </div>
 
           {/* Outcome + Origin */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '24px' }}>
             <div style={{ backgroundColor: '#0E1628', border: '1px solid #1C2940', borderRadius: '12px', padding: '24px' }}>
               <p style={{ fontSize: '10px', fontWeight: 600, color: '#3A4A6A', margin: '0 0 20px', textTransform: 'uppercase', letterSpacing: '0.07em' }}>What happened to the bills</p>
-              <DonutChart passed={totals.passed} notPassed={totals.notPassed} before={totals.before} total={totals.all || 1} />
+              <DonutChart passed={totals.passed} notPassed={totals.notPassed} before={totals.before} total={totals.all || 1} selectedParl={selectedParl} />
             </div>
             <div style={{ backgroundColor: '#0E1628', border: '1px solid #1C2940', borderRadius: '12px', padding: '24px' }}>
               <p style={{ fontSize: '10px', fontWeight: 600, color: '#3A4A6A', margin: '0 0 16px', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Where bills started</p>

@@ -77,6 +77,14 @@ const OUTCOME_CONFIG: Record<string, {
     border: 'rgba(185,28,28,0.30)',
     color: '#f87171',
   },
+  'Lapsed': {
+    icon: '⏹',
+    label: 'This bill lapsed at dissolution of parliament',
+    subtext: 'Parliament was dissolved before this bill could be voted on. It would need to be reintroduced in a new parliament.',
+    bg: 'rgba(100,116,139,0.10)',
+    border: 'rgba(100,116,139,0.30)',
+    color: '#94a3b8',
+  },
 };
 
 export default async function BillPage({ params }: { params: Promise<{ id: string }> }) {
@@ -90,8 +98,15 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
   if (!bill) notFound();
 
   const b = bill as any;
-  const isClosed = bill.status !== 'Before Parliament';
-  const outcomeConfig = b.outcome ? (OUTCOME_CONFIG[b.outcome] ?? OUTCOME_CONFIG[bill.status]) : (isClosed ? OUTCOME_CONFIG['Not Passed'] : null);
+  const isLapsed = bill.status === 'Before Parliament' && b.parliamentNumber && b.parliamentNumber < 48;
+  const isClosed = bill.status !== 'Before Parliament' || isLapsed;
+  const outcomeConfig = b.outcome
+    ? (OUTCOME_CONFIG[b.outcome] ?? OUTCOME_CONFIG[bill.status])
+    : isLapsed
+    ? OUTCOME_CONFIG['Lapsed']
+    : isClosed
+    ? OUTCOME_CONFIG['Not Passed']
+    : null;
 
   const results = await getBillResults(bill.id);
   const supportPct = results.total > 0 ? Math.round((results.support / results.total) * 100) : 0;
