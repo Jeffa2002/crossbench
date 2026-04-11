@@ -103,7 +103,7 @@ export default async function ElectoratePage({ params }: { params: Promise<{ id:
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '8px' }}>
                 <div>
                   <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#F5F7FB', margin: 0 }}>
-                    Division of {electorate.name}
+                    {isHouse ? `Division of ${electorate.name}` : electorate.mpName || electorate.name}
                   </h1>
                   <p style={{ color: '#7E8AA3', margin: '4px 0 0', fontSize: '14px' }}>{electorate.state}</p>
                 </div>
@@ -121,7 +121,7 @@ export default async function ElectoratePage({ params }: { params: Promise<{ id:
               {electorate.mpName && (
                 <div style={{ marginTop: '12px' }}>
                   <p style={{ fontSize: '12px', color: '#7E8AA3', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    {isHouse ? 'Member for' : 'Senator for'} {electorate.name}
+                    {isHouse ? `Member for ${electorate.name}` : `Senator for ${electorate.state}`}
                   </p>
                   <p style={{ fontWeight: 700, color: '#F5F7FB', margin: 0, fontSize: '18px' }}>{electorate.mpName}</p>
                   <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '6px', flexWrap: 'wrap' }}>
@@ -154,10 +154,10 @@ export default async function ElectoratePage({ params }: { params: Promise<{ id:
         {/* Overall sentiment */}
         <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '24px', marginBottom: '16px' }}>
           <h2 style={{ fontSize: '15px', fontWeight: 600, color: '#F5F7FB', margin: '0 0 6px' }}>
-            How {electorate.name} is voting
+            How {isHouse ? electorate.name : (electorate.mpName || electorate.name)} is voting
           </h2>
           <p style={{ color: '#7E8AA3', fontSize: '13px', margin: '0 0 18px' }}>
-            Across all bills on Crossbench
+            {isHouse ? 'Across all bills on Crossbench' : `Senator for ${electorate.state} · Across all bills on Crossbench`}
             {totalElect > 0 && ` — ${totalElect.toLocaleString()} votes total`}
           </p>
 
@@ -194,7 +194,7 @@ export default async function ElectoratePage({ params }: { params: Promise<{ id:
         {sortedBillIds.length > 0 && (
           <div>
             <h2 style={{ fontSize: '15px', fontWeight: 600, color: '#F5F7FB', margin: '0 0 12px' }}>
-              {electorate.name} vs Australia — by bill
+              {isHouse ? electorate.name : (electorate.mpName || electorate.name)} vs Australia — by bill
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {sortedBillIds.map(billId => {
@@ -228,7 +228,7 @@ export default async function ElectoratePage({ params }: { params: Promise<{ id:
 
                     <div className='compare-grid'>
                       {[
-                        { label: `📍 ${electorate.name}`, data: elect },
+                        { label: `📍 ${isHouse ? electorate.name : (electorate.mpName || electorate.name)}`, data: elect },
                         { label: '🇦🇺 National', data: natl },
                       ].map(({ label, data }) => (
                         <div key={label}>

@@ -23,5 +23,20 @@ export async function GET(req: NextRequest) {
 
   if (!result.length) return NextResponse.json({ error: 'Could not determine your electorate. Try a more specific address.' }, { status: 404 });
 
-  return NextResponse.json({ normalizedAddress: display_name, latitude: parseFloat(lat), longitude: parseFloat(lon), electorate: result[0] });
+  const houseElectorate = result[0];
+
+  // Also fetch all senators for this state
+  const senators = await prisma.electorate.findMany({
+    where: { mpChamber: 'Senate', state: houseElectorate.state },
+    select: { id: true, name: true, state: true, mpName: true, mpParty: true, mpPhotoUrl: true },
+    orderBy: { mpParty: 'asc' },
+  });
+
+  return NextResponse.json({
+    normalizedAddress: display_name,
+    latitude: parseFloat(lat),
+    longitude: parseFloat(lon),
+    electorate: houseElectorate,
+    senators,
+  });
 }

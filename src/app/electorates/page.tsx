@@ -107,7 +107,7 @@ export default async function ElectoratesPage({
           >
             <option value="">All chambers</option>
             <option value="House of Reps">🏛 House of Reps</option>
-            <option value="Senate">🔱 Senate</option>
+            <option value="Senate">🔱 Senators</option>
           </select>
           <button
             type="submit"

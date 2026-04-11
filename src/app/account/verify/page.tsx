@@ -3,7 +3,8 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 
 interface Suggestion { display_name: string; lat: string; lon: string; }
-interface ElectorateResult { electorate: { id: string; name: string; state: string }; normalizedAddress: string; }
+interface Senator { id: string; name: string; state: string; mpName: string | null; mpParty: string | null; mpPhotoUrl: string | null; }
+interface ElectorateResult { electorate: { id: string; name: string; state: string }; normalizedAddress: string; senators?: Senator[]; }
 
 export default function VerifyPage() {
   const [address, setAddress] = useState('');
@@ -173,10 +174,23 @@ export default function VerifyPage() {
 
         {result && (
           <div className="bg-[#111A2E] border border-[#25324D] rounded-lg p-5">
-            <p className="text-sm text-[#7E8AA3] mb-1">Your federal electorate:</p>
+            <p className="text-sm text-[#7E8AA3] mb-1">Your House of Reps electorate:</p>
             <p className="text-xl font-bold text-[#F5F7FB]">{result.electorate.name}</p>
             <p className="text-sm text-[#7E8AA3] mb-1">{result.electorate.state}</p>
             <p className="text-xs text-[#4E5A73] mb-4 truncate">{result.normalizedAddress}</p>
+            {result.senators && result.senators.length > 0 && (
+              <div className="mb-4 pt-4 border-t border-[#1C2940]">
+                <p className="text-sm text-[#7E8AA3] mb-2">Your {result.electorate.state} Senators ({result.senators.length}):</p>
+                <div className="flex flex-col gap-1">
+                  {result.senators.map(s => (
+                    <div key={s.id} className="flex items-center justify-between text-xs">
+                      <span className="text-[#B6C0D1]">{s.mpName}</span>
+                      <span className="text-[#4E5A73]">{s.mpParty}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <button
               onClick={confirm}
               disabled={saving}
