@@ -48,7 +48,7 @@ export default async function BillsPage({
       where,
       skip: (page - 1) * limit,
       take: limit,
-      orderBy: { lastUpdatedAt: "desc" },
+      orderBy: activeStatus === "all" ? [{ status: "asc" }, { lastUpdatedAt: "desc" }] : { lastUpdatedAt: "desc" },
       include: { _count: { select: { votes: true } } },
     }),
     prisma.bill.count({ where }),
