@@ -1,337 +1,376 @@
 'use client';
 import { useState } from 'react';
-import Link from 'next/link';
 
 type Tab = 'mps' | 'voters';
-type Section = { title: string; icon: string; content: string | string[] | { label: string; value: string }[] };
-
-const PARTY_COLORS: Record<string, string> = {
-  'ALP': '#E53935', 'Labor': '#E53935',
-  'Liberal': '#1565C0', 'LNP': '#1565C0',
-  'Greens': '#2E7D32',
-  'Nationals': '#795548',
-  'Independent': '#7E8AA3',
-  'One Nation': '#FF6F00',
-  'Other': '#546E7A',
-};
-
-const MP_STRATEGY = {
-  overview: "MPs and Senators are Crossbench's paid B2B customers. They get real-time constituent sentiment data — a unique product that no other platform offers. Target is 227 MPs + 76 Senators = 303 total. Priority: newly elected 48th parliament members still building their constituent intelligence.",
-  phases: [
-    { phase: "Phase 1 — Early Adopters (Now)", timeline: "Apr–Jun 2026", target: "Independents + minor parties", why: "Most motivated to understand constituents; no party machine giving them data", count: "~25 MPs", action: "Direct LinkedIn outreach + personalised electorate preview" },
-    { phase: "Phase 2 — Labor Crossbench Risk", timeline: "Jul–Sep 2026", target: "Labor MPs in marginal seats", why: "Post-election anxiety; want to know if they're on the right side of community opinion", count: "~40 MPs", action: "Targeted email via @aph.gov.au addresses (already in DB)" },
-    { phase: "Phase 3 — Opposition Research", timeline: "Oct–Dec 2026", target: "Liberal/LNP in opposition", why: "Can use constituent data to find policy wedges vs Labor", count: "~60 MPs", action: "Conference presence (LNP National Conference) + ads" },
-    { phase: "Phase 4 — Senators", timeline: "Jan 2027+", target: "All senators, esp. crossbench", why: "Senators cover whole states — broader constituent base = more value", count: "76 Senators", action: "Senate committee targeting; Hansard monitoring for relevance" },
-  ],
-  channels: [
-    { channel: "Direct email to @aph.gov.au", priority: "🔴 Highest", notes: "100 MPs already in DB. Personal, hard to ignore. Keep short — they're busy." },
-    { channel: "LinkedIn", priority: "🔴 Highest", notes: "MPs are very active on LinkedIn. MP staffers are the decision-makers — target them too." },
-    { channel: "Parliamentary press gallery", priority: "🟡 Medium", notes: "A Crikey or The Australian story on Crossbench creates instant credibility." },
-    { channel: "Electorate office visits", priority: "🟡 Medium", notes: "In-person demo with a live dashboard showing their own electorate. Very hard to dismiss." },
-    { channel: "APH conference / parliamentary week", priority: "🟡 Medium", notes: "Parliament sits in blocks — sponsor a lunch or drinks during sitting weeks." },
-    { channel: "Twitter/X", priority: "🟢 Low", notes: "MPs are active but noisy. Better for brand awareness than direct conversion." },
-  ],
-  stateBreakdown: [
-    { state: "NSW", houseSeats: 46, priority: "🔴 Top", notes: "Largest delegation. 6 Independents (Teal seats). High density of marginals." },
-    { state: "VIC", houseSeats: 38, priority: "🔴 Top", notes: "27 ALP seats — many marginal. Greens crossbench presence." },
-    { state: "QLD", houseSeats: 30, priority: "🟡 High", notes: "LNP stronghold but Labor marginals in SE QLD. One Nation senators = unique pitch." },
-    { state: "WA", houseSeats: 15, priority: "🟡 High", notes: "All 10 ALP seats won in landslide — they'll want to know if it holds." },
-    { state: "SA", houseSeats: 10, priority: "🟢 Medium", notes: "Balanced but Centre Alliance quirk. Good independent targets." },
-    { state: "TAS", houseSeats: 5, priority: "🟢 Medium", notes: "Small but Jacqui Lambie Network = perfect early adopter senator." },
-    { state: "ACT/NT", houseSeats: 5, priority: "🟢 Medium", notes: "All ALP. Key Labor test bed." },
-  ],
-  pricing: [
-    { tier: "Pro", price: "$199/mo", pitch: "Individual MP — own electorate dashboard, vote breakdowns, sentiment trends" },
-    { tier: "Team", price: "$499/mo", pitch: "Party whip use case — 3 logins, API access, cross-electorate analysis" },
-    { tier: "Senate Pro", price: "$299/mo", pitch: "Senator tier — state-wide data, 6 senators per state breakdown" },
-  ],
-  messaging: [
-    "\"Know what your electorate actually thinks — before Question Time.\"",
-    "\"Your constituents are already voting on Crossbench. Wouldn't you like to see the data?\"",
-    "\"The only real-time constituent sentiment tool built for Australian parliament.\"",
-    "\"MPs who use data win marginal seats. MPs who don't... lose them.\"",
-    "\"Stop relying on polling firms. Get live data from your own electorate, 24/7.\"",
-  ],
-};
-
-const VOTER_STRATEGY = {
-  overview: "Voters are Crossbench's organic growth engine and the source of the data MPs pay for. Target: 18–65 Australians who care about politics but feel unheard. Motivation: 'My vote counts once every 3 years — now I can be heard every week.'",
-  demographics: [
-    { segment: "18–30 First-time & young voters", size: "~4.2M Australians", motivation: "Feel politics is broken / out of touch. Greens/Independent leaning.", channels: "TikTok, Instagram Reels, Reddit (r/australia), Discord", message: "\"Your voice, not just your vote.\"", priority: "🔴 Top" },
-    { segment: "30–45 Suburban mortgage holders", size: "~5.8M Australians", motivation: "Cost of living, housing. Voted both ways. Highly engaged in election cycles.", channels: "Facebook, Instagram, LinkedIn, podcasts", message: "\"Tell your MP what you actually think about housing policy.\"", priority: "🔴 Top" },
-    { segment: "45–60 Established professionals", size: "~4.1M Australians", motivation: "Super, health, immigration. More partisan but open to civic tech.", channels: "LinkedIn, newsletters, Facebook, The Guardian/AFR", message: "\"Constituent intelligence for engaged citizens.\"", priority: "🟡 Medium" },
-    { segment: "60+ Retirees / high civic engagement", size: "~3.9M Australians", motivation: "Very high political engagement. Write letters to MPs already.", channels: "Facebook, email, talkback radio", message: "\"More powerful than a letter to your MP.\"", priority: "🟢 Lower" },
-  ],
-  channels: [
-    { channel: "Reddit (r/australia, r/AustralianPolitics)", priority: "🔴 Highest", notes: "Organic posts about specific bills get massive engagement. No paid needed — just post results." },
-    { channel: "TikTok / Instagram Reels", priority: "🔴 Highest", notes: "Short explainers: 'How Australia voted on the housing bill'. Young audience. Zero cost if organic." },
-    { channel: "Facebook Groups", priority: "🟡 High", notes: "Local electorate groups, community groups. Geo-targeted. Good for suburban demographic." },
-    { channel: "Twitter/X", priority: "🟡 High", notes: "Political Twitter is very active in AU. Post real-time voting results during sitting weeks." },
-    { channel: "Podcast sponsorship", priority: "🟡 Medium", notes: "The Briefing, 7am, Betoota Advocate. Civically engaged audiences. ~$500-2k/episode." },
-    { channel: "Google / Meta paid ads", priority: "🟡 Medium", notes: "Geo-target marginal electorates. CPC relatively cheap for civic keywords." },
-    { channel: "News media", priority: "🟡 Medium", notes: "Pitch data stories to The Guardian AU, Crikey, ABC. 'Here's how QLD votes on climate vs the rest of AU'" },
-    { channel: "Email newsletter", priority: "🟢 Lower", notes: "Weekly 'What Australia voted on this week'. Build list early. High retention once subscribed." },
-  ],
-  contentIdeas: [
-    "📊 \"How your electorate voted on X\" — shareable stat cards per electorate",
-    "🗺️ 'Australia's political heat map' — interactive map of how different electorates vote on key issues",
-    "📱 Weekly 'Bills in Parliament' push notifications for engaged users",
-    "🎯 'Is your MP listening?' — compare constituent votes vs MP's actual vote in parliament",
-    "🔥 'Most controversial bill this week' — highlight bills with big for/against splits",
-    "📰 Data stories pitched to media: 'Crossbench data shows 73% of Australians support X policy'",
-    "🏆 'Most engaged electorate' leaderboard — gamification for local civic pride",
-  ],
-  launchPlan: [
-    { phase: "Pre-launch (Now)", action: "Build waitlist, post organic Reddit content, set up social accounts" },
-    { phase: "Soft launch", action: "Invite-only for first 500 users. Focus on quality data over quantity." },
-    { phase: "Public launch", action: "Target during next major parliamentary sitting week for maximum relevance" },
-    { phase: "Growth", action: "Refer-a-friend mechanic ('Invite your electorate neighbours'), MP sign-ups drive press coverage" },
-  ],
-  stateBreakdown: [
-    { state: "NSW", population: "8.3M", voters: "~5.1M", focus: "Sydney metro (marginal western suburbs). Large migrant communities — multilingual potential.", priority: "🔴 Top" },
-    { state: "VIC", population: "7.0M", voters: "~4.2M", focus: "Melbourne inner city (Greens base). Progressive, tech-savvy. High organic growth potential.", priority: "🔴 Top" },
-    { state: "QLD", population: "5.5M", voters: "~3.2M", focus: "SE QLD growth corridor. Politically diverse — great for showing cross-partisan appeal.", priority: "🟡 High" },
-    { state: "WA", population: "2.9M", voters: "~1.8M", focus: "Perth metro. Resources-focused electorate. Mining/climate bills will drive engagement.", priority: "🟡 High" },
-    { state: "SA", population: "1.9M", voters: "~1.2M", focus: "Adelaide. University towns. Good Greens/Labor mix for civic engagement.", priority: "🟢 Medium" },
-    { state: "TAS", population: "570K", voters: "~370K", focus: "Small but highly engaged politically. Jacqui Lambie effect — independent-minded.", priority: "🟢 Medium" },
-    { state: "ACT", population: "470K", voters: "~290K", focus: "Public servants, policy wonks — Crossbench's ideal power user demographic.", priority: "🟡 High" },
-  ],
-};
+type SubTab = 'overview' | 'channels' | 'content' | 'competitive' | 'influencers' | 'kpis' | 'budget' | 'risks';
 
 const badge = (priority: string) => {
-  const color = priority.startsWith('🔴') ? '#E53935' : priority.startsWith('🟡') ? '#F59E0B' : '#22C55E';
-  return <span style={{ backgroundColor: `${color}22`, color, border: `1px solid ${color}55`, padding: '2px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 700 }}>{priority}</span>;
+  const p = priority.toLowerCase();
+  const color = p === 'high' || p.startsWith('🔴') ? '#E53935' : p === 'medium' || p.startsWith('🟡') ? '#F59E0B' : '#22C55E';
+  const label = p === 'high' ? '🔴 High' : p === 'medium' ? '🟡 Medium' : '🟢 Low';
+  return <span style={{ backgroundColor: `${color}22`, color, border: `1px solid ${color}55`, padding: '2px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap' }}>{label}</span>;
 };
+
+const Card = ({ children, style = {} }: { children: React.ReactNode; style?: React.CSSProperties }) => (
+  <div style={{ backgroundColor: '#0E1628', border: '1px solid #1C2940', borderRadius: '10px', padding: '16px', ...style }}>{children}</div>
+);
+
+const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
+  <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '20px' }}>
+    <h2 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '14px', color: '#F5F7FB', margin: '0 0 14px' }}>{title}</h2>
+    {children}
+  </div>
+);
+
+const MP_DATA = {
+  personas: [
+    { name: "Emma Chen", age: 42, role: "Chief of Staff, marginal-seat Labor MP, suburban Sydney", motivation: "Wants to show the member is listening; needs quick briefing material before meetings.", painPoint: "Flooded with constituent emails and anecdotes but no clean read on how the seat feels about a bill.", pitch: "Crossbench turns constituent noise into a live bill-by-bill dashboard, so the MP can walk into caucus and media with evidence from their own electorate." },
+    { name: "Tom Riley", age: 55, role: "Nationals MP, regional seat", motivation: "Needs to prove he understands local concerns on energy, agriculture, and health.", painPoint: "Hearings give national talking points, but not a simple picture of what locals actually think.", pitch: "See how your electorate breaks on federal bills, then turn that into sharper local advocacy and radio-ready lines." },
+    { name: "Ayesha Malik", age: 33, role: "Senator's digital & comms adviser", motivation: "Wants a modern product that saves staff time and creates shareable insights.", painPoint: "Existing tools are generic press-clipping systems or static voting records — not real-time constituent sentiment.", pitch: "A continuous constituency signal and ready-made graphics for newsletters, social, and issue briefings." },
+    { name: "David Morgan", age: 49, role: "Independent MP or Senator", motivation: "Needs differentiated, evidence-led representation — a story that he listens better than major parties.", painPoint: "Strong qualitative feedback but no credible, repeatable way to quantify it.", pitch: "Prove the independent model, show responsiveness, and publish a transparent local mandate." },
+  ],
+  channels: [
+    { channel: "Warm outbound email to MPs, chiefs of staff & electorate offices", priority: "high", tactic: "3-step sequence: 1) localised screenshot with the member's electorate, 2) 2-line value prop, 3) 10-min walkthrough offer + free trial. Reference one live bill relevant to the seat.", cost: "Low", expectedROI: "Highest near-term conversion — product is immediately legible to political staffers" },
+    { channel: "LinkedIn founder-led posting", priority: "high", tactic: "Post seat-specific dashboards, screenshots, and short takes on sitting-week bills. Tag MPs only when the content is genuinely useful, not promotional.", cost: "Low", expectedROI: "High for credibility and inbound from staffers, researchers, and political operators" },
+    { channel: "Warm intros through policy & comms networks", priority: "high", tactic: "Leverage former staff, lobbyists, advisers, and journalists for warm intros to offices.", cost: "Low", expectedROI: "Very high — trust is the purchase barrier" },
+    { channel: "Parliament-adjacent events in Canberra", priority: "medium", tactic: "Attend Australia Institute / Grattan / CIS panels, ACTU-style policy events, committee briefings, and Canberra networking drinks.", cost: "Medium", expectedROI: "Moderate but strong for legitimacy and deal acceleration" },
+    { channel: "PR and trade media", priority: "medium", tactic: "Pitch as a new transparency layer for democracy, especially when a bill is controversial or narrowly decided.", cost: "Low–Medium", expectedROI: "Good for awareness, slower for conversions" },
+    { channel: "Targeted paid LinkedIn ads", priority: "low", tactic: "Only retarget visitors and run office-holder audience tests around Canberra, inner-Melbourne, Sydney, and Perth.", cost: "Medium", expectedROI: "Lower than outbound, useful for retargeting and credibility reinforcement" },
+  ],
+  contentCalendar: [
+    { trigger: "48h before each sitting week", content: "'What your electorate is likely to care about this sitting week' — 3 bills, 1 local angle, dashboard screenshots.", channel: "LinkedIn, email" },
+    { trigger: "Day 1 of sitting week", content: "Short video from founder: 3 bills to watch, who is under pressure, what staff should track.", channel: "LinkedIn, X, email" },
+    { trigger: "Any notable division or vote", content: "Seat-specific result graphic sent privately to target offices, then a public summary next morning.", channel: "Email, LinkedIn" },
+    { trigger: "Question Time / major media cycle", content: "'What constituents actually think' thread — one chart, one sentence of interpretation.", channel: "LinkedIn, X" },
+    { trigger: "Committee inquiry relevant to a target seat", content: "One-page issue briefing showing seat-level sentiment and likely local pressure points.", channel: "Email PDF" },
+    { trigger: "End of sitting fortnight", content: "'Your electorate's top 5 bill positions this fortnight' digest with CTA to upgrade to Pro/Team.", channel: "Email" },
+    { trigger: "Budget week / MYEFO", content: "Special report on the seats most affected by measures, plus a media-ready chart.", channel: "LinkedIn, email, press" },
+  ],
+  messages: {
+    "LinkedIn": ["Your electorate has a live opinion on this bill. Crossbench turns that into a dashboard your office can actually use.", "If you are still relying on random emails and call notes to judge constituent sentiment, you are missing the pattern.", "New on Crossbench: electorate-level views on current federal bills, updated as Australians vote."],
+    "Email subject lines": ["See how your electorate is splitting on [Bill Name]", "A better way to brief your member before sitting week", "Free trial for [electorate name] dashboard"],
+    "In person": ["We help you answer one simple question staff never get a clean answer to — what do my constituents think about this bill right now?", "Think of it as a live constituency pulse, not another generic analytics tool.", "If your office wants a tailored electorate demo, we can build it in minutes."],
+  },
+  competitive: [
+    { name: "They Vote For You", what: "Public record of how MPs vote on divisions — transparency and accountability frame.", weakness: "Explains what MPs did, not what constituents think. Retrospective, not live or seat-specific.", positioning: "Crossbench is the constituent-sentiment layer above the vote record, built for staffers who need action, not just history." },
+    { name: "GetUp", what: "Mass advocacy and petition platform with strong campaign mobilisation.", weakness: "Designed to mobilise around issues, not provide per-electorate bipartisan sentiment intelligence to MPs.", positioning: "Crossbench is neutral infrastructure, useful to any office regardless of party." },
+    { name: "Change.org", what: "Petition and public campaign platform.", weakness: "Broad issue petitions are noisy, unverified, and not electorate-representative.", positioning: "Crossbench is verified electorate signal, not petition noise." },
+    { name: "AustralianPolitics.com", what: "Political reference and election information site.", weakness: "Broad reference utility, not a real-time engagement tool for offices.", positioning: "Crossbench is a working dashboard, not a political encyclopedia." },
+    { name: "Parliament of Australia / Hansard", what: "Official parliamentary source material.", weakness: "Official but hard to interpret; not transformed into voter-facing or staff-ready insight.", positioning: "Crossbench translates official parliamentary activity into usable local insight." },
+  ],
+  influencers: [
+    { name: "Patricia Karvelas", platform: "ABC Radio National / The Party Room", why: "Major political interviewer with strong Canberra credibility halo.", approach: "Pitch as a new data source for how Australians react to bills, especially on close or high-salience votes." },
+    { name: "David Speers", platform: "ABC Insiders / 7.30", why: "Sets the frame for federal political debate, likes clear political data stories.", approach: "Offer a short, visual, non-partisan briefing on one controversial bill and electorate splits." },
+    { name: "Tom McIlroy", platform: "Australian Financial Review", why: "Reads Canberra policy and staffer audiences well.", approach: "Send a concise data-led tip whenever a bill has a constituency angle or internal party tension." },
+    { name: "Paul Karp", platform: "The Guardian Australia", why: "Strong on parliamentary detail, process, and accountability.", approach: "Frame Crossbench as a transparency tool revealing the gap between chamber votes and electorate sentiment." },
+    { name: "Democracy Sausage podcast", platform: "Podcast", why: "Civic/political audience that already likes election and parliament nerdery.", approach: "Pitch as a new way to measure local democratic sentiment between elections." },
+    { name: "The Party Room", platform: "Podcast / ABC", why: "Reach politically engaged listeners and staffers.", approach: "Short sponsor-read or guest segment focused on a live bill heatmap." },
+    { name: "The Squiz Today", platform: "Newsletter / podcast", why: "Mass reach to busy professionals who like digestible politics.", approach: "Offer a simple explainer graphic and one-line insight for their politics newsletter." },
+  ],
+  kpis: {
+    "3 months": ["20–30 office contacts in CRM, at least 8 warm intros", "5–10 product demos delivered", "2–3 paid pilots or trials started", "1 clear testimonial from a staffer or adviser", "Email open rates above 40% on personalised office outreach"],
+    "6 months": ["10–15 paying offices (mix of Pro and Team)", "1–2 Canberra media or podcast mentions", "50–100 verified voter signups/week from organic channels", "3+ repeat offices using the product across multiple sitting weeks", "Outreach → demo conversion rate above 20%"],
+    "12 months": ["30–50 paying offices with low churn", "Meaningful presence in Canberra political discourse", "Repeatable pipeline with monthly inbound from staffers and MPs", "5,000+ verified voters across multiple electorates", "Seat-level dashboard content consistently reused by offices"],
+  },
+  budget: [
+    { category: "Founder-led sales & outreach", monthlyAud: 1200, rationale: "List building, personalisation, demos, follow-up, CRM. Highest leverage activity." },
+    { category: "Canberra travel & events", monthlyAud: 800, rationale: "Needed for trust, proximity, and serendipitous staffer meetings." },
+    { category: "LinkedIn & retargeting ads", monthlyAud: 900, rationale: "Retarget site visitors, reinforce awareness, test office-holder audiences." },
+    { category: "PR / freelance pitching", monthlyAud: 700, rationale: "Media lift around sitting weeks, budgets, or headline bills." },
+    { category: "Design (charts, screenshots, one-pagers)", monthlyAud: 700, rationale: "Political buyers are visual — good data graphics improve trust and shareability." },
+    { category: "Data enrichment & contact tooling", monthlyAud: 400, rationale: "CRM, lists, and small software tools to manage targeted outreach." },
+    { category: "Content production", monthlyAud: 300, rationale: "Short video edits, thumbnails, issue-specific landing pages." },
+  ],
+  risks: [
+    { risk: "Perception of partisanship", likelihood: "high", mitigation: "Keep language neutral, show all electorates, avoid advocacy framing in B2B pitch." },
+    { risk: "MP offices ignore cold outreach", likelihood: "high", mitigation: "Use warm intros, localised examples, one clear ask." },
+    { risk: "Product ambiguity between civic platform and B2B dashboard", likelihood: "medium", mitigation: "Separate voter acquisition from office sales on site, messaging, and landing pages." },
+    { risk: "Media interest peaks but office conversions lag", likelihood: "medium", mitigation: "Capture every media spike with office-targeted follow-up and demos." },
+    { risk: "Privacy or representativeness concerns", likelihood: "medium", mitigation: "Be explicit about verification, aggregation, and how electorate boundaries are used." },
+    { risk: "Too much content, too little proof", likelihood: "medium", mitigation: "Lead with one excellent seat-level demo, not broad generic campaigns." },
+  ],
+};
+
+const VOTER_DATA = {
+  personas: [
+    { name: "Sarah Nguyen", age: 28, role: "Inner-city renter, Melbourne", motivation: "Wants to feel politically effective without joining a party. Likes seeing how her seat compares to the country.", painPoint: "Politics feels noisy, tribal, and disconnected from her real life.", pitch: "Vote on the bills that shape your life, then see how your electorate stacks up against Australia." },
+    { name: "Ben Carter", age: 36, role: "Tradesperson, regional Queensland", motivation: "Cares about cost of living, energy, fuel, and jobs. Wants practical politics, not culture-war theatre.", painPoint: "Most political content feels like inner-city argument theatre.", pitch: "Get a straight read on what federal bills mean for your area, then see how people around you vote." },
+    { name: "Mia Thompson", age: 19, role: "First-time voter, uni student, Adelaide", motivation: "Wants low-friction ways to learn politics and take part without being lectured.", painPoint: "Politics is overwhelming and full of jargon.", pitch: "Swipe through real bills, vote in minutes, and see what your community thinks." },
+    { name: "Leila Haddad", age: 41, role: "Busy parent & public sector worker, western Sydney", motivation: "Wants to stay informed but only has short windows of attention.", painPoint: "Can't keep up with every bill, but still wants to contribute meaningfully.", pitch: "Quick bill summaries and a vote in under a minute." },
+    { name: "Gavin O'Connor", age: 63, role: "Retiree, community volunteer & news junkie, Perth", motivation: "Loves politics and wants a better sense of how his electorate is shifting on major issues.", painPoint: "National polls flatten local nuance.", pitch: "See how your electorate votes bill by bill, then compare it with the rest of the country." },
+  ],
+  channels: [
+    { channel: "TikTok & Instagram Reels", priority: "high", tactic: "Short bill explainers — one chart per video, one local hook, one CTA to vote. Use native captions and low-production founder voiceovers.", cost: "Low–Medium", expectedROI: "High for awareness and top-of-funnel signups, especially under 35" },
+    { channel: "Reddit & community forums", priority: "high", tactic: "Post useful explainers in r/australia, r/AustralianPolitics, city/local subreddits — only when genuinely informative, never spammy.", cost: "Low", expectedROI: "Strong for credibility and organic traffic" },
+    { channel: "Email newsletter", priority: "high", tactic: "Weekly 'Bills that matter this week' digest — 3 summaries, one local stat, one big question.", cost: "Low", expectedROI: "Very high for retention and repeat participation" },
+    { channel: "PR & earned media", priority: "high", tactic: "Pitch stories around surprising electorate splits, youth engagement, or local issue heat maps.", cost: "Low", expectedROI: "High when tied to a current bill or election news cycle" },
+    { channel: "Partner newsletters & podcasts", priority: "medium", tactic: "Guest posts, swaps, and short explainers with civic and politics creators.", cost: "Low–Medium", expectedROI: "Good for trust and steady signups" },
+    { channel: "Paid social", priority: "medium", tactic: "Boost best-performing explainers; geo-targeted ads in key electorates and capital cities.", cost: "Medium", expectedROI: "Moderate, useful when paired with strong landing pages" },
+  ],
+  contentCalendar: [
+    { trigger: "Day a major bill is introduced or debated", content: "One short explainer: what the bill does, why it matters, and how to vote on Crossbench.", channel: "TikTok, Instagram, X, email" },
+    { trigger: "Every sitting week Monday", content: "'This week in Parliament' carousel — 3 bills and one local issue per major state.", channel: "Instagram, LinkedIn, email" },
+    { trigger: "Mid-week", content: "Electorate comparison post: 'How your area voted vs Australia'.", channel: "Instagram, TikTok, X" },
+    { trigger: "Friday", content: "'What changed this week' summary with CTA to vote before the weekend.", channel: "Email, socials" },
+    { trigger: "Budget week / housing week / tax week", content: "Issue explainer series with simple graphics and one local human story.", channel: "TikTok, Reels, email" },
+    { trigger: "Outside sitting weeks", content: "Evergreen education posts: how federal bills become law, why votes matter, how electorates differ.", channel: "TikTok, blog, email" },
+  ],
+  messages: {
+    "TikTok / Reels": ["One bill. One minute. See how Australia voted.", "Your MP voted yes. Your electorate said no. Here's the gap.", "Politics, but make it local."],
+    "Reddit": ["We built a tool to vote on real federal bills and see how your electorate compares. Here's how [specific bill] is landing across Australia.", "Data from Crossbench: here's how different electorates are splitting on this week's housing bill."],
+    "Email": ["Subject: Your electorate's view on this bill", "Subject: This week in Parliament, in plain English", "Subject: See what your electorate thinks (new bill results live)"],
+    "Press": ["Crossbench lets Australians vote on real federal bills and see how their electorate lines up with the national result.", "It is a public-interest civic platform designed to make Parliament more understandable and more local.", "We are not another petition site — we are a living electorate sentiment layer."],
+  },
+  competitive: [
+    { name: "GetUp", what: "Issue-driven mobilisation, petitions, and campaign campaigning.", weakness: "Activist framing, less neutral, not a bill-by-bill civic participation product.", positioning: "Crossbench is for participation and insight, not campaign mobilisation." },
+    { name: "Change.org", what: "Generic petition platform.", weakness: "Low deliberation quality and weak electorate context.", positioning: "Crossbench gives structured voting on real bills with electorate comparison." },
+    { name: "They Vote For You", what: "MP voting record tracker.", weakness: "Useful but passive — focused on representatives not citizens.", positioning: "Crossbench is interactive, current, and local." },
+    { name: "AustralianPolitics.com", what: "Political reference site and election data resource.", weakness: "Information-first, not participation-first.", positioning: "Crossbench turns political information into action." },
+    { name: "ABC News / parliament coverage", what: "Trusted explanatory journalism.", weakness: "Does not provide the user's own vote or local comparison.", positioning: "Crossbench complements journalism by giving the reader a place to participate." },
+  ],
+  influencers: [
+    { name: "The Squiz", platform: "Newsletter / podcast", why: "Mass-market explainers for time-poor Australians.", approach: "Offer easy-to-use bill explainers and one strong chart." },
+    { name: "7am podcast", platform: "Podcast / newsletter", why: "Engaged audience that likes clean explanatory politics.", approach: "Pitch a story about how one bill is landing in different electorates." },
+    { name: "Democracy Sausage", platform: "Podcast", why: "Direct fit for civic-tech and politics nerd audiences.", approach: "Guest segment or sponsor-style mention about voting on bills between elections." },
+    { name: "The Australia Institute", platform: "Org / media / podcasts", why: "Large public-facing policy audience, strong issue focus.", approach: "Collaborate on a public explainer or co-branded data story when a bill matches their research." },
+    { name: "Betoota Advocate", platform: "Satire / social", why: "Massive reach with 18–40s; if they run a 'data story' angle it goes viral.", approach: "Pitch genuinely funny electorate splits or surprising result graphics." },
+    { name: "Australian political TikTok creators", platform: "TikTok", why: "Short-form political explainer creators drive signups fast.", approach: "Seed one simple explainer per creator with a local angle and a clear CTA." },
+  ],
+  kpis: {
+    "3 months": ["1,000–2,500 verified voter signups", "25–40% email open rate", "10–20% of signups voting on at least one bill", "5–10 pieces of earned or partner media", "Average share rate above 5% on best-performing explainer posts"],
+    "6 months": ["5,000–10,000 verified voters", "2,000+ recurring monthly active users", "50–100 electorate-specific shares per major bill", "Signup conversion from social above 3%", "Clear retention cohort showing repeat voting across multiple bills"],
+    "12 months": ["20,000+ verified voters", "Broad coverage across most seats with meaningful repeat participation", "Crossbench known as a credible civic utility in Australian political media", "Strong organic search presence for bill and electorate queries", "Politically engaged 18–34s as a defined core user base"],
+  },
+  budget: [
+    { category: "Short-form video production", monthlyAud: 1400, rationale: "TikTok/Reels explainers, templates, captions, and editing." },
+    { category: "Paid social boosts", monthlyAud: 1300, rationale: "Amplify winning content; test electorates, demographics, and issue angles." },
+    { category: "Design & data visualisation", monthlyAud: 700, rationale: "A civic product lives or dies on clarity and visual trust." },
+    { category: "Partnerships & creator seeding", monthlyAud: 700, rationale: "Small payments or honorariums for trusted civic voices." },
+    { category: "PR support", monthlyAud: 400, rationale: "Pitch angles, media lists, and timing around major bills." },
+    { category: "Newsletter & email tooling", monthlyAud: 300, rationale: "Retention and lifecycle messaging are central for repeat participation." },
+    { category: "Landing pages & SEO content", monthlyAud: 200, rationale: "Evergreen explainers that bring in search traffic around bills, MPs, and electorates." },
+  ],
+  risks: [
+    { risk: "People think it is a partisan campaign tool", likelihood: "high", mitigation: "Neutral UX, neutral language, and a strong public-interest frame." },
+    { risk: "Low repeat usage after novelty spike", likelihood: "high", mitigation: "Tie content to the sitting calendar, newsletters, and alerts." },
+    { risk: "Competing with louder advocacy brands for attention", likelihood: "high", mitigation: "Own the niche of bill-level participation plus electorate comparison." },
+    { risk: "Low trust in electorate verification", likelihood: "medium", mitigation: "Explain verification clearly and minimise friction while protecting integrity." },
+    { risk: "Complex bills are hard to explain simply", likelihood: "medium", mitigation: "Use one-sentence summaries, plain English labels, and local examples." },
+  ],
+};
+
+const SUBTABS: { id: SubTab; label: string }[] = [
+  { id: 'overview', label: '👥 Personas' },
+  { id: 'channels', label: '📣 Channels' },
+  { id: 'content', label: '📅 Content Calendar' },
+  { id: 'competitive', label: '⚔️ Competitive' },
+  { id: 'influencers', label: '🤝 Partners & Media' },
+  { id: 'kpis', label: '📊 KPIs' },
+  { id: 'budget', label: '💰 Budget' },
+  { id: 'risks', label: '⚠️ Risks' },
+];
 
 export default function MarketingPage() {
   const [tab, setTab] = useState<Tab>('mps');
+  const [sub, setSub] = useState<SubTab>('overview');
+  const data = tab === 'mps' ? MP_DATA : VOTER_DATA;
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-6 pb-12">
       <div>
         <h1 className="text-2xl font-bold">Marketing Strategy</h1>
-        <p className="text-[#7E8AA3] text-sm mt-1">Go-to-market plan for MPs/Senators and voters</p>
+        <p className="text-[#7E8AA3] text-sm mt-1">Go-to-market plan · Updated 13 Apr 2026</p>
       </div>
 
-      {/* Tab switcher */}
-      <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid #25324D', paddingBottom: '0' }}>
+      {/* Main tabs */}
+      <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid #25324D' }}>
         {(['mps', 'voters'] as Tab[]).map(t => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            style={{
-              padding: '10px 20px',
-              fontWeight: 700,
-              fontSize: '14px',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              borderBottom: tab === t ? '2px solid #4E8FD4' : '2px solid transparent',
-              color: tab === t ? '#4E8FD4' : '#7E8AA3',
-              marginBottom: '-1px',
-            }}
-          >
+          <button key={t} onClick={() => { setTab(t); setSub('overview'); }} style={{ padding: '10px 20px', fontWeight: 700, fontSize: '14px', background: 'none', border: 'none', cursor: 'pointer', borderBottom: tab === t ? '2px solid #4E8FD4' : '2px solid transparent', color: tab === t ? '#4E8FD4' : '#7E8AA3', marginBottom: '-1px' }}>
             {t === 'mps' ? '🏛️ MPs & Senators' : '🗳️ Voters / End Users'}
           </button>
         ))}
       </div>
 
-      {tab === 'mps' && (
-        <div className="space-y-8">
-          {/* Overview */}
-          <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '20px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '10px', color: '#F5F7FB' }}>🎯 The Pitch</h2>
-            <p style={{ color: '#7E8AA3', lineHeight: 1.7, margin: 0 }}>{MP_STRATEGY.overview}</p>
-          </div>
+      {/* Sub tabs */}
+      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+        {SUBTABS.map(s => (
+          <button key={s.id} onClick={() => setSub(s.id)} style={{ padding: '6px 14px', fontWeight: 600, fontSize: '13px', background: sub === s.id ? '#4E8FD422' : '#111A2E', border: sub === s.id ? '1px solid #4E8FD4' : '1px solid #25324D', borderRadius: '999px', cursor: 'pointer', color: sub === s.id ? '#4E8FD4' : '#7E8AA3' }}>
+            {s.label}
+          </button>
+        ))}
+      </div>
 
-          {/* Key messages */}
-          <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '20px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '14px', color: '#F5F7FB' }}>💬 Key Messages</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {MP_STRATEGY.messaging.map((m, i) => (
-                <div key={i} style={{ backgroundColor: '#0E1628', border: '1px solid #1C2940', borderRadius: '8px', padding: '12px 16px', color: '#F5F7FB', fontStyle: 'italic', fontSize: '14px' }}>
-                  {m}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Pricing */}
-          <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '20px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '14px', color: '#F5F7FB' }}>💳 Pricing Tiers</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
-              {MP_STRATEGY.pricing.map((p, i) => (
-                <div key={i} style={{ backgroundColor: '#0E1628', border: '1px solid #1C2940', borderRadius: '10px', padding: '16px' }}>
-                  <div style={{ fontSize: '22px', fontWeight: 800, color: '#4E8FD4' }}>{p.price}</div>
-                  <div style={{ fontWeight: 700, fontSize: '14px', color: '#F5F7FB', marginTop: '4px' }}>{p.tier}</div>
-                  <div style={{ fontSize: '13px', color: '#7E8AA3', marginTop: '6px', lineHeight: 1.5 }}>{p.pitch}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Rollout phases */}
-          <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '20px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '14px', color: '#F5F7FB' }}>📅 Rollout Phases</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {MP_STRATEGY.phases.map((p, i) => (
-                <div key={i} style={{ backgroundColor: '#0E1628', border: '1px solid #1C2940', borderRadius: '10px', padding: '16px', display: 'grid', gridTemplateColumns: '1fr auto', gap: '8px', alignItems: 'start' }}>
+      {/* Personas */}
+      {sub === 'overview' && (
+        <Section title="Audience Personas">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
+            {data.personas.map((p, i) => (
+              <Card key={i}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#1C2940', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>
+                    {p.name.split(' ')[0][0]}
+                  </div>
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: '14px', color: '#F5F7FB' }}>{p.phase}</div>
-                    <div style={{ fontSize: '13px', color: '#4E8FD4', margin: '4px 0' }}>{p.target} · {p.count}</div>
-                    <div style={{ fontSize: '13px', color: '#7E8AA3', lineHeight: 1.5 }}><strong style={{ color: '#A0AABF' }}>Why:</strong> {p.why}</div>
-                    <div style={{ fontSize: '13px', color: '#7E8AA3', marginTop: '4px' }}><strong style={{ color: '#A0AABF' }}>How:</strong> {p.action}</div>
+                    <div style={{ fontWeight: 700, color: '#F5F7FB', fontSize: '14px' }}>{p.name}, {p.age}</div>
+                    <div style={{ fontSize: '12px', color: '#4E8FD4' }}>{p.role}</div>
                   </div>
-                  <span style={{ backgroundColor: '#4E8FD422', color: '#4E8FD4', border: '1px solid #4E8FD455', padding: '2px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap' }}>{p.timeline}</span>
                 </div>
+                <div style={{ fontSize: '13px', marginBottom: '6px' }}><span style={{ color: '#A0AABF', fontWeight: 600 }}>Motivation: </span><span style={{ color: '#7E8AA3' }}>{p.motivation}</span></div>
+                <div style={{ fontSize: '13px', marginBottom: '8px' }}><span style={{ color: '#A0AABF', fontWeight: 600 }}>Pain: </span><span style={{ color: '#7E8AA3' }}>{p.painPoint}</span></div>
+                <div style={{ backgroundColor: '#111A2E', borderLeft: '3px solid #4E8FD4', padding: '8px 12px', borderRadius: '0 6px 6px 0', fontSize: '13px', color: '#F5F7FB', fontStyle: 'italic' }}>"{p.pitch}"</div>
+              </Card>
+            ))}
+          </div>
+        </Section>
+      )}
+
+      {/* Channels */}
+      {sub === 'channels' && (
+        <Section title="Channel Strategy (ranked by ROI)">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {data.channels.map((c, i) => (
+              <Card key={i} style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '12px', alignItems: 'start' }}>
+                <div>
+                  <div style={{ fontWeight: 700, color: '#F5F7FB', fontSize: '14px', marginBottom: '6px' }}>{c.channel}</div>
+                  <div style={{ fontSize: '13px', color: '#7E8AA3', lineHeight: 1.6, marginBottom: '6px' }}>{c.tactic}</div>
+                  <div style={{ display: 'flex', gap: '12px', fontSize: '12px' }}>
+                    <span><span style={{ color: '#A0AABF' }}>Cost: </span><span style={{ color: '#7E8AA3' }}>{c.cost}</span></span>
+                    <span><span style={{ color: '#A0AABF' }}>ROI: </span><span style={{ color: '#7E8AA3' }}>{c.expectedROI}</span></span>
+                  </div>
+                </div>
+                {badge(c.priority)}
+              </Card>
+            ))}
+          </div>
+        </Section>
+      )}
+
+      {/* Content Calendar */}
+      {sub === 'content' && (
+        <div className="space-y-6">
+          <Section title="Content Calendar — Tied to Parliamentary Sitting Schedule">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {data.contentCalendar.map((c, i) => (
+                <Card key={i} style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '16px', alignItems: 'start' }}>
+                  <div style={{ backgroundColor: '#4E8FD422', border: '1px solid #4E8FD455', borderRadius: '8px', padding: '6px 12px', fontSize: '12px', fontWeight: 700, color: '#4E8FD4', whiteSpace: 'nowrap', textAlign: 'center' }}>TRIGGER</div>
+                  <div>
+                    <div style={{ fontWeight: 700, color: '#F5F7FB', fontSize: '13px', marginBottom: '4px' }}>{c.trigger}</div>
+                    <div style={{ fontSize: '13px', color: '#7E8AA3', lineHeight: 1.5, marginBottom: '4px' }}>{c.content}</div>
+                    <div style={{ fontSize: '12px', color: '#4E5A73' }}>📤 {c.channel}</div>
+                  </div>
+                </Card>
               ))}
             </div>
-          </div>
-
-          {/* Channels */}
-          <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '20px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '14px', color: '#F5F7FB' }}>📣 Outreach Channels</h2>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid #25324D' }}>
-                    {['Channel', 'Priority', 'Notes'].map(h => <th key={h} style={{ textAlign: 'left', padding: '8px 12px', color: '#7E8AA3', fontWeight: 600 }}>{h}</th>)}
-                  </tr>
-                </thead>
-                <tbody>
-                  {MP_STRATEGY.channels.map((c, i) => (
-                    <tr key={i} style={{ borderBottom: '1px solid #1C2940' }}>
-                      <td style={{ padding: '10px 12px', color: '#F5F7FB', fontWeight: 600 }}>{c.channel}</td>
-                      <td style={{ padding: '10px 12px', whiteSpace: 'nowrap' }}>{badge(c.priority)}</td>
-                      <td style={{ padding: '10px 12px', color: '#7E8AA3', lineHeight: 1.5 }}>{c.notes}</td>
-                    </tr>
+          </Section>
+          <Section title="Platform-Specific Messaging">
+            {Object.entries(data.messages).map(([platform, msgs]) => (
+              <div key={platform} style={{ marginBottom: '16px' }}>
+                <div style={{ fontWeight: 700, color: '#A0AABF', fontSize: '13px', marginBottom: '8px' }}>{platform}</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {(msgs as string[]).map((m, i) => (
+                    <div key={i} style={{ backgroundColor: '#0E1628', border: '1px solid #1C2940', borderRadius: '8px', padding: '10px 14px', fontSize: '13px', color: '#F5F7FB', fontStyle: 'italic' }}>"{m}"</div>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* State breakdown */}
-          <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '20px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '14px', color: '#F5F7FB' }}>🗺️ State Prioritisation</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '10px' }}>
-              {MP_STRATEGY.stateBreakdown.map((s, i) => (
-                <div key={i} style={{ backgroundColor: '#0E1628', border: '1px solid #1C2940', borderRadius: '10px', padding: '14px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                    <span style={{ fontWeight: 700, color: '#F5F7FB', fontSize: '15px' }}>{s.state}</span>
-                    {badge(s.priority)}
-                  </div>
-                  <div style={{ fontSize: '12px', color: '#4E8FD4', marginBottom: '4px' }}>{s.houseSeats} House seats</div>
-                  <div style={{ fontSize: '13px', color: '#7E8AA3', lineHeight: 1.5 }}>{s.notes}</div>
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            ))}
+          </Section>
         </div>
       )}
 
-      {tab === 'voters' && (
-        <div className="space-y-8">
-          {/* Overview */}
-          <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '20px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '10px', color: '#F5F7FB' }}>🎯 Strategy Overview</h2>
-            <p style={{ color: '#7E8AA3', lineHeight: 1.7, margin: 0 }}>{VOTER_STRATEGY.overview}</p>
-          </div>
-
-          {/* Demographics */}
-          <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '20px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '14px', color: '#F5F7FB' }}>👥 Audience Segments</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {VOTER_STRATEGY.demographics.map((d, i) => (
-                <div key={i} style={{ backgroundColor: '#0E1628', border: '1px solid #1C2940', borderRadius: '10px', padding: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px', marginBottom: '8px' }}>
-                    <div style={{ fontWeight: 700, fontSize: '14px', color: '#F5F7FB' }}>{d.segment}</div>
-                    {badge(d.priority)}
-                  </div>
-                  <div style={{ fontSize: '12px', color: '#4E8FD4', marginBottom: '8px' }}>{d.size}</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '13px' }}>
-                    <div><span style={{ color: '#A0AABF', fontWeight: 600 }}>Motivation: </span><span style={{ color: '#7E8AA3' }}>{d.motivation}</span></div>
-                    <div><span style={{ color: '#A0AABF', fontWeight: 600 }}>Channels: </span><span style={{ color: '#7E8AA3' }}>{d.channels}</span></div>
-                  </div>
-                  <div style={{ marginTop: '8px', backgroundColor: '#111A2E', borderRadius: '6px', padding: '8px 12px', fontStyle: 'italic', color: '#F5F7FB', fontSize: '13px', borderLeft: '3px solid #4E8FD4' }}>
-                    {d.message}
-                  </div>
+      {/* Competitive */}
+      {sub === 'competitive' && (
+        <Section title="Competitive Landscape">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {data.competitive.map((c, i) => (
+              <Card key={i}>
+                <div style={{ fontWeight: 700, color: '#F5F7FB', fontSize: '15px', marginBottom: '8px' }}>{c.name}</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', fontSize: '13px' }}>
+                  <div><div style={{ color: '#A0AABF', fontWeight: 600, marginBottom: '4px' }}>What they do</div><div style={{ color: '#7E8AA3', lineHeight: 1.5 }}>{c.what}</div></div>
+                  <div><div style={{ color: '#E53935', fontWeight: 600, marginBottom: '4px' }}>Their weakness</div><div style={{ color: '#7E8AA3', lineHeight: 1.5 }}>{c.weakness}</div></div>
+                  <div><div style={{ color: '#22C55E', fontWeight: 600, marginBottom: '4px' }}>Our positioning</div><div style={{ color: '#7E8AA3', lineHeight: 1.5 }}>{c.positioning}</div></div>
                 </div>
-              ))}
-            </div>
+              </Card>
+            ))}
           </div>
+        </Section>
+      )}
 
-          {/* Content ideas */}
-          <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '20px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '14px', color: '#F5F7FB' }}>💡 Content Ideas</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {VOTER_STRATEGY.contentIdeas.map((idea, i) => (
-                <div key={i} style={{ backgroundColor: '#0E1628', border: '1px solid #1C2940', borderRadius: '8px', padding: '12px 16px', color: '#F5F7FB', fontSize: '14px', lineHeight: 1.5 }}>
-                  {idea}
-                </div>
-              ))}
-            </div>
+      {/* Influencers */}
+      {sub === 'influencers' && (
+        <Section title="Media, Partners & Influencer Targets">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '10px' }}>
+            {data.influencers.map((inf, i) => (
+              <Card key={i}>
+                <div style={{ fontWeight: 700, color: '#F5F7FB', fontSize: '14px' }}>{inf.name}</div>
+                <div style={{ fontSize: '12px', color: '#4E8FD4', margin: '4px 0 8px' }}>{inf.platform}</div>
+                <div style={{ fontSize: '13px', color: '#7E8AA3', marginBottom: '6px', lineHeight: 1.5 }}><span style={{ color: '#A0AABF', fontWeight: 600 }}>Why: </span>{inf.why}</div>
+                <div style={{ fontSize: '13px', color: '#7E8AA3', lineHeight: 1.5 }}><span style={{ color: '#A0AABF', fontWeight: 600 }}>Approach: </span>{inf.approach}</div>
+              </Card>
+            ))}
           </div>
+        </Section>
+      )}
 
-          {/* Channels */}
-          <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '20px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '14px', color: '#F5F7FB' }}>📣 Marketing Channels</h2>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid #25324D' }}>
-                    {['Channel', 'Priority', 'Notes'].map(h => <th key={h} style={{ textAlign: 'left', padding: '8px 12px', color: '#7E8AA3', fontWeight: 600 }}>{h}</th>)}
-                  </tr>
-                </thead>
-                <tbody>
-                  {VOTER_STRATEGY.channels.map((c, i) => (
-                    <tr key={i} style={{ borderBottom: '1px solid #1C2940' }}>
-                      <td style={{ padding: '10px 12px', color: '#F5F7FB', fontWeight: 600 }}>{c.channel}</td>
-                      <td style={{ padding: '10px 12px', whiteSpace: 'nowrap' }}>{badge(c.priority)}</td>
-                      <td style={{ padding: '10px 12px', color: '#7E8AA3', lineHeight: 1.5 }}>{c.notes}</td>
-                    </tr>
+      {/* KPIs */}
+      {sub === 'kpis' && (
+        <Section title="KPIs & Success Metrics">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '12px' }}>
+            {Object.entries(data.kpis).map(([period, items]) => (
+              <Card key={period}>
+                <div style={{ fontWeight: 700, color: '#4E8FD4', fontSize: '14px', marginBottom: '10px' }}>{period}</div>
+                <ul style={{ margin: 0, padding: '0 0 0 16px' }}>
+                  {(items as string[]).map((item, i) => (
+                    <li key={i} style={{ fontSize: '13px', color: '#7E8AA3', lineHeight: 1.7 }}>{item}</li>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </ul>
+              </Card>
+            ))}
           </div>
+        </Section>
+      )}
 
-          {/* Launch plan */}
-          <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '20px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '14px', color: '#F5F7FB' }}>🚀 Launch Plan</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
-              {VOTER_STRATEGY.launchPlan.map((p, i) => (
-                <div key={i} style={{ display: 'flex', gap: '16px', paddingBottom: i < VOTER_STRATEGY.launchPlan.length - 1 ? '16px' : '0' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#4E8FD4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 800, color: '#fff', flexShrink: 0 }}>{i + 1}</div>
-                    {i < VOTER_STRATEGY.launchPlan.length - 1 && <div style={{ width: '2px', flex: 1, backgroundColor: '#25324D', margin: '4px 0' }} />}
+      {/* Budget */}
+      {sub === 'budget' && (
+        <Section title={`Budget Breakdown — ~$${data.budget.reduce((s, b) => s + b.monthlyAud, 0).toLocaleString()}/month`}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {data.budget.sort((a, b) => b.monthlyAud - a.monthlyAud).map((b, i) => {
+              const total = data.budget.reduce((s, x) => s + x.monthlyAud, 0);
+              const pct = Math.round((b.monthlyAud / total) * 100);
+              return (
+                <Card key={i} style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '12px', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontWeight: 700, color: '#F5F7FB', fontSize: '13px', marginBottom: '4px' }}>{b.category}</div>
+                    <div style={{ fontSize: '12px', color: '#7E8AA3' }}>{b.rationale}</div>
+                    <div style={{ marginTop: '8px', height: '4px', backgroundColor: '#1C2940', borderRadius: '2px' }}>
+                      <div style={{ width: `${pct}%`, height: '100%', backgroundColor: '#4E8FD4', borderRadius: '2px' }} />
+                    </div>
                   </div>
-                  <div style={{ paddingTop: '4px', paddingBottom: i < VOTER_STRATEGY.launchPlan.length - 1 ? '0' : '0' }}>
-                    <div style={{ fontWeight: 700, fontSize: '14px', color: '#F5F7FB' }}>{p.phase}</div>
-                    <div style={{ fontSize: '13px', color: '#7E8AA3', marginTop: '4px', lineHeight: 1.5 }}>{p.action}</div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '18px', fontWeight: 800, color: '#4E8FD4' }}>${b.monthlyAud.toLocaleString()}</div>
+                    <div style={{ fontSize: '11px', color: '#4E5A73' }}>{pct}%</div>
                   </div>
-                </div>
-              ))}
-            </div>
+                </Card>
+              );
+            })}
           </div>
+        </Section>
+      )}
 
-          {/* State breakdown */}
-          <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '20px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '14px', color: '#F5F7FB' }}>🗺️ State Prioritisation</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '10px' }}>
-              {VOTER_STRATEGY.stateBreakdown.map((s, i) => (
-                <div key={i} style={{ backgroundColor: '#0E1628', border: '1px solid #1C2940', borderRadius: '10px', padding: '14px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                    <span style={{ fontWeight: 700, color: '#F5F7FB', fontSize: '15px' }}>{s.state}</span>
-                    {badge(s.priority)}
-                  </div>
-                  <div style={{ fontSize: '12px', color: '#4E8FD4', marginBottom: '4px' }}>{s.voters} enrolled voters</div>
-                  <div style={{ fontSize: '13px', color: '#7E8AA3', lineHeight: 1.5 }}>{s.focus}</div>
+      {/* Risks */}
+      {sub === 'risks' && (
+        <Section title="Risk Register">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {data.risks.map((r, i) => (
+              <Card key={i} style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '12px', alignItems: 'start' }}>
+                <div>
+                  <div style={{ fontWeight: 700, color: '#F5F7FB', fontSize: '14px', marginBottom: '6px' }}>{r.risk}</div>
+                  <div style={{ fontSize: '13px', color: '#7E8AA3', lineHeight: 1.5 }}><span style={{ color: '#22C55E', fontWeight: 600 }}>Mitigation: </span>{r.mitigation}</div>
                 </div>
-              ))}
-            </div>
+                {badge(r.likelihood)}
+              </Card>
+            ))}
           </div>
-        </div>
+        </Section>
       )}
     </div>
   );
