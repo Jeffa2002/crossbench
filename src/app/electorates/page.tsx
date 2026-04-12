@@ -160,8 +160,8 @@ export default async function ElectoratesPage({
                       style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }}
                     />
                   ) : (
-                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>
-                      🏛
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: 800, color: '#4E8FD4', backgroundColor: '#111A2E' }}>
+                      {(e.mpName || '').split(' ').filter((w: string) => w.match(/^[A-Z]/)).slice(0, 2).map((w: string) => w[0]).join('')}
                     </div>
                   )}
                 </div>

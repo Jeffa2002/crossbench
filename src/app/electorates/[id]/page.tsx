@@ -160,8 +160,12 @@ export default async function ElectoratePage({ params }: { params: Promise<{ id:
 
         <section style={{ backgroundColor: '#0E1628', border: '1px solid #1C2940', borderRadius: '16px', padding: '28px', marginBottom: '16px' }}>
           <div style={{ display: 'flex', gap: '18px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-            {electorate.mpPhotoUrl && (
+            {electorate.mpPhotoUrl ? (
               <img src={electorate.mpPhotoUrl} alt={name || ''} style={{ width: '132px', height: '168px', borderRadius: '14px', objectFit: 'cover', objectPosition: 'top', border: '1px solid #1C2940', flexShrink: 0 }} />
+            ) : (
+              <div style={{ width: '132px', height: '168px', borderRadius: '14px', border: '1px solid #1C2940', flexShrink: 0, backgroundColor: '#111A2E', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '42px', fontWeight: 800, color: partyColor || '#4E8FD4' }}>
+                {(electorate.mpName || '').split(' ').filter((w: string) => w.match(/^[A-Z]/)).slice(0, 2).map((w: string) => w[0]).join('')}
+              </div>
             )}
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
