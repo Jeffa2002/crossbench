@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import VoteButton from './vote-button';
 import Nav from '@/components/Nav';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 export const revalidate = 60;
 
@@ -252,9 +253,7 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
               <p style={{ fontSize: '11px', fontWeight: 700, color: '#2E8B57', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
                 ✦ Plain-English Summary
               </p>
-              <div style={{ color: '#C8D4E8', lineHeight: 1.75, fontSize: '14px', whiteSpace: 'pre-wrap' }}>
-                {b.aiSummary}
-              </div>
+              <MarkdownRenderer content={b.aiSummary} />
             </div>
           )}
 
