@@ -3,18 +3,29 @@ import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import Nav from '@/components/Nav';
+import ChangeAddressButton from './ChangeAddressButton';
 
 export default async function AccountPage() {
   const session = await auth();
   if (!session?.user) redirect('/login?next=/account');
+  const userId = (session.user as any).id;
   const user = await prisma.user.findUnique({
-    where: { id: (session.user as any).id },
+    where: { id: userId },
     include: {
       electorate: true,
       votes: { orderBy: { createdAt: 'desc' }, take: 10, include: { bill: { select: { id: true, title: true } } } },
     },
   });
   if (!user) redirect('/login');
+
+  // Check address change eligibility
+  const oneYearAgo = new Date();
+  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+  const addressChangesThisYear = user.verifiedAt
+    ? await prisma.addressChangeLog.count({ where: { userId, createdAt: { gte: oneYearAgo } } })
+    : 0;
+  const canChangeAddress = addressChangesThisYear < 1;
+  const needsTicket = addressChangesThisYear >= 1;
 
   return (
     <main style={{ backgroundColor: '#0B1220', minHeight: '100vh', color: '#F5F7FB' }}>
@@ -27,12 +38,15 @@ export default async function AccountPage() {
         <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '24px' }}>
           <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px', color: '#F5F7FB' }}>Electorate verification</h2>
           {user.verifiedAt && user.electorate ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span style={{ fontSize: '24px' }}>✅</span>
-              <div>
-                <p style={{ fontWeight: 600, color: '#F5F7FB', margin: 0 }}>Verified — {user.electorate.name}</p>
-                <p style={{ fontSize: '13px', color: '#7E8AA3', margin: '4px 0 0' }}>{user.electorate.state}{user.electorate.mpName ? ` · ${user.electorate.mpName}` : ''}</p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '24px' }}>✅</span>
+                <div>
+                  <p style={{ fontWeight: 600, color: '#F5F7FB', margin: 0 }}>Verified — {user.electorate.name}</p>
+                  <p style={{ fontSize: '13px', color: '#7E8AA3', margin: '4px 0 0' }}>{user.electorate.state}{user.electorate.mpName ? ` · ${user.electorate.mpName}` : ''}</p>
+                </div>
               </div>
+              <ChangeAddressButton canChange={canChangeAddress} needsTicket={needsTicket} changesThisYear={addressChangesThisYear} />
             </div>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>

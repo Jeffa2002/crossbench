@@ -63,8 +63,10 @@ model User {
   termsAcceptedAt DateTime?
   electorateId    String?
   electorate      Electorate? @relation(fields: [electorateId], references: [id], onDelete: SetNull)
-  addressHash          String?
-  verificationStatus   VerificationStatus @default(NONE)
+  addressHash             String?
+  addressChangeCount      Int        @default(0)
+  lastAddressChangeAt     DateTime?
+  verificationStatus      VerificationStatus @default(NONE)
   electorateVerified   Boolean    @default(false)
   name            String?
   image           String?
@@ -77,8 +79,9 @@ model User {
   subscriptionId      String?
   votes           Vote[]
   mpSentiments    MpSentiment[]
-  supportTickets  SupportTicket[]
-  accounts        Account[]
+  supportTickets     SupportTicket[]
+  addressChangeLogs  AddressChangeLog[]
+  accounts           Account[]
   sessions        Session[]
 
   @@index([role])
@@ -230,6 +233,17 @@ enum TicketPriority {
   NORMAL
   HIGH
   URGENT
+}
+
+model AddressChangeLog {
+  id               String   @id @default(cuid())
+  userId           String
+  fromElectorateId String?
+  toElectorateId   String?
+  createdAt        DateTime @default(now())
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model SupportTicket {

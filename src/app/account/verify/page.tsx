@@ -18,6 +18,7 @@ export default function VerifyPage() {
   const [saving, setSaving] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const isChange = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('change') === '1';
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -106,7 +107,7 @@ export default function VerifyPage() {
         </div>
       </header>
       <div className="max-w-lg mx-auto px-4 py-12">
-        <h1 className="text-2xl font-bold mb-2">Verify your address</h1>
+        <h1 className="text-2xl font-bold mb-2">{isChange ? 'Change your address' : 'Verify your address'}</h1>
         <p className="text-[#B6C0D1] mb-8">
           We'll use your address to find your electorate. We don't store your address — only your electorate.
         </p>

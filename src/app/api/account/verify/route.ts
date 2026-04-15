@@ -12,20 +12,37 @@ export async function POST(req: NextRequest) {
   if (!electorate) return NextResponse.json({ error: 'Invalid electorate' }, { status: 400 });
   const finalHash = createHash('sha256').update(addressHash + process.env.NEXTAUTH_SECRET).digest('hex');
 
-  // Fetch current termsAcceptedAt so we don't overwrite an existing timestamp
+  // Fetch current user state
   const userId = (session.user as any).id;
-  const existing = await prisma.user.findUnique({ where: { id: userId }, select: { termsAcceptedAt: true } });
-
-  await prisma.user.update({
+  const existing = await prisma.user.findUnique({
     where: { id: userId },
-    data: {
-      electorateId,
-      verifiedAt: new Date(),
-      addressHash: finalHash,
-      termsAcceptedAt: existing?.termsAcceptedAt ?? new Date(),
-      verificationStatus: 'ADDRESS',
-      electorateVerified: true,
-    },
+    select: { termsAcceptedAt: true, electorateId: true, verifiedAt: true },
   });
+
+  const isChange = !!existing?.verifiedAt; // already verified = this is a change
+
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: userId },
+      data: {
+        electorateId,
+        verifiedAt: new Date(),
+        addressHash: finalHash,
+        termsAcceptedAt: existing?.termsAcceptedAt ?? new Date(),
+        verificationStatus: 'ADDRESS',
+        electorateVerified: true,
+        ...(isChange && { lastAddressChangeAt: new Date() }),
+      },
+    }),
+    // Log address changes (not initial verifications)
+    ...(isChange ? [prisma.addressChangeLog.create({
+      data: {
+        userId,
+        fromElectorateId: existing?.electorateId ?? null,
+        toElectorateId: electorateId,
+      },
+    })] : []),
+  ]);
+
   return NextResponse.json({ ok: true });
 }

@@ -28,9 +28,9 @@ function getBadgeForBill(bill: any) {
 export default async function BillsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; chamber?: string; page?: string; status?: string }>;
+  searchParams: Promise<{ q?: string; chamber?: string; page?: string; status?: string; sort?: string }>;
 }) {
-  const { q, chamber, page: pageStr, status } = await searchParams;
+  const { q, chamber, page: pageStr, status, sort } = await searchParams;
   const page = parseInt(pageStr || "1");
   const limit = 20;
 
@@ -45,12 +45,19 @@ export default async function BillsPage({
     ...(chamber ? { chamber: chamber as any } : {}),
   };
 
+  const activeSort = sort ?? 'newest';
+  const orderBy: any =
+    activeSort === 'votes' ? [{ votes: { _count: 'desc' } }, { lastUpdatedAt: 'desc' }]
+    : activeSort === 'alpha' ? { title: 'asc' }
+    : activeStatus === 'all' ? [{ status: 'asc' }, { lastUpdatedAt: 'desc' }]
+    : { lastUpdatedAt: 'desc' };
+
   const [bills, total, counts] = await Promise.all([
     prisma.bill.findMany({
       where,
       skip: (page - 1) * limit,
       take: limit,
-      orderBy: activeStatus === "all" ? [{ status: "asc" }, { lastUpdatedAt: "desc" }] : { lastUpdatedAt: "desc" },
+      orderBy,
       include: { _count: { select: { votes: true } } },
     }),
     prisma.bill.count({ where }),
@@ -69,10 +76,11 @@ export default async function BillsPage({
 
   function pageUrl(p: number) {
     const params = new URLSearchParams();
-    params.set("status", activeStatus);
-    if (q) params.set("q", q);
-    if (chamber) params.set("chamber", chamber);
-    if (p > 1) params.set("page", String(p));
+    params.set('status', activeStatus);
+    if (q) params.set('q', q);
+    if (chamber) params.set('chamber', chamber);
+    if (sort && sort !== 'newest') params.set('sort', sort);
+    if (p > 1) params.set('page', String(p));
     return `/bills?${params.toString()}`;
   }
 
@@ -137,33 +145,26 @@ export default async function BillsPage({
             name="q"
             defaultValue={q}
             placeholder="Search bills..."
-            style={{
-              flex: 1,
-              minWidth: 0,
-              backgroundColor: "#16213A",
-              border: "1px solid #25324D",
-              borderRadius: "6px",
-              padding: "10px 14px",
-              color: "#F5F7FB",
-              fontSize: "14px",
-            }}
+            style={{ flex: 1, minWidth: 0, backgroundColor: "#16213A", border: "1px solid #25324D", borderRadius: "6px", padding: "10px 14px", color: "#F5F7FB", fontSize: "14px" }}
           />
           <select
             name="chamber"
             defaultValue={chamber}
-            style={{
-              backgroundColor: "#16213A",
-              border: "1px solid #25324D",
-              borderRadius: "6px",
-              padding: "10px 14px",
-              color: "#F5F7FB",
-              fontSize: "14px",
-            }}
+            style={{ backgroundColor: "#16213A", border: "1px solid #25324D", borderRadius: "6px", padding: "10px 14px", color: "#F5F7FB", fontSize: "14px" }}
           >
             <option value="">All chambers</option>
             <option value="HOUSE">House of Reps</option>
             <option value="SENATE">Senate</option>
             <option value="JOINT">Joint</option>
+          </select>
+          <select
+            name="sort"
+            defaultValue={activeSort}
+            style={{ backgroundColor: "#16213A", border: "1px solid #25324D", borderRadius: "6px", padding: "10px 14px", color: "#F5F7FB", fontSize: "14px" }}
+          >
+            <option value="newest">Newest first</option>
+            <option value="votes">Most voted</option>
+            <option value="alpha">A–Z</option>
           </select>
           <button
             type="submit"
