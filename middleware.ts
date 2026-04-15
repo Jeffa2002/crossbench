@@ -18,19 +18,18 @@ export function middleware(request: NextRequest) {
   const cspHeader = [
     // Only load resources from same origin by default
     `default-src 'self'`,
-    // Scripts: same origin + nonce for Next.js inline chunks
-    // Plausible tracker is bundled locally — no external script domain needed
-    `script-src 'self' 'nonce-${nonce}'`,
+    // Scripts: same origin + nonce for Next.js inline chunks + reCAPTCHA v3
+    `script-src 'self' 'nonce-${nonce}' https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/`,
     // Styles: same origin + unsafe-inline (Tailwind v4 CSS-in-JS injects styles)
     `style-src 'self' 'unsafe-inline'`,
     // Images: same origin + data URIs (avatars) + APH/Wikipedia photos
     `img-src 'self' data: https://www.aph.gov.au https://upload.wikimedia.org https://en.wikipedia.org`,
     // Fonts: Google Fonts (used in root layout via next/font/google)
     `font-src 'self' https://fonts.gstatic.com`,
-    // Connect: same origin API calls + Plausible event tracking
-    `connect-src 'self' https://plausible.io`,
-    // Stripe checkout is server-side redirect — no frame embedding of Stripe needed
-    `frame-src 'none'`,
+    // Connect: same origin API calls + Plausible + reCAPTCHA
+    `connect-src 'self' https://plausible.io https://www.google.com/recaptcha/`,
+    // reCAPTCHA uses an iframe
+    `frame-src https://www.google.com/recaptcha/ https://recaptcha.google.com/`,
     // Prevent this app from being embedded in iframes (clickjacking)
     `frame-ancestors 'none'`,
     // Forms: same origin only
