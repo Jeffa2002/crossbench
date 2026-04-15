@@ -82,8 +82,9 @@ export default function VerifyPage() {
       body: JSON.stringify({ electorateId: result.electorate.id, addressHash: btoa(result.normalizedAddress) }),
     });
     setSaving(false);
-    if (res.ok) setConfirmed(true);
-    else setError('Something went wrong. Please try again.');
+    if (res.ok) { setConfirmed(true); return; }
+    const data = await res.json().catch(() => ({}));
+    setError(data.error || 'Something went wrong. Please try again.');
   }
 
   if (confirmed) return (
