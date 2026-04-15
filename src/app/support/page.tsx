@@ -1,5 +1,11 @@
+import Nav from '@/components/Nav';
 import SupportClient from './SupportClient';
 
 export default function SupportPage() {
-  return <SupportClient />;
+  return (
+    <>
+      <Nav />
+      <SupportClient />
+    </>
+  );
 }
