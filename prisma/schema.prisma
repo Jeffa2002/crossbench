@@ -76,6 +76,7 @@ model User {
   trialEndsAt         DateTime?
   subscriptionId      String?
   votes           Vote[]
+  mpSentiments    MpSentiment[]
   accounts        Account[]
   sessions        Session[]
 
@@ -194,6 +195,25 @@ model Session {
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
+}
+
+enum SentimentValue {
+  POSITIVE
+  NEGATIVE
+}
+
+model MpSentiment {
+  id        String         @id @default(cuid())
+  userId    String
+  mpId      String
+  sentiment SentimentValue
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, mpId])
+  @@index([mpId])
   @@index([userId])
 }
 
