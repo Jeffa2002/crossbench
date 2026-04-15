@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { headers } from "next/headers";
+import Script from "next/script";
 import Footer from "@/components/Footer";
 import "./globals.css";
 
@@ -25,6 +26,22 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className={inter.className} style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         {children}
         <Footer />
+
+        {/* Plausible Analytics — privacy-friendly, no cookies */}
+        <Script
+          async
+          src="https://plausible.io/js/pa-7cvhVMeoNj1O3JYCeu4En.js"
+          strategy="afterInteractive"
+          nonce={nonce}
+        />
+        <Script
+          id="plausible-init"
+          strategy="afterInteractive"
+          nonce={nonce}
+          dangerouslySetInnerHTML={{
+            __html: `window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};plausible.init()`,
+          }}
+        />
       </body>
     </html>
   )

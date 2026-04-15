@@ -18,17 +18,16 @@ export function middleware(request: NextRequest) {
   const cspHeader = [
     // Only load resources from same origin by default
     `default-src 'self'`,
-    // Scripts: same origin + nonce for Next.js inline chunks
-    // Stripe.js is server-redirect only — no client JS needed
-    `script-src 'self' 'nonce-${nonce}'`,
+    // Scripts: same origin + nonce for Next.js inline chunks + Plausible analytics
+    `script-src 'self' 'nonce-${nonce}' https://plausible.io`,
     // Styles: same origin + unsafe-inline (Tailwind v4 CSS-in-JS injects styles)
     `style-src 'self' 'unsafe-inline'`,
     // Images: same origin + data URIs (avatars) + APH/Wikipedia photos
     `img-src 'self' data: https://www.aph.gov.au https://upload.wikimedia.org https://en.wikipedia.org`,
     // Fonts: Google Fonts (used in root layout via next/font/google)
     `font-src 'self' https://fonts.gstatic.com`,
-    // Connect: same origin API calls + Resend (magic link, server-side only)
-    `connect-src 'self'`,
+    // Connect: same origin API calls + Plausible event tracking
+    `connect-src 'self' https://plausible.io`,
     // Stripe checkout is server-side redirect — no frame embedding of Stripe needed
     `frame-src 'none'`,
     // Prevent this app from being embedded in iframes (clickjacking)
