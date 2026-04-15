@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { auth } from "@/lib/auth";
 
 export default async function Nav() {
@@ -6,9 +7,8 @@ export default async function Nav() {
   return (
     <header style={{ backgroundColor: "#0B1220", borderBottom: "1px solid #25324D", position: "sticky", top: 0, zIndex: 50 }}>
       <div className="nav-inner">
-        <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
-          <span style={{ fontSize: "18px", fontWeight: 700, color: "#F5F7FB" }}>Crossbench</span>
-          <span style={{ fontSize: "11px", color: "#7E8AA3", fontWeight: 400 }}>AU</span>
+        <Link href="/" style={{ textDecoration: "none", flexShrink: 0, display: "flex", alignItems: "center" }}>
+          <Image src="/logo.jpg" alt="Crossbench" width={160} height={47} style={{ height: '36px', width: 'auto', display: 'block' }} priority />
         </Link>
         <nav className="nav-links">
           <Link href="/bills" className="nav-link">Bills</Link>
