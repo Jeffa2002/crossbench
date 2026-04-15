@@ -18,8 +18,9 @@ export function middleware(request: NextRequest) {
   const cspHeader = [
     // Only load resources from same origin by default
     `default-src 'self'`,
-    // Scripts: same origin + nonce for Next.js inline chunks + Plausible analytics
-    `script-src 'self' 'nonce-${nonce}' https://plausible.io`,
+    // Scripts: same origin + nonce for Next.js inline chunks
+    // Plausible tracker is bundled locally — no external script domain needed
+    `script-src 'self' 'nonce-${nonce}'`,
     // Styles: same origin + unsafe-inline (Tailwind v4 CSS-in-JS injects styles)
     `style-src 'self' 'unsafe-inline'`,
     // Images: same origin + data URIs (avatars) + APH/Wikipedia photos
