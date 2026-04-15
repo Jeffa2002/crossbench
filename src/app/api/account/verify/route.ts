@@ -23,6 +23,8 @@ export async function POST(req: NextRequest) {
       verifiedAt: new Date(),
       addressHash: finalHash,
       termsAcceptedAt: existing?.termsAcceptedAt ?? new Date(),
+      verificationStatus: 'ADDRESS',
+      electorateVerified: true,
     },
   });
   return NextResponse.json({ ok: true });

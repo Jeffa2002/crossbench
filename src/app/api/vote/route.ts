@@ -24,10 +24,22 @@ export async function POST(req: NextRequest) {
   const bill = await prisma.bill.findUnique({ where: { id: billId } });
   if (!bill) return NextResponse.json({ error: "Bill not found" }, { status: 404 });
 
+  // Snapshot the user's current verification status at time of vote
   const vote = await prisma.vote.upsert({
     where: { userId_billId: { userId: user.id, billId } },
-    create: { userId: user.id, billId, electorateId: user.electorateId, position, comment: comment || null },
-    update: { position, comment: comment || null },
+    create: {
+      userId: user.id,
+      billId,
+      electorateId: user.electorateId,
+      position,
+      comment: comment || null,
+      verificationStatus: user.verificationStatus,
+    },
+    update: {
+      position,
+      comment: comment || null,
+      verificationStatus: user.verificationStatus,
+    },
   });
 
   return NextResponse.json({ ok: true, vote });

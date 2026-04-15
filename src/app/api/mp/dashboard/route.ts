@@ -27,7 +27,6 @@ export async function GET() {
     return NextResponse.json({ error: 'No electorate linked to your account' }, { status: 404 });
   }
 
-  // Trial days remaining
   const trialDaysLeft = (user as any).trialEndsAt
     ? Math.ceil(((user as any).trialEndsAt.getTime() - Date.now()) / 86400000)
     : null;
@@ -36,6 +35,16 @@ export async function GET() {
   const votesByBill = await prisma.vote.groupBy({
     by: ['billId', 'position'],
     where: { electorateId: electorate.id },
+    _count: true,
+  });
+
+  // Verified-only votes (ADDRESS or IDENTITY verification status)
+  const verifiedVotesByBill = await prisma.vote.groupBy({
+    by: ['billId', 'position'],
+    where: {
+      electorateId: electorate.id,
+      verificationStatus: { in: ['ADDRESS', 'IDENTITY'] },
+    },
     _count: true,
   });
 
@@ -54,7 +63,7 @@ export async function GET() {
       })
     : [];
 
-  // National stats
+  // National stats (all votes)
   const nationalStats = topBillIds.length > 0
     ? await prisma.vote.groupBy({
         by: ['billId', 'position'],
@@ -63,18 +72,32 @@ export async function GET() {
       })
     : [];
 
-  function getPositions(billId: string, source: typeof votesByBill) {
+  function getPositions(billId: string, source: { billId: string; position: string; _count: number }[]) {
     const rows = source.filter(r => r.billId === billId);
     const total = rows.reduce((s, r) => s + r._count, 0);
     const get = (pos: string) => rows.find(r => r.position === pos)?._count || 0;
     const pct = (pos: string) => total > 0 ? Math.round((get(pos) / total) * 100) : 0;
-    return { total, supportPct: pct('SUPPORT'), opposePct: pct('OPPOSE'), abstainPct: pct('ABSTAIN') };
+    return {
+      total,
+      support: get('SUPPORT'),
+      oppose: get('OPPOSE'),
+      abstain: get('ABSTAIN'),
+      supportPct: pct('SUPPORT'),
+      opposePct: pct('OPPOSE'),
+      abstainPct: pct('ABSTAIN'),
+    };
   }
 
+  // Overview totals — all vs verified
   const totalVotes = Object.values(billCounts).reduce((s, n) => s + n, 0);
   const supportTotal = votesByBill.filter(r => r.position === 'SUPPORT').reduce((s, r) => s + r._count, 0);
   const opposeTotal = votesByBill.filter(r => r.position === 'OPPOSE').reduce((s, r) => s + r._count, 0);
   const abstainTotal = votesByBill.filter(r => r.position === 'ABSTAIN').reduce((s, r) => s + r._count, 0);
+
+  const verifiedTotalVotes = verifiedVotesByBill.reduce((s, r) => s + r._count, 0);
+  const verifiedSupport = verifiedVotesByBill.filter(r => r.position === 'SUPPORT').reduce((s, r) => s + r._count, 0);
+  const verifiedOppose = verifiedVotesByBill.filter(r => r.position === 'OPPOSE').reduce((s, r) => s + r._count, 0);
+  const verifiedAbstain = verifiedVotesByBill.filter(r => r.position === 'ABSTAIN').reduce((s, r) => s + r._count, 0);
 
   const billMap = Object.fromEntries(bills.map(b => [b.id, b]));
 
@@ -93,10 +116,18 @@ export async function GET() {
       trialDaysLeft,
     },
     overview: {
+      // All votes (including unverified self-declared)
       totalVotes,
       supportPct: totalVotes > 0 ? Math.round((supportTotal / totalVotes) * 100) : 0,
       opposePct: totalVotes > 0 ? Math.round((opposeTotal / totalVotes) * 100) : 0,
       abstainPct: totalVotes > 0 ? Math.round((abstainTotal / totalVotes) * 100) : 0,
+      // Verified constituent votes only (ADDRESS or IDENTITY verified)
+      verified: {
+        totalVotes: verifiedTotalVotes,
+        supportPct: verifiedTotalVotes > 0 ? Math.round((verifiedSupport / verifiedTotalVotes) * 100) : 0,
+        opposePct: verifiedTotalVotes > 0 ? Math.round((verifiedOppose / verifiedTotalVotes) * 100) : 0,
+        abstainPct: verifiedTotalVotes > 0 ? Math.round((verifiedAbstain / verifiedTotalVotes) * 100) : 0,
+      },
     },
     bills: topBillIds
       .map(billId => {
@@ -107,6 +138,7 @@ export async function GET() {
           title: bill.title,
           status: bill.status,
           local: getPositions(billId, votesByBill),
+          localVerified: getPositions(billId, verifiedVotesByBill),
           national: getPositions(billId, nationalStats),
         };
       })

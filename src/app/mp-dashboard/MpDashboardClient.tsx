@@ -6,10 +6,14 @@ import Link from 'next/link';
 type DashboardData = {
   electorate: { name: string; state: string; mpName: string; mpParty: string; mpPhotoUrl: string | null };
   subscription: { status: string; tier: string; trialEndsAt: string | null; trialDaysLeft: number | null };
-  overview: { totalVotes: number; supportPct: number; opposePct: number; abstainPct: number };
+  overview: {
+    totalVotes: number; supportPct: number; opposePct: number; abstainPct: number;
+    verified: { totalVotes: number; supportPct: number; opposePct: number; abstainPct: number };
+  };
   bills: Array<{
     id: string; title: string; status: string;
     local: { total: number; supportPct: number; opposePct: number; abstainPct: number };
+    localVerified: { total: number; supportPct: number; opposePct: number; abstainPct: number };
     national: { total: number; supportPct: number; opposePct: number; abstainPct: number };
   }>;
 };
@@ -177,33 +181,60 @@ export default function MpDashboardClient() {
           ) : (
             <>
               {/* Overview stats */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '16px' }}>
                 {[
-                  { label: 'Constituent votes', value: data.overview.totalVotes.toLocaleString(), sub: 'across all bills' },
-                  { label: 'Majority position', value: data.overview.supportPct >= data.overview.opposePct ? 'Support' : 'Oppose', sub: `${Math.max(data.overview.supportPct, data.overview.opposePct)}% of votes` },
-                  { label: 'Bills with feedback', value: String(data.bills.length), sub: 'in your electorate' },
-                ].map(({ label, value, sub }) => (
+                  { label: 'Total votes', value: data.overview.totalVotes.toLocaleString(), sub: 'all constituents', color: '#D6A94A' },
+                  { label: 'Verified votes', value: data.overview.verified.totalVotes.toLocaleString(), sub: 'address-confirmed', color: '#2E8B57' },
+                  { label: 'Majority position', value: data.overview.supportPct >= data.overview.opposePct ? 'Support' : 'Oppose', sub: `${Math.max(data.overview.supportPct, data.overview.opposePct)}% of all votes`, color: '#D6A94A' },
+                  { label: 'Bills with feedback', value: String(data.bills.length), sub: 'in your electorate', color: '#D6A94A' },
+                ].map(({ label, value, sub, color }) => (
                   <div key={label} style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '10px', padding: '16px' }}>
                     <p style={{ fontSize: '11px', color: '#7E8AA3', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
-                    <p style={{ fontSize: '22px', fontWeight: 700, color: '#D6A94A', margin: '0 0 2px' }}>{value}</p>
+                    <p style={{ fontSize: '22px', fontWeight: 700, color, margin: '0 0 2px' }}>{value}</p>
                     <p style={{ fontSize: '12px', color: '#4A5568', margin: 0 }}>{sub}</p>
                   </div>
                 ))}
               </div>
 
-              {/* Overall sentiment */}
-              <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '24px', marginBottom: '16px' }}>
-                <h2 style={{ fontSize: '15px', fontWeight: 600, color: '#F5F7FB', margin: '0 0 16px' }}>
-                  Overall constituent sentiment — {data.electorate.name}
-                </h2>
-                <Bar pct={data.overview.supportPct} color="#2E8B57" label="Support" />
-                <Bar pct={data.overview.opposePct} color="#D95C4B" label="Oppose" />
-                <Bar pct={data.overview.abstainPct} color="#6F7D95" label="Abstain" />
-                {data.overview.totalVotes === 0 && (
-                  <p style={{ color: '#4A5568', fontSize: '13px', marginTop: '12px' }}>
-                    No constituent votes yet. Share Crossbench with your electorate to start collecting data.
+              {/* Overall sentiment — all vs verified */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                {/* All votes */}
+                <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#F5F7FB', margin: 0 }}>All constituent votes</h2>
+                    <span style={{ fontSize: '12px', color: '#7E8AA3', backgroundColor: '#1A2540', padding: '3px 10px', borderRadius: '20px' }}>
+                      {data.overview.totalVotes.toLocaleString()} total
+                    </span>
+                  </div>
+                  <Bar pct={data.overview.supportPct} color="#2E8B57" label="Support" />
+                  <Bar pct={data.overview.opposePct} color="#D95C4B" label="Oppose" />
+                  <Bar pct={data.overview.abstainPct} color="#6F7D95" label="Abstain" />
+                  {data.overview.totalVotes === 0 && (
+                    <p style={{ color: '#4A5568', fontSize: '13px', marginTop: '12px' }}>No votes yet.</p>
+                  )}
+                </div>
+                {/* Verified only */}
+                <div style={{ backgroundColor: '#111A2E', border: '1px solid #2E8B57', borderRadius: '12px', padding: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#F5F7FB', margin: 0 }}>
+                      ✓ Verified constituent votes
+                    </h2>
+                    <span style={{ fontSize: '12px', color: '#2E8B57', backgroundColor: '#0D2818', padding: '3px 10px', borderRadius: '20px' }}>
+                      {data.overview.verified.totalVotes.toLocaleString()} verified
+                    </span>
+                  </div>
+                  <Bar pct={data.overview.verified.supportPct} color="#2E8B57" label="Support" />
+                  <Bar pct={data.overview.verified.opposePct} color="#D95C4B" label="Oppose" />
+                  <Bar pct={data.overview.verified.abstainPct} color="#6F7D95" label="Abstain" />
+                  {data.overview.verified.totalVotes === 0 && (
+                    <p style={{ color: '#4A5568', fontSize: '13px', marginTop: '12px' }}>
+                      No verified votes yet. Verified voters have confirmed their address.
+                    </p>
+                  )}
+                  <p style={{ fontSize: '11px', color: '#4A5568', margin: '12px 0 0', borderTop: '1px solid #1A2540', paddingTop: '12px' }}>
+                    Address-verified constituents only — highest confidence signal
                   </p>
-                )}
+                </div>
               </div>
 
               {/* Per-bill */}
@@ -229,7 +260,7 @@ export default function MpDashboardClient() {
                                 {bill.title}
                               </Link>
                               <p style={{ fontSize: '11px', color: '#7E8AA3', margin: 0 }}>
-                                {bill.status} · {bill.local.total} constituent{bill.local.total !== 1 ? 's' : ''} voted
+                                {bill.status} · {bill.local.total} vote{bill.local.total !== 1 ? 's' : ''} total · <span style={{ color: '#2E8B57' }}>{bill.localVerified.total} verified</span>
                               </p>
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', flexShrink: 0 }}>
@@ -249,7 +280,8 @@ export default function MpDashboardClient() {
 
                           <div className="compare-grid">
                             {[
-                              { label: `📍 ${data.electorate.name}`, d: bill.local },
+                              { label: `📍 ${data.electorate.name} (all)`, d: bill.local },
+                              { label: `✓ ${data.electorate.name} (verified)`, d: bill.localVerified },
                               { label: '🇦🇺 National avg', d: bill.national },
                             ].map(({ label, d }) => (
                               <div key={label}>
