@@ -1,88 +1,14 @@
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const s = {
   page: { backgroundColor: '#0B1220', minHeight: '100vh', color: '#F5F7FB' } as React.CSSProperties,
   container: { maxWidth: '1100px', margin: '0 auto', padding: '0 20px' } as React.CSSProperties,
 };
 
-function DashboardMock() {
-  return (
-    <div style={{ backgroundColor: '#0E1628', border: '1px solid #25324D', borderRadius: '16px', overflow: 'hidden', fontFamily: 'system-ui, sans-serif', boxShadow: '0 32px 80px rgba(0,0,0,0.5)' }}>
-      {/* Top bar */}
-      <div style={{ backgroundColor: '#111A2E', borderBottom: '1px solid #25324D', padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#2E8B57' }} />
-          <span style={{ fontSize: '13px', fontWeight: 600, color: '#F5F7FB' }}>Crossbench MP Dashboard</span>
-        </div>
-        <span style={{ fontSize: '11px', backgroundColor: 'rgba(46,139,87,0.2)', color: '#2E8B57', border: '1px solid rgba(46,139,87,0.4)', padding: '3px 10px', borderRadius: '999px', fontWeight: 700 }}>PRO</span>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', minHeight: '380px' }}>
-        {/* Sidebar */}
-        <div style={{ backgroundColor: '#0A1020', borderRight: '1px solid #1C2940', padding: '16px 0' }}>
-          <div style={{ padding: '8px 16px', marginBottom: '4px' }}>
-            <div style={{ fontSize: '10px', color: '#4A5568', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>Electorate</div>
-            <div style={{ fontSize: '13px', fontWeight: 600, color: '#F5F7FB' }}>Kooyong</div>
-            <div style={{ fontSize: '11px', color: '#7E8AA3', marginTop: '2px' }}>Victoria · House of Reps</div>
-          </div>
-          <div style={{ borderTop: '1px solid #1C2940', marginTop: '8px', paddingTop: '8px' }}>
-            {[['📊', 'Overview', true], ['📋', 'Bills', false], ['👥', 'Constituents', false], ['💳', 'Billing', false]].map(([icon, label, active]) => (
-              <div key={label as string} style={{ padding: '9px 16px', fontSize: '13px', fontWeight: active ? 600 : 400, color: active ? '#2E8B57' : '#7E8AA3', backgroundColor: active ? 'rgba(46,139,87,0.1)' : 'transparent', borderLeft: `2px solid ${active ? '#2E8B57' : 'transparent'}`, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span>{icon as string}</span>{label as string}
-              </div>
-            ))}
-          </div>
-          <div style={{ padding: '16px', marginTop: '8px', borderTop: '1px solid #1C2940' }}>
-            <div style={{ fontSize: '10px', color: '#4A5568', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>This week</div>
-            {[['847', 'constituents'], ['23', 'bills tracked'], ['68%', 'engagement']].map(([val, lbl]) => (
-              <div key={lbl} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                <span style={{ fontSize: '12px', color: '#7E8AA3' }}>{lbl}</span>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: '#D6A94A' }}>{val}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-        {/* Main */}
-        <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: 700, margin: 0 }}>Constituent sentiment — current bills</h3>
-            <span style={{ fontSize: '11px', color: '#7E8AA3' }}>Live · updated every 5min</span>
-          </div>
-          {[
-            { title: 'Migration Amendment Bill 2024', support: 67, oppose: 33, votes: 312, hot: true },
-            { title: 'Aged Care (Transitional Arrangements) Bill', support: 54, oppose: 46, votes: 189, hot: false },
-            { title: 'Clean Energy Finance Corporation Amendment', support: 78, oppose: 22, votes: 241, hot: false },
-          ].map(bill => (
-            <div key={bill.title} style={{ backgroundColor: '#111A2E', border: `1px solid ${bill.hot ? 'rgba(214,169,74,0.3)' : '#25324D'}`, borderRadius: '10px', padding: '14px 16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '4px' }}>
-                    {bill.hot && <span style={{ fontSize: '10px', backgroundColor: 'rgba(214,169,74,0.2)', color: '#D6A94A', border: '1px solid rgba(214,169,74,0.4)', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>🔥 HIGH ACTIVITY</span>}
-                  </div>
-                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#F5F7FB' }}>{bill.title}</div>
-                </div>
-                <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '12px' }}>
-                  <div style={{ fontSize: '18px', fontWeight: 700, color: '#D6A94A' }}>{bill.votes}</div>
-                  <div style={{ fontSize: '10px', color: '#7E8AA3' }}>constituents voted</div>
-                </div>
-              </div>
-              {/* Bar */}
-              <div style={{ height: '8px', borderRadius: '999px', backgroundColor: '#1C2940', overflow: 'hidden', display: 'flex' }}>
-                <div style={{ width: `${bill.support}%`, backgroundColor: '#2E8B57', borderRadius: '999px 0 0 999px' }} />
-                <div style={{ width: `${bill.oppose}%`, backgroundColor: '#D95C4B', borderRadius: '0 999px 999px 0' }} />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
-                <span style={{ fontSize: '11px', color: '#2E8B57', fontWeight: 700 }}>{bill.support}% support</span>
-                <span style={{ fontSize: '11px', color: '#D95C4B', fontWeight: 700 }}>{bill.oppose}% oppose</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
+
 
 export default function ForMPsPage() {
   return (
@@ -115,7 +41,9 @@ export default function ForMPsPage() {
       <section style={{ borderBottom: '1px solid #25324D', padding: 'clamp(48px, 6vw, 80px) 0' }}>
         <div style={s.container}>
           <p style={{ color: '#7E8AA3', fontSize: '13px', textAlign: 'center', marginBottom: '24px', fontWeight: 500 }}>Live constituent sentiment — exactly what you'd see for your electorate</p>
-          <DashboardMock />
+          <div style={{ borderRadius: '16px', overflow: 'hidden', border: '1px solid #25324D', boxShadow: '0 32px 80px rgba(0,0,0,0.5)' }}>
+            <Image src="/mp-dashboard-mock.png" alt="MP electorate dashboard showing constituent sentiment" width={1200} height={800} style={{ width: '100%', height: 'auto', display: 'block' }} />
+          </div>
         </div>
       </section>
 

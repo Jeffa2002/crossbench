@@ -2,51 +2,10 @@ import { prisma } from "@/lib/prisma";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import Link from "next/link";
+import Image from "next/image";
 import { getBillTags } from "@/lib/bill-tags";
 
 export const revalidate = 300;
-
-function DashboardMockMini() {
-  return (
-    <div style={{ backgroundColor: '#0E1628', border: '1px solid #25324D', borderRadius: '12px', overflow: 'hidden', fontSize: '12px' }}>
-      <div style={{ backgroundColor: '#111A2E', borderBottom: '1px solid #25324D', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontWeight: 600, color: '#F5F7FB', fontSize: '12px' }}>Kooyong — MP Dashboard</span>
-        <span style={{ backgroundColor: 'rgba(46,139,87,0.2)', color: '#2E8B57', border: '1px solid rgba(46,139,87,0.4)', padding: '2px 8px', borderRadius: '999px', fontWeight: 700, fontSize: '10px' }}>PRO</span>
-      </div>
-      <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        <div style={{ color: '#7E8AA3', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Constituent sentiment · live</div>
-        {[
-          { title: 'Migration Amendment Bill', support: 67, oppose: 33, votes: 312 },
-          { title: 'Aged Care Bill', support: 54, oppose: 46, votes: 189 },
-          { title: 'Clean Energy Finance Corp Bill', support: 78, oppose: 22, votes: 241 },
-        ].map(bill => (
-          <div key={bill.title} style={{ backgroundColor: '#111A2E', border: '1px solid #1C2940', borderRadius: '8px', padding: '10px 12px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <span style={{ color: '#B6C0D1', fontSize: '12px', fontWeight: 500, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{bill.title}</span>
-              <span style={{ color: '#D6A94A', fontWeight: 700, fontSize: '12px', marginLeft: '8px', flexShrink: 0 }}>{bill.votes} votes</span>
-            </div>
-            <div style={{ height: '6px', borderRadius: '999px', backgroundColor: '#1C2940', overflow: 'hidden', display: 'flex' }}>
-              <div style={{ width: `${bill.support}%`, backgroundColor: '#2E8B57' }} />
-              <div style={{ width: `${bill.oppose}%`, backgroundColor: '#D95C4B' }} />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-              <span style={{ color: '#2E8B57', fontWeight: 700, fontSize: '11px' }}>{bill.support}% support</span>
-              <span style={{ color: '#D95C4B', fontWeight: 700, fontSize: '11px' }}>{bill.oppose}% oppose</span>
-            </div>
-          </div>
-        ))}
-        <div style={{ borderTop: '1px solid #1C2940', paddingTop: '10px', display: 'flex', justifyContent: 'space-between' }}>
-          {[['847', 'constituents'], ['23', 'bills'], ['68%', 'active']].map(([v, l]) => (
-            <div key={l} style={{ textAlign: 'center' }}>
-              <div style={{ fontWeight: 700, color: '#D6A94A', fontSize: '14px' }}>{v}</div>
-              <div style={{ color: '#4A5568', fontSize: '10px' }}>{l}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default async function HomePage() {
   const [billCount, voteCount, electorateCount, bills] = await Promise.all([
@@ -88,7 +47,9 @@ export default async function HomePage() {
           </div>
           {/* Dashboard preview */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <DashboardMockMini />
+            <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid #25324D', boxShadow: '0 24px 60px rgba(0,0,0,0.4)' }}>
+              <Image src="/mp-dashboard-mock.png" alt="MP electorate dashboard" width={600} height={400} style={{ width: '100%', height: 'auto', display: 'block' }} />
+            </div>
             <p style={{ color: '#4A5568', fontSize: '11px', textAlign: 'center', margin: 0 }}>Live MP electorate dashboard — <Link href="/for-mps" style={{ color: '#4E8FD4', textDecoration: 'none' }}>learn more →</Link></p>
           </div>
         </div>
