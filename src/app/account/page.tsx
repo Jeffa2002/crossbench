@@ -1,4 +1,4 @@
-import { auth } from '@/lib/auth';
+import { auth, signOut } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -31,8 +31,17 @@ export default async function AccountPage() {
     <main style={{ backgroundColor: '#0B1220', minHeight: '100vh', color: '#F5F7FB' }}>
       <Nav />
       <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px' }}>My account</h1>
-        <p style={{ color: '#7E8AA3', fontSize: '14px', marginBottom: '8px' }}>{user.email}</p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '8px' }}>
+          <div>
+            <h1 style={{ fontSize: '24px', fontWeight: 700, margin: '0 0 4px' }}>My account</h1>
+            <p style={{ color: '#7E8AA3', fontSize: '14px', margin: 0 }}>{user.email}</p>
+          </div>
+          <form action={async () => { 'use server'; await signOut({ redirectTo: '/' }); }}>
+            <button type="submit" style={{ backgroundColor: 'transparent', color: '#7E8AA3', border: '1px solid #25324D', padding: '8px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
+              Sign out
+            </button>
+          </form>
+        </div>
 
         {/* Verification */}
         <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '24px' }}>
