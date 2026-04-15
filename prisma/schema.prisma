@@ -77,6 +77,7 @@ model User {
   subscriptionId      String?
   votes           Vote[]
   mpSentiments    MpSentiment[]
+  supportTickets  SupportTicket[]
   accounts        Account[]
   sessions        Session[]
 
@@ -215,6 +216,53 @@ model MpSentiment {
   @@unique([userId, mpId])
   @@index([mpId])
   @@index([userId])
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+model SupportTicket {
+  id               String          @id @default(cuid())
+  userId           String?
+  email            String
+  name             String?
+  subject          String
+  message          String
+  status           TicketStatus    @default(OPEN)
+  priority         TicketPriority  @default(NORMAL)
+  aiSuggestedReply String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  user             User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  replies          SupportReply[]
+
+  @@index([status])
+  @@index([userId])
+}
+
+model SupportReply {
+  id          String        @id @default(cuid())
+  ticketId    String
+  authorId    String?
+  authorEmail String
+  isAdmin     Boolean       @default(false)
+  isAi        Boolean       @default(false)
+  message     String
+  createdAt   DateTime      @default(now())
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
 }
 
 model VerificationToken {

@@ -23,6 +23,7 @@ const NAV = [
   { href: '/admin/users', label: '👥 Users' },
   { href: '/admin/mps', label: '🏛️ MPs' },
   { href: '/admin/bills', label: '📋 Bills' },
+  { href: '/admin/support', label: '🎫 Support' },
   { href: '/admin/votes', label: '🗳️ Votes & Comments' },
   { href: '/admin/marketing', label: '📈 Marketing Strategy' },
 ];
