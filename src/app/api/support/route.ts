@@ -11,7 +11,7 @@ async function sendTelegramNotification(ticket: { id: string; email: string; nam
   if (!token || !chatId) return;
 
   const preview = ticket.message.slice(0, 200) + (ticket.message.length > 200 ? '…' : '');
-  const text = `🎫 *New Support Ticket*\n\n*From:* ${ticket.name || 'Anonymous'} (${ticket.email})\n*Subject:* ${ticket.subject}\n\n${preview}\n\n[View ticket](https://crossbench.io/admin/support/${ticket.id})`;
+  const text = `🎫 *New Support Ticket*\n\n*From:* ${ticket.name || 'Anonymous'} (${ticket.email})\n*Subject:* ${ticket.subject}\n\n${preview}\n\n[View tickets](https://crossbench.io/admin/support)`;
 
   await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: 'POST',
