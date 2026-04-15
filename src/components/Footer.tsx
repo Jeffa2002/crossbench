@@ -12,16 +12,13 @@ export default function Footer() {
       <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <Link href="/" style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-            {/* Icon-only crop: show left ~29% of the logo (the ballot box + chat icon) */}
-            <div style={{ width: '32px', height: '32px', overflow: 'hidden', position: 'relative', borderRadius: '4px' }}>
-              <Image
-                src="/logo.jpg"
-                alt="Crossbench"
-                width={679}
-                height={198}
-                style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', height: '32px', width: 'auto' }}
-              />
-            </div>
+            <Image
+              src="/logo-icon.png"
+              alt="Crossbench"
+              width={198}
+              height={198}
+              style={{ height: '32px', width: '32px', borderRadius: '4px' }}
+            />
           </Link>
           <span style={{ color: '#4A5568', fontSize: '13px' }}>Your voice. Your electorate. Your Parliament.</span>
         </div>
