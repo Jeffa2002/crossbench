@@ -63,7 +63,7 @@ model User {
   termsAcceptedAt DateTime?
   electorateId    String?
   electorate      Electorate? @relation(fields: [electorateId], references: [id], onDelete: SetNull)
-  addressHash          String?     @unique
+  addressHash          String?
   verificationStatus   VerificationStatus @default(NONE)
   electorateVerified   Boolean    @default(false)
   name            String?

@@ -16,27 +16,16 @@ export async function POST(req: NextRequest) {
   const userId = (session.user as any).id;
   const existing = await prisma.user.findUnique({ where: { id: userId }, select: { termsAcceptedAt: true } });
 
-  try {
-    await prisma.user.update({
-      where: { id: userId },
-      data: {
-        electorateId,
-        verifiedAt: new Date(),
-        addressHash: finalHash,
-        termsAcceptedAt: existing?.termsAcceptedAt ?? new Date(),
-        verificationStatus: 'ADDRESS',
-        electorateVerified: true,
-      },
-    });
-  } catch (e: any) {
-    // Unique constraint on addressHash = another account already verified this address
-    if (e?.code === 'P2002' && e?.meta?.target?.includes('addressHash')) {
-      return NextResponse.json(
-        { error: 'This address has already been used to verify another account. Each address can only be linked to one account.' },
-        { status: 409 }
-      );
-    }
-    throw e;
-  }
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      electorateId,
+      verifiedAt: new Date(),
+      addressHash: finalHash,
+      termsAcceptedAt: existing?.termsAcceptedAt ?? new Date(),
+      verificationStatus: 'ADDRESS',
+      electorateVerified: true,
+    },
+  });
   return NextResponse.json({ ok: true });
 }
