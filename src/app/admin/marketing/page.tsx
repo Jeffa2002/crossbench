@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 
-type Tab = 'mps' | 'voters';
+type Tab = 'mps' | 'voters' | 'todo';
 type SubTab = 'overview' | 'channels' | 'content' | 'competitive' | 'influencers' | 'kpis' | 'budget' | 'risks';
 
 const badge = (priority: string) => {
@@ -170,6 +170,49 @@ const SUBTABS: { id: SubTab; label: string }[] = [
   { id: 'risks', label: '⚠️ Risks' },
 ];
 
+const TODO_ITEMS = [
+  { id: 1, category: 'LinkedIn', priority: 'high', task: 'Create Crossbench LinkedIn company page', notes: 'Company name: Crossbench · Industry: Technology · Tagline: "Real-time constituent sentiment for Australian MPs" · Admin: Jeffa · Parent: EquiM8 Group ABN' },
+  { id: 2, category: 'LinkedIn', priority: 'high', task: 'Write company description for LinkedIn page', notes: '2-3 paragraph about section covering the product, mission, and MP value prop. Also draft first announcement post.' },
+  { id: 3, category: 'LinkedIn', priority: 'medium', task: 'Generate LinkedIn banner image (1128×191px)', notes: 'Dark background matching brand, logo on left, tagline on right. Can use AI image generation.' },
+  { id: 4, category: 'LinkedIn', priority: 'medium', task: 'Post launch announcement on LinkedIn', notes: 'Short founder post: what Crossbench is, why it exists, link to crossbench.io' },
+  { id: 5, category: 'Email', priority: 'high', task: 'Set up Cloudflare Email Routing once DNS migrated', notes: 'Routes: privacy@ · abuse@ · info@ → forward to personal email. Free, 2 min setup.' },
+  { id: 6, category: 'Email', priority: 'medium', task: 'Verify crossbench.io domain in Resend', notes: 'Currently sending from noreply@crossbench.io — need domain verified for reliable delivery' },
+  { id: 7, category: 'Support', priority: 'high', task: 'Build internal support ticket system', notes: 'Users submit tickets → appear in /admin/support · Telegram notification to Jeffa · AI assistant can help users in-thread' },
+  { id: 8, category: 'Product', priority: 'medium', task: 'Search/filter on bills page', notes: 'Filter by status, portfolio, chamber, keyword search' },
+  { id: 9, category: 'Product', priority: 'medium', task: 'Share-your-vote social card', notes: 'After voting on a bill, user can share a card showing their position + how their electorate voted' },
+  { id: 10, category: 'Product', priority: 'medium', task: 'Approval rating widget on MP dashboard', notes: 'Show % positive from own electorate vs nationally using MpSentiment data' },
+];
+
+const CATEGORIES = ['All', 'LinkedIn', 'Email', 'Support', 'Product'];
+
+function TodoSection() {
+  const [catFilter, setCatFilter] = useState('All');
+  const filtered = catFilter === 'All' ? TODO_ITEMS : TODO_ITEMS.filter(t => t.category === catFilter);
+  return (
+    <div>
+      <h1 className="text-2xl font-bold mb-1">Tasks & To-Do</h1>
+      <p className="text-[#7E8AA3] text-sm mb-4">Outstanding work across marketing, product, and ops.</p>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+        {CATEGORIES.map(c => (
+          <button key={c} onClick={() => setCatFilter(c)} style={{ padding: '5px 14px', borderRadius: '999px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', border: '1px solid', borderColor: catFilter === c ? '#4E8FD4' : '#25324D', backgroundColor: catFilter === c ? '#4E8FD422' : '#111A2E', color: catFilter === c ? '#4E8FD4' : '#7E8AA3' }}>{c}</button>
+        ))}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {filtered.map(t => (
+          <div key={t.id} style={{ backgroundColor: '#0E1628', border: '1px solid #1C2940', borderRadius: '10px', padding: '14px 16px', display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: '12px', alignItems: 'start' }}>
+            <span style={{ fontSize: '11px', fontWeight: 700, padding: '3px 10px', borderRadius: '999px', backgroundColor: t.category === 'LinkedIn' ? '#0A66C222' : t.category === 'Support' ? '#2E8B5722' : t.category === 'Email' ? '#D6A94A22' : '#7E8AA322', color: t.category === 'LinkedIn' ? '#0A66C2' : t.category === 'Support' ? '#2E8B57' : t.category === 'Email' ? '#D6A94A' : '#7E8AA3', border: '1px solid', borderColor: t.category === 'LinkedIn' ? '#0A66C255' : t.category === 'Support' ? '#2E8B5755' : t.category === 'Email' ? '#D6A94A55' : '#7E8AA355', whiteSpace: 'nowrap' }}>{t.category}</span>
+            <div>
+              <div style={{ fontWeight: 600, color: '#F5F7FB', fontSize: '14px', marginBottom: '4px' }}>{t.task}</div>
+              <div style={{ fontSize: '12px', color: '#4A5568', lineHeight: 1.5 }}>{t.notes}</div>
+            </div>
+            {badge(t.priority)}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function MarketingPage() {
   const [tab, setTab] = useState<Tab>('mps');
   const [sub, setSub] = useState<SubTab>('overview');
@@ -184,15 +227,17 @@ export default function MarketingPage() {
 
       {/* Main tabs */}
       <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid #25324D' }}>
-        {(['mps', 'voters'] as Tab[]).map(t => (
+        {([['mps', '🏛️ MPs & Senators'], ['voters', '🗳️ Voters / End Users'], ['todo', '✅ Tasks & To-Do']] as [Tab, string][]).map(([t, label]) => (
           <button key={t} onClick={() => { setTab(t); setSub('overview'); }} style={{ padding: '10px 20px', fontWeight: 700, fontSize: '14px', background: 'none', border: 'none', cursor: 'pointer', borderBottom: tab === t ? '2px solid #4E8FD4' : '2px solid transparent', color: tab === t ? '#4E8FD4' : '#7E8AA3', marginBottom: '-1px' }}>
-            {t === 'mps' ? '🏛️ MPs & Senators' : '🗳️ Voters / End Users'}
+            {label}
           </button>
         ))}
       </div>
 
+      {tab === 'todo' && <TodoSection />}
+
       {/* Sub tabs */}
-      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+      <div style={{ display: tab === 'todo' ? 'none' : 'flex', gap: '6px', flexWrap: 'wrap' }}>
         {SUBTABS.map(s => (
           <button key={s.id} onClick={() => setSub(s.id)} style={{ padding: '6px 14px', fontWeight: 600, fontSize: '13px', background: sub === s.id ? '#4E8FD422' : '#111A2E', border: sub === s.id ? '1px solid #4E8FD4' : '1px solid #25324D', borderRadius: '999px', cursor: 'pointer', color: sub === s.id ? '#4E8FD4' : '#7E8AA3' }}>
             {s.label}
@@ -200,8 +245,8 @@ export default function MarketingPage() {
         ))}
       </div>
 
-      {/* Personas */}
-      {sub === 'overview' && (
+      {/* Strategy content — hidden when on todo tab */}
+      {tab !== 'todo' && sub === 'overview' && (
         <Section title="Audience Personas">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
             {data.personas.map((p, i) => (
