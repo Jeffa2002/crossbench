@@ -1,31 +1,30 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
+
+let plausibleReady = false
 
 export default function PlausibleTracker() {
   const pathname = usePathname()
-  const initialized = useRef(false)
 
-  // Initialise once
   useEffect(() => {
-    if (initialized.current) return
-    initialized.current = true
+    if (plausibleReady) {
+      // Subsequent navigations — just track the pageview
+      import('@plausible-analytics/tracker').then(({ track }) => {
+        track('pageview', {})
+      })
+      return
+    }
 
-    import('@plausible-analytics/tracker').then(({ init }) => {
+    // First load — init then track
+    import('@plausible-analytics/tracker').then(({ init, track }) => {
       init({
         domain: 'crossbench.io',
         captureOnLocalhost: true,
-        // Disable built-in SPA tracking — we handle it via usePathname below
         autoCapturePageviews: false,
       })
-    })
-  }, [])
-
-  // Fire a pageview on every route change (including initial load)
-  useEffect(() => {
-    if (!initialized.current) return
-    import('@plausible-analytics/tracker').then(({ track }) => {
+      plausibleReady = true
       track('pageview', {})
     })
   }, [pathname])
