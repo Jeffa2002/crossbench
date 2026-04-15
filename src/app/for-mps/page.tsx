@@ -1,5 +1,4 @@
 import Nav from '@/components/Nav';
-import Footer from '@/components/Footer';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -137,7 +136,7 @@ export default function ForMPsPage() {
         </div>
       </section>
 
-      <Footer />
+
     </main>
   );
 }

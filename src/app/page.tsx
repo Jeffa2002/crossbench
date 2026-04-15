@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import Nav from "@/components/Nav";
-import Footer from "@/components/Footer";
 import Link from "next/link";
 import Image from "next/image";
 import { getBillTags } from "@/lib/bill-tags";
@@ -202,7 +201,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <Footer />
+
     </main>
   );
 }
