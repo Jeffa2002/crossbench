@@ -187,27 +187,61 @@ const CATEGORIES = ['All', 'LinkedIn', 'Email', 'Support', 'Product'];
 
 function TodoSection() {
   const [catFilter, setCatFilter] = useState('All');
-  const filtered = catFilter === 'All' ? TODO_ITEMS : TODO_ITEMS.filter(t => t.category === catFilter);
+  const [done, setDone] = useState<Set<number>>(new Set());
+  const [showDone, setShowDone] = useState(false);
+
+  // Load from localStorage on mount
+  useState(() => {
+    try {
+      const saved = localStorage.getItem('cb_admin_todos_done');
+      if (saved) setDone(new Set(JSON.parse(saved)));
+    } catch {}
+  });
+
+  function toggle(id: number) {
+    setDone(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      try { localStorage.setItem('cb_admin_todos_done', JSON.stringify([...next])); } catch {}
+      return next;
+    });
+  }
+
+  const allFiltered = (catFilter === 'All' ? TODO_ITEMS : TODO_ITEMS.filter(t => t.category === catFilter));
+  const filtered = showDone ? allFiltered : allFiltered.filter(t => !done.has(t.id));
+  const doneCount = allFiltered.filter(t => done.has(t.id)).length;
+
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-1">Tasks & To-Do</h1>
-      <p className="text-[#7E8AA3] text-sm mb-4">Outstanding work across marketing, product, and ops.</p>
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+        <h1 style={{ fontSize: '22px', fontWeight: 700, margin: 0 }}>Tasks & To-Do</h1>
+        <span style={{ fontSize: '12px', color: '#2E8B57', fontWeight: 600 }}>{doneCount}/{allFiltered.length} done</span>
+      </div>
+      <p style={{ color: '#7E8AA3', fontSize: '13px', margin: '0 0 14px' }}>Click a task to mark it done. Persists in your browser.</p>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
         {CATEGORIES.map(c => (
           <button key={c} onClick={() => setCatFilter(c)} style={{ padding: '5px 14px', borderRadius: '999px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', border: '1px solid', borderColor: catFilter === c ? '#4E8FD4' : '#25324D', backgroundColor: catFilter === c ? '#4E8FD422' : '#111A2E', color: catFilter === c ? '#4E8FD4' : '#7E8AA3' }}>{c}</button>
         ))}
+        <button onClick={() => setShowDone(s => !s)} style={{ marginLeft: 'auto', padding: '5px 14px', borderRadius: '999px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', border: '1px solid #25324D', backgroundColor: '#111A2E', color: '#4A5568' }}>
+          {showDone ? 'Hide done' : `Show done (${doneCount})`}
+        </button>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {filtered.map(t => (
-          <div key={t.id} style={{ backgroundColor: '#0E1628', border: '1px solid #1C2940', borderRadius: '10px', padding: '14px 16px', display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: '12px', alignItems: 'start' }}>
-            <span style={{ fontSize: '11px', fontWeight: 700, padding: '3px 10px', borderRadius: '999px', backgroundColor: t.category === 'LinkedIn' ? '#0A66C222' : t.category === 'Support' ? '#2E8B5722' : t.category === 'Email' ? '#D6A94A22' : '#7E8AA322', color: t.category === 'LinkedIn' ? '#0A66C2' : t.category === 'Support' ? '#2E8B57' : t.category === 'Email' ? '#D6A94A' : '#7E8AA3', border: '1px solid', borderColor: t.category === 'LinkedIn' ? '#0A66C255' : t.category === 'Support' ? '#2E8B5755' : t.category === 'Email' ? '#D6A94A55' : '#7E8AA355', whiteSpace: 'nowrap' }}>{t.category}</span>
-            <div>
-              <div style={{ fontWeight: 600, color: '#F5F7FB', fontSize: '14px', marginBottom: '4px' }}>{t.task}</div>
-              <div style={{ fontSize: '12px', color: '#4A5568', lineHeight: 1.5 }}>{t.notes}</div>
+        {filtered.length === 0 && <p style={{ color: '#4A5568', fontSize: '13px' }}>All done! 🎉</p>}
+        {filtered.map(t => {
+          const isDone = done.has(t.id);
+          return (
+            <div key={t.id} onClick={() => toggle(t.id)} style={{ backgroundColor: isDone ? '#0A1408' : '#0E1628', border: `1px solid ${isDone ? '#2E8B5733' : '#1C2940'}`, borderRadius: '10px', padding: '14px 16px', display: 'grid', gridTemplateColumns: 'auto auto 1fr auto', gap: '12px', alignItems: 'start', cursor: 'pointer', opacity: isDone ? 0.55 : 1, transition: 'opacity 0.15s' }}>
+              <span style={{ fontSize: '16px', marginTop: '1px', userSelect: 'none' }}>{isDone ? '✅' : '⬜'}</span>
+              <span style={{ fontSize: '11px', fontWeight: 700, padding: '3px 10px', borderRadius: '999px', backgroundColor: t.category === 'LinkedIn' ? '#0A66C222' : t.category === 'Support' ? '#2E8B5722' : t.category === 'Email' ? '#D6A94A22' : '#7E8AA322', color: t.category === 'LinkedIn' ? '#0A66C2' : t.category === 'Support' ? '#2E8B57' : t.category === 'Email' ? '#D6A94A' : '#7E8AA3', border: '1px solid', borderColor: t.category === 'LinkedIn' ? '#0A66C255' : t.category === 'Support' ? '#2E8B5755' : t.category === 'Email' ? '#D6A94A55' : '#7E8AA355', whiteSpace: 'nowrap' }}>{t.category}</span>
+              <div>
+                <div style={{ fontWeight: 600, color: isDone ? '#4A5568' : '#F5F7FB', fontSize: '14px', marginBottom: '4px', textDecoration: isDone ? 'line-through' : 'none' }}>{t.task}</div>
+                <div style={{ fontSize: '12px', color: '#3A4A5A', lineHeight: 1.5 }}>{t.notes}</div>
+              </div>
+              {badge(t.priority)}
             </div>
-            {badge(t.priority)}
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
