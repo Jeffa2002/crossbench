@@ -73,17 +73,18 @@ body {
   white-space: nowrap;
 }
 
-@media (max-width: 480px) {
-  .nav-link-hide-xs {
-    display: none;
+@media (max-width: 768px) {
+  .nav-desktop {
+    display: none !important;
   }
-  .nav-link {
-    font-size: 13px;
-    padding: 8px 8px;
+  .nav-hamburger {
+    display: flex !important;
   }
-  .nav-cta {
-    padding: 8px 12px;
-    font-size: 12px;
+}
+
+@media (min-width: 769px) {
+  .nav-hamburger {
+    display: none !important;
   }
 }
 
