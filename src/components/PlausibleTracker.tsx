@@ -26,7 +26,7 @@ export default function PlausibleTracker() {
   useEffect(() => {
     if (!initialized.current) return
     import('@plausible-analytics/tracker').then(({ track }) => {
-      track('pageview')
+      track('pageview', {})
     })
   }, [pathname])
 
