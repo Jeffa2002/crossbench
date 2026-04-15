@@ -3,8 +3,7 @@ import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
 import Stripe from 'stripe';
 
-export const config = { api: { bodyParser: false } };
-
+// App Router reads raw body via req.text() — no bodyParser config needed
 export async function POST(req: NextRequest) {
   const body = await req.text();
   const sig = req.headers.get('stripe-signature')!;
