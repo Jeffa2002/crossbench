@@ -24,6 +24,7 @@ jobs:
             cd /var/www/crossbench
 
             echo "=== Pulling latest ==="
+            git stash || true
             git pull origin main
 
             echo "=== Installing dependencies ==="
