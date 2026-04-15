@@ -29,6 +29,9 @@ jobs:
             echo "=== Installing dependencies ==="
             npm ci --prefer-offline
 
+            echo "=== Generating Prisma client ==="
+            npx prisma generate
+
             echo "=== Building ==="
             npm run build
 
