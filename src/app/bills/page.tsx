@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { prisma } from "@/lib/prisma";
 import Nav from "@/components/Nav";
 import Link from "next/link";
@@ -5,12 +6,14 @@ import { getBillTags } from "@/lib/bill-tags";
 import BillBadge from "@/components/BillBadge";
 import CustomSelect from "@/components/CustomSelect";
 
+export const metadata: Metadata = { title: 'Bills — Crossbench' };
+
 export const revalidate = 300;
 
 const STATUS_TABS = [
-  { label: "Before Parliament", value: "Before Parliament", emoji: "🏛️" },
-  { label: "Passed", value: "Passed", emoji: "✅" },
-  { label: "Not Passed", value: "Not Passed", emoji: "❌" },
+  { label: "Before Parliament", value: "Before Parliament" },
+  { label: "Passed", value: "Passed" },
+  { label: "Not Passed", value: "Not Passed" },
 ];
 
 export default async function BillsPage({
@@ -104,11 +107,17 @@ export default async function BillsPage({
                   border: `1px solid ${active ? "#2E8B57" : "#25324D"}`,
                   backgroundColor: active ? "rgba(46,139,87,0.15)" : "#111A2E",
                   color: active ? "#2E8B57" : "#B6C0D1",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
                 }}
               >
-                {tab.emoji} {tab.label}
+                {tab.value === "Before Parliament" && active && (
+                  <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#2E8B57", flexShrink: 0, display: "inline-block" }} />
+                )}
+                {tab.label}
                 {countMap[tab.value] !== undefined && (
-                  <span style={{ marginLeft: "6px", opacity: 0.7, fontWeight: 400 }}>
+                  <span style={{ marginLeft: "2px", opacity: 0.7, fontWeight: 400 }}>
                     ({countMap[tab.value]})
                   </span>
                 )}
@@ -200,6 +209,7 @@ export default async function BillsPage({
                 <Link
                   key={bill.id}
                   href={`/bills/${bill.id}`}
+                  className="cb-card"
                   style={{
                     backgroundColor: "#111A2E",
                     border: `1px solid ${isClosed ? "rgba(37,50,77,0.6)" : "#25324D"}`,

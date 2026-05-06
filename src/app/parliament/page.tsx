@@ -1,6 +1,9 @@
+import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import Nav from '@/components/Nav';
 import ParliamentClient, { ParliamentData } from './ParliamentClient';
+
+export const metadata: Metadata = { title: 'Parliament — Crossbench' };
 
 export const revalidate = 3600;
 

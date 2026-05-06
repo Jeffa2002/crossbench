@@ -7,7 +7,7 @@ export default function Footer() {
       borderTop: '1px solid #25324D',
       backgroundColor: '#0B1220',
       marginTop: 'auto',
-      padding: '32px 24px',
+      padding: '48px 24px 32px 24px',
     }}>
       <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

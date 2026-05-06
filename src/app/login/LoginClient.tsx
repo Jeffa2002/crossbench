@@ -21,6 +21,14 @@ export default function LoginClient() {
   const [error, setError] = useState('');
   const [recaptchaReady, setRecaptchaReady] = useState(false);
 
+  // Hide the reCAPTCHA badge — we show a text disclaimer instead
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = '.grecaptcha-badge { visibility: hidden !important; }';
+    document.head.appendChild(style);
+    return () => { document.head.removeChild(style); };
+  }, []);
+
   // Load reCAPTCHA v3 script
   useEffect(() => {
     const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
@@ -138,7 +146,7 @@ export default function LoginClient() {
         <p className='text-xs text-[#7E8AA3] mt-4 text-center'>
           No password needed. Just a quick sign-in link.
         </p>
-        <p className='text-[10px] text-[#4A5568] mt-3 text-center'>
+        <p className='text-[10px] text-[#4A5568] mt-3 text-center leading-relaxed'>
           Protected by reCAPTCHA —{' '}
           <a href='https://policies.google.com/privacy' target='_blank' rel='noopener' className='hover:underline'>Privacy</a>{' '}
           &amp;{' '}

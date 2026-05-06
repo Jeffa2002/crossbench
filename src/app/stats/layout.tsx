@@ -1,4 +1,7 @@
+import type { Metadata } from 'next';
 import Nav from '@/components/Nav';
+
+export const metadata: Metadata = { title: 'Stats — Crossbench' };
 
 export default function StatsLayout({ children }: { children: React.ReactNode }) {
   return (

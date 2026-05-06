@@ -1,6 +1,9 @@
+import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import Nav from '@/components/Nav';
 import Link from 'next/link';
+
+export const metadata: Metadata = { title: 'Electorates — Crossbench' };
 
 export const revalidate = 300;
 
@@ -87,8 +90,11 @@ export default async function ElectoratesPage({
             name="state"
             defaultValue={stateFilter || ''}
             style={{
-              backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '8px',
-              padding: '10px 14px', color: stateFilter ? '#F5F7FB' : '#7E8AA3', fontSize: '14px',
+              backgroundColor: '#16213A', border: '1px solid #25324D', borderRadius: '6px',
+              padding: '10px 14px', color: '#F5F7FB', fontSize: '14px',
+              outline: 'none', appearance: 'none',
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237E8AA3' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+              backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', paddingRight: '36px',
             }}
           >
             <option value="">All states</option>
@@ -100,13 +106,16 @@ export default async function ElectoratesPage({
             name="chamber"
             defaultValue={chamber || ''}
             style={{
-              backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '8px',
-              padding: '10px 14px', color: chamber ? '#F5F7FB' : '#7E8AA3', fontSize: '14px',
+              backgroundColor: '#16213A', border: '1px solid #25324D', borderRadius: '6px',
+              padding: '10px 14px', color: '#F5F7FB', fontSize: '14px',
+              outline: 'none', appearance: 'none',
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237E8AA3' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+              backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', paddingRight: '36px',
             }}
           >
             <option value="">All chambers</option>
-            <option value="House of Reps">🏛 House of Reps</option>
-            <option value="Senate">🔱 Senators</option>
+            <option value="House of Reps">House of Reps</option>
+            <option value="Senate">Senators</option>
           </select>
           <button
             type="submit"
@@ -139,6 +148,7 @@ export default async function ElectoratesPage({
               <Link
                 key={e.id}
                 href={`/electorates/${e.id}`}
+                className="cb-card"
                 style={{
                   backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '10px',
                   padding: '16px', textDecoration: 'none', display: 'flex', gap: '14px',

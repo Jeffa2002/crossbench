@@ -186,22 +186,26 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
                 paddingLeft: '30px',
               }}>
                 {b.outcome === 'Assented' && majorityPosition === 'opposed' && (
-                  <p style={{ margin: 0, fontSize: '13px', color: '#f87171' }}>
-                    ⚠️ <strong>{opposePct}% of voters opposed this bill</strong> — parliament passed it anyway.
-                  </p>
+                  <div style={{ backgroundColor: 'rgba(214,169,74,0.08)', border: '1px solid rgba(214,169,74,0.22)', borderRadius: '6px', padding: '8px 12px' }}>
+                    <p style={{ margin: 0, fontSize: '13px', color: '#D6A94A' }}>
+                      ⚠️ <strong>{opposePct}% of voters opposed this bill</strong> — parliament passed it anyway.
+                    </p>
+                  </div>
                 )}
                 {b.outcome === 'Assented' && majorityPosition === 'supported' && (
-                  <p style={{ margin: 0, fontSize: '13px', color: '#2E8B57' }}>
+                  <p style={{ margin: 0, fontSize: '13px', color: '#7DD8A3' }}>
                     ✓ <strong>{supportPct}% of voters supported this bill</strong> — parliament agreed.
                   </p>
                 )}
                 {b.outcome === 'Not Passed' && majorityPosition === 'supported' && (
-                  <p style={{ margin: 0, fontSize: '13px', color: '#f87171' }}>
-                    ⚠️ <strong>{supportPct}% of voters supported this bill</strong> — parliament rejected it anyway.
-                  </p>
+                  <div style={{ backgroundColor: 'rgba(214,169,74,0.08)', border: '1px solid rgba(214,169,74,0.22)', borderRadius: '6px', padding: '8px 12px' }}>
+                    <p style={{ margin: 0, fontSize: '13px', color: '#D6A94A' }}>
+                      ⚠️ <strong>{supportPct}% of voters supported this bill</strong> — parliament rejected it anyway.
+                    </p>
+                  </div>
                 )}
                 {b.outcome === 'Not Passed' && majorityPosition === 'opposed' && (
-                  <p style={{ margin: 0, fontSize: '13px', color: '#2E8B57' }}>
+                  <p style={{ margin: 0, fontSize: '13px', color: '#7DD8A3' }}>
                     ✓ <strong>{opposePct}% of voters opposed this bill</strong> — parliament agreed.
                   </p>
                 )}

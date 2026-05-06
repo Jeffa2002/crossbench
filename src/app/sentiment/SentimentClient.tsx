@@ -43,7 +43,7 @@ function ThumbButton({ active, type, count, onClick, disabled }: {
       disabled={disabled}
       style={{
         display: 'flex', alignItems: 'center', gap: '5px',
-        padding: '5px 10px', borderRadius: '20px', border: '1px solid',
+        padding: '5px 10px', borderRadius: '8px', border: '1px solid',
         borderColor: active ? activeBorder : '#25324D',
         backgroundColor: active ? activeBg : 'transparent',
         color: active ? activeColor : '#7E8AA3',
@@ -51,8 +51,20 @@ function ThumbButton({ active, type, count, onClick, disabled }: {
         cursor: disabled ? 'not-allowed' : 'pointer',
         transition: 'all 0.15s', opacity: disabled && !active ? 0.5 : 1,
       }}
+      onMouseEnter={e => { if (!disabled) (e.currentTarget as HTMLButtonElement).style.backgroundColor = active ? activeBg : 'rgba(255,255,255,0.04)'; }}
+      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = active ? activeBg : 'transparent'; }}
     >
-      <span style={{ fontSize: '15px' }}>{isUp ? '👍' : '👎'}</span>
+      {isUp ? (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/>
+          <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+        </svg>
+      ) : (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/>
+          <path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/>
+        </svg>
+      )}
       <span>{count}</span>
     </button>
   );

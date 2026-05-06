@@ -301,6 +301,10 @@ body {
   }
 }
 
+/* ── Card hover transitions ───────────────────────────────── */
+.cb-card { transition: border-color 0.15s ease, background-color 0.15s ease; }
+.cb-card:hover { border-color: #2E4A6A !important; background-color: #131E35 !important; }
+
 /* ── Utility ──────────────────────────────────────────────── */
 .truncate-1 {
   overflow: hidden;

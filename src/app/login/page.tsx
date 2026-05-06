@@ -1,6 +1,9 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import Nav from '@/components/Nav';
 import LoginClient from './LoginClient';
+
+export const metadata: Metadata = { title: 'Sign in — Crossbench' };
 
 export default function LoginPage() {
   return (

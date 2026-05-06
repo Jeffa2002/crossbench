@@ -64,7 +64,7 @@ export default async function HomePage() {
             { value: electorateCount, label: 'Electorates covered' },
           ].map(({ value, label }) => (
             <div key={label} style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 'clamp(28px, 5vw, 38px)', fontWeight: 700, color: '#D6A94A' }}>{value}</div>
+              <div style={{ fontSize: 'clamp(28px, 5vw, 38px)', fontWeight: 700, color: '#F5F7FB' }}>{value}</div>
               <div style={{ color: '#7E8AA3', fontSize: '13px', marginTop: '4px' }}>{label}</div>
             </div>
           ))}
@@ -174,7 +174,7 @@ export default async function HomePage() {
             ) : bills.map(bill => {
               const tags = getBillTags(bill).slice(0, 2);
               return (
-                <Link key={bill.id} href={`/bills/${bill.id}`} style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '18px 24px', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+                <Link key={bill.id} href={`/bills/${bill.id}`} className="cb-card" style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '18px 24px', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', gap: '6px', marginBottom: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
                       {tags.map(tag => (

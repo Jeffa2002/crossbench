@@ -1,5 +1,8 @@
+import type { Metadata } from 'next';
 import Nav from '@/components/Nav';
 import Link from 'next/link';
+
+export const metadata: Metadata = { title: 'About — Crossbench' };
 
 export default function AboutPage() {
   return (
@@ -24,14 +27,14 @@ export default function AboutPage() {
         <div style={{ maxWidth: '760px', margin: '0 auto', padding: '0 24px' }}>
 
           <div style={{ marginBottom: '48px' }}>
-            <h2 style={{ fontSize: '26px', fontWeight: 700, marginBottom: '20px', color: '#F5F7FB' }}>The problem with how things work now</h2>
-            <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.9, marginBottom: '16px' }}>
+            <h2 style={{ fontSize: '26px', fontWeight: 700, marginBottom: '16px', marginTop: '0', color: '#F5F7FB' }}>The problem with how things work now</h2>
+            <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.85, marginBottom: '20px' }}>
               A bill lands in Parliament. It might affect healthcare, housing, how your super is taxed, or how schools are funded. Your MP may vote on it within days. For most Australians, the only way to weigh in is to call the electorate office, write a letter, or sign a petition that may never be read.
             </p>
-            <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.9, marginBottom: '16px' }}>
+            <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.85, marginBottom: '20px' }}>
               Meanwhile, the loudest voices in the room are often lobbyists, industry groups, and party whips, not constituents.
             </p>
-            <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.9 }}>
+            <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.85, marginBottom: '20px' }}>
               We think that is broken. Not because MPs are bad, most go into politics to represent people. But the tools for doing that have barely changed in a century.
             </p>
           </div>
@@ -44,20 +47,20 @@ export default function AboutPage() {
           </div>
 
           <div style={{ marginBottom: '48px' }}>
-            <h2 style={{ fontSize: '26px', fontWeight: 700, marginBottom: '20px', color: '#F5F7FB' }}>Why we built Crossbench</h2>
-            <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.9, marginBottom: '16px' }}>
+            <h2 style={{ fontSize: '26px', fontWeight: 700, marginBottom: '16px', marginTop: '0', color: '#F5F7FB' }}>Why we built Crossbench</h2>
+            <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.85, marginBottom: '20px' }}>
               Crossbench started from a simple question: what if your MP actually knew what their electorate thought about a specific bill before they voted on it?
             </p>
-            <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.9, marginBottom: '16px' }}>
+            <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.85, marginBottom: '20px' }}>
               Not a national poll. Not a Twitter pile-on. Not a petition with no name verification. Real people, in a real electorate, voting on a real bill, with their address verified, their vote counted once, and the result visible to whoever represents them in Canberra.
             </p>
-            <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.9 }}>
+            <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.85, marginBottom: '20px' }}>
               That's Crossbench. A civic layer between elections. A way to keep the conversation going between the polls, not instead of them.
             </p>
           </div>
 
           <div style={{ marginBottom: '48px' }}>
-            <h2 style={{ fontSize: '26px', fontWeight: 700, marginBottom: '20px', color: '#F5F7FB' }}>What we're not</h2>
+            <h2 style={{ fontSize: '26px', fontWeight: 700, marginBottom: '16px', marginTop: '0', color: '#F5F7FB' }}>What we're not</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {[
                 { label: 'Not a petition site', desc: 'Petitions aggregate signatures. We aggregate verified constituent sentiment, bill by bill, electorate by electorate. Different thing.' },
@@ -77,27 +80,27 @@ export default function AboutPage() {
           </div>
 
           <div style={{ marginBottom: '48px' }}>
-            <h2 style={{ fontSize: '26px', fontWeight: 700, marginBottom: '20px', color: '#F5F7FB' }}>How we handle your data</h2>
-            <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.9, marginBottom: '16px' }}>
+            <h2 style={{ fontSize: '26px', fontWeight: 700, marginBottom: '16px', marginTop: '0', color: '#F5F7FB' }}>How we handle your data</h2>
+            <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.85, marginBottom: '20px' }}>
               We ask for your address once, to confirm which electorate you are in. After that, we store the electorate, not the address. We know your electorate. We do not need to know your street.
             </p>
-            <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.9, marginBottom: '16px' }}>
+            <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.85, marginBottom: '20px' }}>
               MPs see electorate-level totals. They do not see names. They do not see individual votes. They see how their electorate is leaning on a bill. That is it.
             </p>
-            <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.9 }}>
+            <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.85, marginBottom: '20px' }}>
               We built it this way deliberately. The goal is to make collective sentiment legible to power, not to expose individuals to it.
             </p>
           </div>
 
           <div style={{ marginBottom: '48px' }}>
-            <h2 style={{ fontSize: '26px', fontWeight: 700, marginBottom: '20px', color: '#F5F7FB' }}>Does it actually matter?</h2>
-            <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.9, marginBottom: '16px' }}>
+            <h2 style={{ fontSize: '26px', fontWeight: 700, marginBottom: '16px', marginTop: '0', color: '#F5F7FB' }}>Does it actually matter?</h2>
+            <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.85, marginBottom: '20px' }}>
               We are not naive. An MP will not vote against their party because 60% of their electorate ticked "oppose" on an app. Party discipline is real. Caucus is real.
             </p>
-            <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.9, marginBottom: '16px' }}>
+            <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.85, marginBottom: '20px' }}>
               But independents and crossbenchers hold real power in the Senate. And even within parties, MPs with a clear picture of constituent sentiment have something they did not before: evidence. Something to take into a caucus room. Something to point to when they advocate for their community's position.
             </p>
-            <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.9 }}>
+            <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.85, marginBottom: '20px' }}>
               And for citizens, knowing that your view is counted, visible, and in front of the person who represents you in Canberra? That is not nothing. That might be the start of something.
             </p>
           </div>

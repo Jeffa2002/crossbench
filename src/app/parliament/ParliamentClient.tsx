@@ -152,7 +152,7 @@ export default function ParliamentClient({ data }: { data: ParliamentData }) {
                 fontWeight: chamber === c ? 600 : 400,
                 fontSize: '14px', cursor: 'pointer',
               }}>
-              {c === 'hor' ? '🟢 House of Reps' : '🔵 Senate'}
+              {c === 'hor' ? 'House of Reps' : 'Senate'}
             </button>
           ))}
         </div>
