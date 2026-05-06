@@ -3,13 +3,14 @@ import Nav from "@/components/Nav";
 import Link from "next/link";
 import Image from "next/image";
 import { getBillTags } from "@/lib/bill-tags";
+import BillBadge from "@/components/BillBadge";
 
 export const revalidate = 300;
 
 export default async function HomePage() {
-  const [billCount, voteCount, electorateCount, bills] = await Promise.all([
+  const [billCount, allBillCount, electorateCount, bills] = await Promise.all([
     prisma.bill.count({ where: { status: 'Before Parliament', parliamentNumber: 48 } }),
-    prisma.vote.count(),
+    prisma.bill.count(),
     prisma.electorate.count({ where: { mpName: { not: null } } }),
     prisma.bill.findMany({
       where: { status: 'Before Parliament', parliamentNumber: 48 },
@@ -59,7 +60,7 @@ export default async function HomePage() {
         <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 20px', display: 'flex', justifyContent: 'center', gap: 'clamp(24px, 6vw, 80px)', flexWrap: 'wrap' }}>
           {[
             { value: billCount, label: 'Bills before parliament' },
-            { value: voteCount.toLocaleString(), label: 'Citizen votes cast' },
+            { value: allBillCount.toLocaleString(), label: 'Bills tracked' },
             { value: electorateCount, label: 'Electorates covered' },
           ].map(({ value, label }) => (
             <div key={label} style={{ textAlign: 'center' }}>
@@ -71,7 +72,7 @@ export default async function HomePage() {
       </section>
 
       {/* Why Crossbench — manifesto */}
-      <section style={{ borderBottom: '1px solid #25324D', padding: 'clamp(48px, 6vw, 80px) 0' }}>
+      <section style={{ borderBottom: '1px solid #25324D', padding: 'clamp(48px, 6vw, 80px) 0', background: 'linear-gradient(180deg, #0A1020 0%, #111A2E 22%, #111A2E 100%)' }}>
         <div style={{ maxWidth: '760px', margin: '0 auto', padding: '0 20px', textAlign: 'center' }}>
           <h2 style={{ fontSize: 'clamp(24px, 4vw, 36px)', fontWeight: 700, lineHeight: 1.2, marginBottom: '20px' }}>
             Democracy shouldn't go quiet between elections.
@@ -171,24 +172,18 @@ export default async function HomePage() {
                 No live bills right now. Check back soon.
               </div>
             ) : bills.map(bill => {
-              const tags = getBillTags(bill);
+              const tags = getBillTags(bill).slice(0, 2);
               return (
                 <Link key={bill.id} href={`/bills/${bill.id}`} style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '18px 24px', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', gap: '6px', marginBottom: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
                       {tags.map(tag => (
-                        <span key={tag.label} style={{ backgroundColor: tag.bg, color: tag.color, fontSize: '11px', padding: '3px 8px', borderRadius: '4px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                          {tag.pulse && <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: tag.color, display: 'inline-block', flexShrink: 0 }} />}
-                          {tag.label}
-                        </span>
+                        <BillBadge key={tag.label} tag={tag} />
                       ))}
                     </div>
                     <p style={{ color: '#F5F7FB', fontWeight: 500, fontSize: '15px', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{bill.title}</p>
                   </div>
-                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <div style={{ fontSize: '20px', fontWeight: 700, color: '#D6A94A' }}>{bill._count.votes}</div>
-                    <div style={{ fontSize: '11px', color: '#7E8AA3' }}>votes</div>
-                  </div>
+                  <div style={{ color: '#4E8FD4', fontSize: '20px', flexShrink: 0 }}>→</div>
                 </Link>
               );
             })}

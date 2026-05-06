@@ -142,6 +142,7 @@ model Bill {
   @@index([chamber])
   @@index([portfolio])
   @@index([lastUpdatedAt])
+  @@index([parliamentNumber])
 }
 
 model Vote {

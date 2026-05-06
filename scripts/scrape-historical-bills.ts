@@ -113,7 +113,13 @@ async function main() {
     console.log(`\n=== Scraping Parliament ${parlNum} (${parlDates.start} to ${parlDates.end}) ===`);
 
     for (const { status, billStatus } of STATUSES) {
-      console.log(`\n  Status: ${status} (${billStatus})`);
+      // Derive outcome from billStatus: Assented→Passed, Defeated/Lapsed/Withdrawn→Not Passed
+      const outcome = billStatus === 'Assented' ? 'Assented'
+        : billStatus === 'Defeated' ? 'Not Passed'
+        : billStatus === 'Lapsed' ? 'Lapsed'
+        : billStatus === 'Withdrawn' ? 'Withdrawn'
+        : null;
+      console.log(`\\n  Status: ${status} (${billStatus})`);
 
       let pageNum = 1;
       let hasMore = true;
@@ -161,6 +167,8 @@ async function main() {
                   data: {
                     parliamentNumber: parlNum,
                     status: bill.status,
+                    // Set outcome if not already set — historical scraper maps defeated/lapsed/withdrawn
+                    ...(existing.outcome ? {} : { outcome }),
                     ...(existing.introducedAt ? {} : { introducedAt: introDate }),
                   },
                 });
@@ -174,6 +182,7 @@ async function main() {
                     title: bill.title,
                     chamber: bill.chamber,
                     status: bill.status,
+                    outcome,
                     aphUrl: bill.aphUrl,
                     introducedAt: introDate,
                     parliamentNumber: parlNum,

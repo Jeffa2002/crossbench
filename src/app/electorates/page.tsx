@@ -57,7 +57,6 @@ export default async function ElectoratesPage({
     prisma.electorate.groupBy({ by: ['state'], orderBy: { state: 'asc' } }),
   ]);
 
-  const totalVotes = electorates.reduce((s, e) => s + e._count.votes, 0);
 
   return (
     <main style={{ backgroundColor: '#0B1220', minHeight: '100vh', color: '#F5F7FB' }}>
@@ -68,7 +67,7 @@ export default async function ElectoratesPage({
         <div style={{ marginBottom: '32px' }}>
           <h1 style={{ fontSize: '32px', fontWeight: 700, margin: '0 0 8px' }}>Electorates</h1>
           <p style={{ color: '#7E8AA3', margin: 0, fontSize: '15px' }}>
-            {electorates.length} electorates · {totalVotes.toLocaleString()} votes cast
+            {electorates.length} electorates shown · Federal seats and senators covered
           </p>
         </div>
 
@@ -195,11 +194,7 @@ export default async function ElectoratesPage({
                       {e.mpParty.replace('Australian ', '').replace(' of Australia', '')}
                     </span>
                   )}
-                  {e._count.votes > 0 && (
-                    <p style={{ fontSize: '11px', color: '#4A5568', margin: '6px 0 0' }}>
-                      {e._count.votes} vote{e._count.votes !== 1 ? 's' : ''}
-                    </p>
-                  )}
+
                 </div>
               </Link>
             );

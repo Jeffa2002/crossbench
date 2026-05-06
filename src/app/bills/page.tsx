@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import Nav from "@/components/Nav";
 import Link from "next/link";
 import { getBillTags } from "@/lib/bill-tags";
+import BillBadge from "@/components/BillBadge";
+import CustomSelect from "@/components/CustomSelect";
 
 export const revalidate = 300;
 
@@ -10,20 +12,6 @@ const STATUS_TABS = [
   { label: "Passed", value: "Passed", emoji: "✅" },
   { label: "Not Passed", value: "Not Passed", emoji: "❌" },
 ];
-
-const OUTCOME_BADGE: Record<string, { label: string; bg: string; color: string }> = {
-  Passed: { label: "✅ Passed", bg: "rgba(46,139,87,0.2)", color: "#2E8B57" },
-  "Not Passed": { label: "❌ Not Passed", bg: "rgba(185,28,28,0.15)", color: "#f87171" },
-  "Before Parliament": { label: "🏛️ Active", bg: "rgba(59,130,246,0.15)", color: "#60a5fa" },
-  "Lapsed": { label: "⏹ Lapsed", bg: "rgba(100,116,139,0.15)", color: "#94a3b8" },
-};
-
-function getBadgeForBill(bill: any) {
-  if (bill.status === "Before Parliament" && bill.parliamentNumber && bill.parliamentNumber < 48) {
-    return OUTCOME_BADGE["Lapsed"];
-  }
-  return (bill.outcome ? OUTCOME_BADGE[bill.outcome] : null) ?? OUTCOME_BADGE[bill.status];
-}
 
 export default async function BillsPage({
   searchParams,
@@ -147,25 +135,27 @@ export default async function BillsPage({
             placeholder="Search bills..."
             style={{ flex: 1, minWidth: 0, backgroundColor: "#16213A", border: "1px solid #25324D", borderRadius: "6px", padding: "10px 14px", color: "#F5F7FB", fontSize: "14px" }}
           />
-          <select
+          <CustomSelect
             name="chamber"
-            defaultValue={chamber}
-            style={{ backgroundColor: "#16213A", border: "1px solid #25324D", borderRadius: "6px", padding: "10px 14px", color: "#F5F7FB", fontSize: "14px" }}
-          >
-            <option value="">All chambers</option>
-            <option value="HOUSE">House of Reps</option>
-            <option value="SENATE">Senate</option>
-            <option value="JOINT">Joint</option>
-          </select>
-          <select
+            defaultValue={chamber || ""}
+            ariaLabel="Filter bills by chamber"
+            options={[
+              { value: "", label: "All chambers" },
+              { value: "HOUSE", label: "House of Reps" },
+              { value: "SENATE", label: "Senate" },
+              { value: "JOINT", label: "Joint" },
+            ]}
+          />
+          <CustomSelect
             name="sort"
             defaultValue={activeSort}
-            style={{ backgroundColor: "#16213A", border: "1px solid #25324D", borderRadius: "6px", padding: "10px 14px", color: "#F5F7FB", fontSize: "14px" }}
-          >
-            <option value="newest">Newest first</option>
-            <option value="votes">Most voted</option>
-            <option value="alpha">A–Z</option>
-          </select>
+            ariaLabel="Sort bills"
+            options={[
+              { value: "newest", label: "Newest first" },
+              { value: "votes", label: "Most voted" },
+              { value: "alpha", label: "A–Z" },
+            ]}
+          />
           <button
             type="submit"
             style={{
@@ -202,8 +192,7 @@ export default async function BillsPage({
             </div>
           ) : (
             bills.map((bill) => {
-              const tags = getBillTags(bill);
-              const outcomeBadge = getBadgeForBill(bill);
+              const tags = getBillTags(bill).slice(0, 2);
               const isLapsed = bill.status === "Before Parliament" && (bill as any).parliamentNumber && (bill as any).parliamentNumber < 48;
               const isClosed = bill.status !== "Before Parliament" || isLapsed;
 
@@ -233,50 +222,8 @@ export default async function BillsPage({
                         alignItems: "center",
                       }}
                     >
-                      {/* Outcome badge */}
-                      {outcomeBadge && (
-                        <span
-                          style={{
-                            backgroundColor: outcomeBadge.bg,
-                            color: outcomeBadge.color,
-                            fontSize: "11px",
-                            padding: "3px 8px",
-                            borderRadius: "4px",
-                            fontWeight: 600,
-                          }}
-                        >
-                          {outcomeBadge.label}
-                        </span>
-                      )}
                       {tags.map((tag) => (
-                        <span
-                          key={tag.label}
-                          style={{
-                            backgroundColor: tag.bg,
-                            color: tag.color,
-                            fontSize: "11px",
-                            padding: "3px 8px",
-                            borderRadius: "4px",
-                            fontWeight: 600,
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "5px",
-                          }}
-                        >
-                          {tag.pulse && (
-                            <span
-                              style={{
-                                width: "6px",
-                                height: "6px",
-                                borderRadius: "50%",
-                                backgroundColor: tag.color,
-                                display: "inline-block",
-                                flexShrink: 0,
-                              }}
-                            />
-                          )}
-                          {tag.label}
-                        </span>
+                        <BillBadge key={tag.label} tag={tag} />
                       ))}
                     </div>
                     <p
@@ -297,18 +244,8 @@ export default async function BillsPage({
                         {bill.sponsorName}
                       </p>
                     )}
-                    {isClosed && bill._count.votes > 0 && (
-                      <p style={{ color: "#7E8AA3", fontSize: "11px", margin: "4px 0 0" }}>
-                        {bill._count.votes} constituent votes recorded
-                      </p>
-                    )}
                   </div>
-                  <div style={{ textAlign: "right", flexShrink: 0 }}>
-                    <div style={{ fontSize: "18px", fontWeight: 700, color: isClosed ? "#7E8AA3" : "#D6A94A" }}>
-                      {bill._count.votes}
-                    </div>
-                    <div style={{ fontSize: "11px", color: "#7E8AA3" }}>votes</div>
-                  </div>
+                  <div style={{ color: "#4E8FD4", fontSize: "20px", flexShrink: 0 }}>→</div>
                 </Link>
               );
             })

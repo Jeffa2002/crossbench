@@ -100,7 +100,7 @@ async function fetchDetail(id: number): Promise<StoredDivision | null> {
     date: data.date,
     ayes: data.aye_votes,
     noes: data.no_votes,
-    passed: data.aye_votes > data.no_votes,
+    passed: data.passed ?? (data.aye_votes > data.no_votes),
     byParty: Object.entries(partyMap)
       .map(([party, d]) => ({ party, ayes: d.ayes, noes: d.noes }))
       .sort((a, b) => (b.ayes + b.noes) - (a.ayes + a.noes)),

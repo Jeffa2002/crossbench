@@ -108,6 +108,7 @@ async function main() {
                   outcome: source.outcome ?? null,
                   outcomeDate: source.outcome ? new Date() : null,
                   lastUpdatedAt: new Date(),
+                  parliamentNumber: 48,
                   ...(introducedAt ? { introducedAt } : {}),
                 },
               });
@@ -124,6 +125,7 @@ async function main() {
                 outcome: source.outcome ?? null,
                 outcomeDate: source.outcome ? new Date() : null,
                 lastUpdatedAt: new Date(),
+                parliamentNumber: 48,
                 ...(introducedAt ? { introducedAt } : {}),
               },
             });

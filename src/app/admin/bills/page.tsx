@@ -3,15 +3,23 @@ import { prisma } from '@/lib/prisma';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminBills() {
-  const bills = await prisma.bill.findMany({
-    orderBy: { votes: { _count: 'desc' } },
-    include: {
-      _count: { select: { votes: true } },
-      votes: {
-        select: { position: true },
-      },
-    },
-  });
+  const [bills, voteBreakdown] = await Promise.all([
+    prisma.bill.findMany({
+      orderBy: { votes: { _count: 'desc' } },
+      include: { _count: { select: { votes: true } } },
+    }),
+    prisma.vote.groupBy({
+      by: ['billId', 'position'],
+      _count: { _all: true },
+    }),
+  ]);
+
+  // Build a lookup map: billId → { SUPPORT, OPPOSE, ABSTAIN }
+  const breakdown: Record<string, Record<string, number>> = {};
+  for (const row of voteBreakdown) {
+    if (!breakdown[row.billId]) breakdown[row.billId] = {};
+    breakdown[row.billId][row.position] = row._count._all;
+  }
 
   return (
     <div className="space-y-6">
@@ -35,9 +43,10 @@ export default async function AdminBills() {
           </thead>
           <tbody>
             {bills.map(b => {
-              const support = b.votes.filter(v => v.position === 'SUPPORT').length;
-              const oppose = b.votes.filter(v => v.position === 'OPPOSE').length;
-              const abstain = b.votes.filter(v => v.position === 'ABSTAIN').length;
+              const bv = breakdown[b.id] ?? {};
+              const support = bv['SUPPORT'] ?? 0;
+              const oppose = bv['OPPOSE'] ?? 0;
+              const abstain = bv['ABSTAIN'] ?? 0;
               const total = b._count.votes;
               return (
                 <tr key={b.id} className="border-b border-[#1A2640] hover:bg-[#16213A] transition-colors">

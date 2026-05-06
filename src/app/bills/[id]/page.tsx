@@ -5,6 +5,8 @@ import { auth } from '@/lib/auth';
 import VoteButton from './vote-button';
 import Nav from '@/components/Nav';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
+import BillBadge from '@/components/BillBadge';
+import { getBillTags, makeBillTag } from '@/lib/bill-tags';
 
 export const revalidate = 60;
 
@@ -109,7 +111,12 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
     ? OUTCOME_CONFIG['Not Passed']
     : null;
 
-  const results = await getBillResults(bill.id);
+  // Fetch vote results and user session in parallel
+  const [results, session] = await Promise.all([
+    getBillResults(bill.id),
+    auth(),
+  ]);
+
   const supportPct = results.total > 0 ? Math.round((results.support / results.total) * 100) : 0;
   const opposePct = results.total > 0 ? Math.round((results.oppose / results.total) * 100) : 0;
   const abstainPct = results.total > 0 ? Math.round((results.abstain / results.total) * 100) : 0;
@@ -120,8 +127,6 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
       : results.oppose >= results.support && results.oppose >= results.abstain ? 'opposed'
       : 'abstained from')
     : null;
-
-  const session = await auth();
   let userVote = null;
   if (session?.user) {
     const existingVote = await prisma.vote.findUnique({
@@ -130,8 +135,12 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
     userVote = existingVote?.position || null;
   }
 
-  const chamberLabel = bill.chamber === 'HOUSE' ? '🏛 House of Representatives'
-    : bill.chamber === 'SENATE' ? '🔱 Senate' : '⚖️ Joint';
+  const headerTags = [
+    ...getBillTags(bill),
+    ...(bill.portfolio ? [makeBillTag(bill.portfolio, 'gold')] : []),
+    ...(b.revisionsCount > 1 ? [makeBillTag(`${b.revisionsCount} readings`, 'neutral')] : []),
+    ...(b.hasAmendments ? [makeBillTag('Amendments circulated', 'gold')] : []),
+  ];
 
   return (
     <main style={{ backgroundColor: '#0B1220', minHeight: '100vh', color: '#F5F7FB' }}>
@@ -211,30 +220,9 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
 
           {/* Status badges */}
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
-            <span style={{ backgroundColor: '#16213A', color: '#B6C0D1', fontSize: '11px', padding: '3px 10px', borderRadius: '4px' }}>
-              {chamberLabel}
-            </span>
-            {!isClosed && (
-              <span style={{ backgroundColor: 'rgba(46,139,87,0.14)', color: '#2E8B57', fontSize: '11px', padding: '3px 10px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#2E8B57', display: 'inline-block' }} />
-                {bill.status}
-              </span>
-            )}
-            {bill.portfolio && (
-              <span style={{ backgroundColor: 'rgba(214,169,74,0.14)', color: '#D6A94A', fontSize: '11px', padding: '3px 10px', borderRadius: '4px' }}>
-                {bill.portfolio}
-              </span>
-            )}
-            {b.revisionsCount > 1 && (
-              <span style={{ backgroundColor: 'rgba(100,120,200,0.14)', color: '#7B93D4', fontSize: '11px', padding: '3px 10px', borderRadius: '4px' }}>
-                {b.revisionsCount} readings
-              </span>
-            )}
-            {b.hasAmendments && (
-              <span style={{ backgroundColor: 'rgba(180,100,50,0.14)', color: '#C97B4B', fontSize: '11px', padding: '3px 10px', borderRadius: '4px' }}>
-                Amendments circulated
-              </span>
-            )}
+            {headerTags.map(tag => (
+              <BillBadge key={tag.label} tag={tag} />
+            ))}
           </div>
 
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#F5F7FB', marginBottom: '20px', lineHeight: 1.35 }}>
@@ -353,7 +341,7 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
         {/* ── Parliamentary Progress ── */}
         {(() => {
           const progress: Array<{chamber: string; event: string; date: string | null}> = b.parliamentaryProgress
-            ? JSON.parse(b.parliamentaryProgress)
+            ? (() => { try { return JSON.parse(b.parliamentaryProgress); } catch { return []; } })()
             : [];
           const mainStages = progress.filter((s: any) =>
             /agreed to|negatived|passed both|withdrawn|lapsed|assent|Committee of the Whole|Consideration of Senate message|Referred to Committee|Committee report/i.test(s.event)
@@ -418,7 +406,7 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
             byParty: Array<{ party: string; ayes: number; noes: number }>;
             memberVotes: Array<{ name: string; electorate: string; party: string; vote: string }>;
           };
-          const divisions: Division[] = b.divisionsData ? JSON.parse(b.divisionsData) : [];
+          const divisions: Division[] = b.divisionsData ? (() => { try { return JSON.parse(b.divisionsData); } catch { return []; } })() : [];
 
           // Final reading divisions: passage votes only
           const finalDivisions = divisions.filter(d =>
@@ -558,12 +546,14 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
               </span>
             )}
           </h2>
+          <p style={{ fontSize: '12px', color: '#4E5A73', marginBottom: isClosed ? '8px' : '20px', marginTop: '4px' }}>
+            Citizen votes cast on Crossbench — not the parliamentary vote.
+          </p>
           {isClosed && (
-            <p style={{ fontSize: '12px', color: '#7E8AA3', marginBottom: '20px', marginTop: '4px' }}>
+            <p style={{ fontSize: '12px', color: '#7E8AA3', marginBottom: '20px', marginTop: 0 }}>
               Voting is closed — this bill has been decided by parliament.
             </p>
           )}
-          {!isClosed && <div style={{ marginBottom: '20px' }} />}
 
           {results.total === 0 ? (
             <div style={{ textAlign: 'center', padding: '32px 0', color: '#7E8AA3' }}>

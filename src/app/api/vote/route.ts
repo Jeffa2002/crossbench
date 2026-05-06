@@ -24,6 +24,15 @@ export async function POST(req: NextRequest) {
   const bill = await prisma.bill.findUnique({ where: { id: billId } });
   if (!bill) return NextResponse.json({ error: "Bill not found" }, { status: 404 });
 
+  // Reject votes on decided or lapsed bills
+  const isLapsed = bill.status === 'Before Parliament' && (bill as any).parliamentNumber && (bill as any).parliamentNumber < 48;
+  const isClosed = bill.status !== 'Before Parliament' || isLapsed;
+  if (isClosed)
+    return NextResponse.json({ error: "Voting on this bill is closed" }, { status: 403 });
+
+  // Sanitise comment — cap at 1000 chars
+  const safeComment = typeof comment === 'string' ? comment.trim().slice(0, 1000) || null : null;
+
   // Snapshot the user's current verification status at time of vote
   const vote = await prisma.vote.upsert({
     where: { userId_billId: { userId: user.id, billId } },
@@ -32,12 +41,12 @@ export async function POST(req: NextRequest) {
       billId,
       electorateId: user.electorateId,
       position,
-      comment: comment || null,
+      comment: safeComment,
       verificationStatus: user.verificationStatus,
     },
     update: {
       position,
-      comment: comment || null,
+      comment: safeComment,
       verificationStatus: user.verificationStatus,
     },
   });
