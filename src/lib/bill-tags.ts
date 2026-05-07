@@ -24,8 +24,8 @@ function statusTag(bill: { status: string; outcome?: string | null; parliamentNu
 
   const outcome = bill.outcome || bill.status;
   if (outcome === 'Passed' || outcome === 'Assented') return { label: 'Passed', ...TAG_STYLE.passed };
-  if (outcome === 'Not Passed') return { label: 'Not passed', ...TAG_STYLE.failed };
-  if (outcome === 'Lapsed') return { label: 'Lapsed', ...TAG_STYLE.neutral };
+  if (outcome === 'Not Passed' || outcome === 'Defeated') return { label: 'Not passed', ...TAG_STYLE.failed };
+  if (outcome === 'Lapsed' || outcome === 'Withdrawn') return { label: 'Lapsed', ...TAG_STYLE.neutral };
   if (bill.status === 'Before Parliament') return { label: 'Before parliament', ...TAG_STYLE.active };
 
   return { label: bill.status || 'Status unknown', ...TAG_STYLE.neutral };
