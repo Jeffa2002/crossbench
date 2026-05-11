@@ -83,6 +83,7 @@ model User {
   addressChangeLogs  AddressChangeLog[]
   accounts           Account[]
   sessions        Session[]
+  billAlerts         BillAlert[]
 
   @@index([role])
   @@index([electorateId])
@@ -286,4 +287,31 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model BillAlert {
+  id              String    @id @default(cuid())
+  userId          String
+  keyword         String
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  lastNotifiedAt  DateTime?
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notifications   BillAlertNotification[]
+
+  @@unique([userId, keyword])
+  @@index([isActive])
+  @@index([keyword])
+}
+
+model BillAlertNotification {
+  id          String    @id @default(cuid())
+  alertId     String
+  billId      String
+  sentAt      DateTime  @default(now())
+  alert       BillAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+
+  @@unique([alertId, billId])
+  @@index([alertId])
 }
