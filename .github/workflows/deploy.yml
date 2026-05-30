@@ -37,7 +37,8 @@ jobs:
             npm run build
 
             echo "=== Restarting ==="
-            pm2 restart crossbench
+            pm2 restart crossbench || pm2 start npm --name crossbench -- start -- -p 3006
+            pm2 save
 
             echo "=== Done ==="
             pm2 show crossbench | grep -E "status|uptime|restart"

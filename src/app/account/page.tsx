@@ -5,6 +5,12 @@ import Link from 'next/link';
 import Nav from '@/components/Nav';
 import ChangeAddressButton from './ChangeAddressButton';
 
+type AccountVote = {
+  id: string;
+  position: string;
+  bill: { id: string; title: string };
+};
+
 export default async function AccountPage() {
   const session = await auth();
   if (!session?.user) redirect('/login?next=/account');
@@ -82,7 +88,7 @@ export default async function AccountPage() {
             </p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {user.votes.map(vote => (
+              {user.votes.map((vote: AccountVote) => (
                 <Link key={vote.id} href={`/bills/${vote.bill.id}`} style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   padding: '12px 16px', borderRadius: '8px', border: '1px solid #25324D',

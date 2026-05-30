@@ -9,10 +9,36 @@ function generateNonce(): string {
   // Use crypto.getRandomValues for a 128-bit random nonce
   const array = new Uint8Array(16)
   crypto.getRandomValues(array)
-  return Buffer.from(array).toString('base64')
+  return btoa(String.fromCharCode(...array))
 }
 
-export function middleware(request: NextRequest) {
+async function sha256Hex(value: string): Promise<string> {
+  const bytes = new TextEncoder().encode(value)
+  const digest = await crypto.subtle.digest('SHA-256', bytes)
+  return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('')
+}
+
+async function hasAdminSession(request: NextRequest): Promise<boolean> {
+  const adminPassword = process.env.ADMIN_PASSWORD ?? ''
+  const cookieSecret = process.env.MISSION_COOKIE_SECRET ?? process.env.NEXTAUTH_SECRET ?? ''
+  const token = request.cookies.get('admin_session')?.value
+
+  if (!adminPassword || !cookieSecret || !token) return false
+
+  const expected = await sha256Hex(adminPassword + cookieSecret)
+  return token === expected
+}
+
+export async function middleware(request: NextRequest) {
+  if (request.nextUrl.pathname === '/admin' || request.nextUrl.pathname.startsWith('/admin/')) {
+    if (!await hasAdminSession(request)) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/admin-login'
+      url.search = ''
+      return NextResponse.redirect(url)
+    }
+  }
+
   const nonce = generateNonce()
 
   const cspHeader = [
