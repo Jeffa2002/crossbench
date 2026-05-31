@@ -3,7 +3,37 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import Anthropic from '@anthropic-ai/sdk';
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+let anthropicClient: Anthropic | null = null;
+
+function getAnthropic(): Anthropic | null {
+  if (!process.env.ANTHROPIC_API_KEY) return null;
+  anthropicClient ??= new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  return anthropicClient;
+}
+
+const TICKET_WINDOW_MS = 10 * 60_000;
+const TICKET_MAX = 3;
+const ticketRateLimit = new Map<string, { count: number; resetAt: number }>();
+
+function clientKey(req: NextRequest): string {
+  return req.headers.get('cf-connecting-ip')
+    ?? req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    ?? 'unknown';
+}
+
+function isRateLimited(req: NextRequest): boolean {
+  const key = clientKey(req);
+  const now = Date.now();
+  const current = ticketRateLimit.get(key);
+
+  if (!current || current.resetAt <= now) {
+    ticketRateLimit.set(key, { count: 1, resetAt: now + TICKET_WINDOW_MS });
+    return false;
+  }
+
+  current.count += 1;
+  return current.count > TICKET_MAX;
+}
 
 async function sendTelegramNotification(ticket: { id: string; email: string; name: string | null; subject: string; message: string }) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -21,6 +51,9 @@ async function sendTelegramNotification(ticket: { id: string; email: string; nam
 }
 
 async function generateAiReply(subject: string, message: string): Promise<string> {
+  const anthropic = getAnthropic();
+  if (!anthropic) return '';
+
   try {
     const res = await anthropic.messages.create({
       model: 'claude-haiku-4-5',
@@ -44,18 +77,24 @@ Write a friendly, helpful reply. Be concise (2-4 sentences). Don't make up speci
 
 // POST /api/support — submit a ticket
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  const { email, name, subject, message } = await req.json();
+  if (isRateLimited(req)) {
+    return NextResponse.json({ error: 'Too many support tickets. Please wait and try again.' }, { status: 429 });
+  }
 
-  if (!email || !subject || !message) {
+  const session = await auth();
+  const { email, name, subject, message } = await req.json().catch(() => ({}));
+
+  if (typeof email !== 'string' || typeof subject !== 'string' || typeof message !== 'string' || !email.trim() || !subject.trim() || !message.trim()) {
     return NextResponse.json({ error: 'Email, subject and message are required' }, { status: 400 });
   }
 
   const userId = (session?.user as any)?.id ?? null;
 
   // Auto-fill email/name from session if logged in
-  const finalEmail = email || session?.user?.email || '';
-  const finalName = name || session?.user?.name || null;
+  const finalEmail = (email || session?.user?.email || '').trim().slice(0, 254);
+  const finalName = typeof name === 'string' && name.trim() ? name.trim().slice(0, 120) : session?.user?.name || null;
+  const finalSubject = subject.trim().slice(0, 160);
+  const finalMessage = message.trim().slice(0, 4000);
 
   // Create ticket
   const ticket = await prisma.supportTicket.create({
@@ -63,14 +102,14 @@ export async function POST(req: NextRequest) {
       userId,
       email: finalEmail,
       name: finalName,
-      subject,
-      message,
+      subject: finalSubject,
+      message: finalMessage,
     },
   });
 
   // Fire off AI reply generation + Telegram notification in parallel (non-blocking)
   Promise.all([
-    generateAiReply(subject, message).then(async (aiReply) => {
+    generateAiReply(finalSubject, finalMessage).then(async (aiReply) => {
       if (aiReply) {
         await prisma.supportTicket.update({
           where: { id: ticket.id },

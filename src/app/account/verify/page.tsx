@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 interface Suggestion { display_name: string; lat: string; lon: string; }
 interface Senator { id: string; name: string; state: string; mpName: string | null; mpParty: string | null; mpPhotoUrl: string | null; }
-interface ElectorateResult { electorate: { id: string; name: string; state: string }; normalizedAddress: string; senators?: Senator[]; }
+interface ElectorateResult { electorate: { id: string; name: string; state: string }; normalizedAddress: string; verificationToken: string; senators?: Senator[]; }
 
 export default function VerifyPage() {
   const [address, setAddress] = useState('');
@@ -80,7 +80,7 @@ export default function VerifyPage() {
     const res = await fetch('/api/account/verify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ electorateId: result.electorate.id, addressHash: btoa(result.normalizedAddress) }),
+      body: JSON.stringify({ electorateId: result.electorate.id, verificationToken: result.verificationToken }),
     });
     setSaving(false);
     if (res.ok) { setConfirmed(true); return; }
@@ -109,7 +109,7 @@ export default function VerifyPage() {
       <div className="max-w-lg mx-auto px-4 py-12">
         <h1 className="text-2xl font-bold mb-2">{isChange ? 'Change your address' : 'Verify your address'}</h1>
         <p className="text-[#B6C0D1] mb-8">
-          We'll use your address to find your electorate. We don't store your address — only your electorate.
+          Your address is sent to OpenStreetMap Nominatim to find a location, then Crossbench stores only your electorate and a one-way address hash.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4 mb-6">

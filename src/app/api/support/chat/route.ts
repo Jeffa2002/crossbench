@@ -1,7 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+let anthropicClient: Anthropic | null = null;
+
+function getAnthropic(): Anthropic {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    throw new Error('ANTHROPIC_API_KEY is not configured');
+  }
+
+  anthropicClient ??= new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  return anthropicClient;
+}
+
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX = 8;
+const rateLimit = new Map<string, { count: number; resetAt: number }>();
 
 const SYSTEM_PROMPT = `You are a helpful support assistant for Crossbench, an Australian civic platform.
 
@@ -17,17 +30,57 @@ About Crossbench:
 
 Your job: Answer support questions clearly and concisely. If something is a bug or you're unsure, tell the user to submit a ticket and the team will look into it. Keep replies short (2-4 sentences max). Don't make up features. Be warm and friendly.`;
 
-export async function POST(req: NextRequest) {
-  const { messages } = await req.json();
-  if (!messages?.length) return NextResponse.json({ error: 'No messages' }, { status: 400 });
+function clientKey(req: NextRequest): string {
+  return req.headers.get('cf-connecting-ip')
+    ?? req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    ?? 'unknown';
+}
 
-  // Limit history to last 10 messages to keep costs low
-  const history = messages.slice(-10).map((m: any) => ({
-    role: m.role as 'user' | 'assistant',
-    content: m.content,
-  }));
+function isRateLimited(req: NextRequest): boolean {
+  const key = clientKey(req);
+  const now = Date.now();
+  const current = rateLimit.get(key);
+
+  if (!current || current.resetAt <= now) {
+    rateLimit.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return false;
+  }
+
+  current.count += 1;
+  return current.count > RATE_LIMIT_MAX;
+}
+
+type SupportChatMessage = {
+  role: 'user' | 'assistant';
+  content: string;
+};
+
+function parseMessages(value: unknown): SupportChatMessage[] | null {
+  if (!Array.isArray(value) || value.length === 0) return null;
+
+  const messages = value.slice(-10).map((message): SupportChatMessage | null => {
+    if (!message || typeof message !== 'object') return null;
+    const role = (message as { role?: unknown }).role;
+    const content = (message as { content?: unknown }).content;
+    if ((role !== 'user' && role !== 'assistant') || typeof content !== 'string') return null;
+    return { role, content: content.trim().slice(0, 1000) };
+  });
+
+  if (messages.some(message => !message || message.content.length === 0)) return null;
+  return messages as SupportChatMessage[];
+}
+
+export async function POST(req: NextRequest) {
+  if (isRateLimited(req)) {
+    return NextResponse.json({ error: 'Too many chat requests. Please wait a minute and try again.' }, { status: 429 });
+  }
+
+  const { messages } = await req.json().catch(() => ({}));
+  const history = parseMessages(messages);
+  if (!history) return NextResponse.json({ error: 'Invalid messages' }, { status: 400 });
 
   try {
+    const anthropic = getAnthropic();
     const res = await anthropic.messages.create({
       model: 'claude-haiku-4-5',
       max_tokens: 400,

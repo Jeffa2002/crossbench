@@ -67,7 +67,7 @@ export default function PrivacyPage() {
             Collection Notice (APP 5 Summary)
           </p>
           <p style={{ color: '#B6C0D1', fontSize: '14px', lineHeight: '1.65', margin: 0 }}>
-            Crossbench collects your <strong style={{ color: '#F5F7FB' }}>email address</strong> and <strong style={{ color: '#F5F7FB' }}>address</strong> to verify your electorate and record your votes on parliamentary bills. We store a <strong style={{ color: '#F5F7FB' }}>one-way hash</strong> of your address — never the raw address. Your votes are linked to your electorate and shown to MPs as <strong style={{ color: '#F5F7FB' }}>aggregated, anonymised data</strong> — your name is never attached to your vote. We use session cookies only. Contact us at{' '}
+            Crossbench collects your <strong style={{ color: '#F5F7FB' }}>email address</strong> and uses your <strong style={{ color: '#F5F7FB' }}>address</strong> to verify your electorate and record your votes on parliamentary bills. Address lookup uses OpenStreetMap Nominatim geocoding. We store a <strong style={{ color: '#F5F7FB' }}>one-way hash</strong> of your address — never the raw address. Your votes are linked to your electorate and shown to MPs as <strong style={{ color: '#F5F7FB' }}>aggregated, anonymised data</strong> — your name is never attached to your vote. We use session cookies only. Contact us at{' '}
             <a href="mailto:privacy@crossbench.io" style={{ color: '#2E8B57', textDecoration: 'none' }}>privacy@crossbench.io</a>.
           </p>
         </div>
@@ -82,7 +82,7 @@ export default function PrivacyPage() {
           <ul style={{ margin: '0 0 12px', paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {[
               ['Email address', 'To create and manage your account'],
-              ['Address information', 'Used temporarily to verify your electorate'],
+              ['Address information', 'Used temporarily with OpenStreetMap Nominatim geocoding to verify your electorate'],
               ['A one-way hash of your address', 'We never store your raw address in readable form — only a hash used for electorate matching'],
               ['Electorate assignment', 'Which federal electorate you belong to'],
               ['Voting history', 'Your Support, Oppose, or Abstain choices on bills'],
@@ -112,7 +112,7 @@ export default function PrivacyPage() {
         </Section>
 
         <Section title="4. How we use address information">
-          <P>To verify your electorate, we ask for your address. We do <strong style={{ color: '#F5F7FB' }}>not</strong> store your raw address as a readable record. Instead, we store a <strong style={{ color: '#F5F7FB' }}>one-way hash</strong> and use it to match your address to the correct electorate.</P>
+          <P>To verify your electorate, we ask for your address. We send the address to OpenStreetMap Nominatim to geocode it, then match that location against electorate boundary data. We do <strong style={{ color: '#F5F7FB' }}>not</strong> store your raw address as a readable record. Instead, we store a <strong style={{ color: '#F5F7FB' }}>one-way hash</strong> and your electorate assignment.</P>
           <P>This helps us verify electorate membership while reducing unnecessary storage of personal information.</P>
         </Section>
 

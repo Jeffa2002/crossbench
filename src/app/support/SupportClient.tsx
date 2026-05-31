@@ -38,7 +38,7 @@ export default function SupportClient() {
         body: JSON.stringify({ messages: newMessages }),
       });
       const data = await res.json();
-      setMessages(m => [...m, { role: 'assistant', content: data.reply || "Sorry, I couldn't process that. Please try again or submit a ticket." }]);
+      setMessages(m => [...m, { role: 'assistant', content: data.reply || data.error || "Sorry, I couldn't process that. Please try again or submit a ticket." }]);
     } catch {
       setMessages(m => [...m, { role: 'assistant', content: "Something went wrong. Please try submitting a support ticket instead." }]);
     }

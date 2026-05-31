@@ -1,5 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { createHmac } from 'crypto';
+
+function createVerificationToken(electorateId: string, normalizedAddress: string): string {
+  const payload = JSON.stringify({
+    electorateId,
+    addressHash: createHmac('sha256', process.env.NEXTAUTH_SECRET ?? '').update(normalizedAddress).digest('hex'),
+  });
+  const signature = createHmac('sha256', process.env.NEXTAUTH_SECRET ?? '').update(payload).digest('hex');
+  return Buffer.from(payload).toString('base64url') + '.' + signature;
+}
 
 export async function GET(req: NextRequest) {
   const address = req.nextUrl.searchParams.get('address');
@@ -34,8 +44,7 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     normalizedAddress: display_name,
-    latitude: parseFloat(lat),
-    longitude: parseFloat(lon),
+    verificationToken: createVerificationToken(houseElectorate.id, display_name),
     electorate: houseElectorate,
     senators,
   });

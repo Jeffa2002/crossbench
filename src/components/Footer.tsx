@@ -24,6 +24,7 @@ export default function Footer() {
         </div>
         <nav style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
           <Link href="/about" style={{ color: '#7E8AA3', fontSize: '13px', textDecoration: 'none' }}>About</Link>
+          <Link href="/methodology" style={{ color: "#7E8AA3", fontSize: "13px", textDecoration: "none" }}>Methodology</Link>
           <Link href="/privacy" style={{ color: "#7E8AA3", fontSize: "13px", textDecoration: "none" }}>Privacy Policy</Link>
           <Link href="/terms" style={{ color: "#7E8AA3", fontSize: "13px", textDecoration: "none" }}>Terms</Link>
           <a href="/support" style={{ color: '#7E8AA3', fontSize: '13px', textDecoration: 'none' }}>Contact</a>

@@ -1,22 +1,6 @@
 import Link from 'next/link';
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { createHash } from 'crypto';
-
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? '';
-const COOKIE_SECRET = process.env.MISSION_COOKIE_SECRET ?? process.env.NEXTAUTH_SECRET ?? '';
-
-function makeToken(password: string): string {
-  return createHash('sha256').update(password + COOKIE_SECRET).digest('hex');
-}
-
-async function isAuthenticated(): Promise<boolean> {
-  if (!ADMIN_PASSWORD) return false;
-  const jar = await cookies();
-  const token = jar.get('admin_session')?.value;
-  if (!token) return false;
-  return token === makeToken(ADMIN_PASSWORD);
-}
+import { hasAdminSessionCookie } from '@/lib/admin-auth';
 
 const NAV = [
   { href: '/admin', label: '📊 Overview' },
@@ -29,7 +13,7 @@ const NAV = [
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const authed = await isAuthenticated();
+  const authed = await hasAdminSessionCookie();
   if (!authed) redirect("/admin-login");
 
   return (

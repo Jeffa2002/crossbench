@@ -1,17 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-
-async function requireAdmin() {
-  const session = await auth();
-  if (!session?.user) return null;
-  const user = await prisma.user.findUnique({ where: { id: (session.user as any).id }, select: { role: true, email: true } });
-  return user?.role === 'ADMIN' ? { session, email: user.email } : null;
-}
+import { requireAdminAccess } from '@/lib/admin-auth';
 
 // PATCH /api/admin/support/[id] — update status/priority or add reply
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const admin = await requireAdmin();
+  const admin = await requireAdminAccess();
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id } = await params;
