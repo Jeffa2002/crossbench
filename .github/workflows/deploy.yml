@@ -7,38 +7,32 @@ on:
 
 jobs:
   deploy:
-    name: SSH deploy to prod
-    runs-on: ubuntu-latest
+    name: Deploy to prod
+    runs-on: [self-hosted, per-web, crossbench-prod]
     timeout-minutes: 10
 
     steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: 203.57.50.240
-          port: 2222
-          username: root
-          key: ${{ secrets.PROD_SSH_KEY }}
-          script: |
-            set -e
-            cd /var/www/crossbench
+      - name: Deploy on production runner
+        run: |
+          set -euo pipefail
+          cd /var/www/crossbench
 
-            echo "=== Pulling latest ==="
-            git stash || true
-            git pull origin main
+          echo "=== Pulling latest ==="
+          git fetch origin main
+          git merge --ff-only origin/main
 
-            echo "=== Installing dependencies ==="
-            npm ci --prefer-offline
+          echo "=== Installing dependencies ==="
+          npm ci --prefer-offline
 
-            echo "=== Generating Prisma client ==="
-            npx prisma generate
+          echo "=== Generating Prisma client ==="
+          npx prisma generate
 
-            echo "=== Building ==="
-            npm run build
+          echo "=== Building ==="
+          npm run build
 
-            echo "=== Restarting ==="
-            pm2 restart crossbench || pm2 start npm --name crossbench -- start -- -p 3006
-            pm2 save
+          echo "=== Restarting ==="
+          pm2 restart crossbench || pm2 start npm --name crossbench -- start -- -p 3006
+          pm2 save
 
-            echo "=== Done ==="
-            pm2 show crossbench | grep -E "status|uptime|restart"
+          echo "=== Done ==="
+          pm2 show crossbench | grep -E "status|uptime|restart"
