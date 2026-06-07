@@ -3,19 +3,17 @@
 Extended TVFY division scraper for 47th parliament historical bills.
 Covers May 2022 - present, matches against ALL bills in DB (including hist_).
 """
-import re, time, json, urllib.request, psycopg2
+import re, time, json, urllib.request, psycopg2, os
 from datetime import datetime, date
 
-DB_URL = "postgresql://crossbench:cb_prod_2026@localhost/crossbench"
+DB_URL = os.environ.get("DATABASE_URL")
+if not DB_URL:
+    raise RuntimeError("DATABASE_URL is required")
 BASE = "https://theyvoteforyou.org.au/api/v1"
 
-import subprocess
-result = subprocess.run(
-    ["grep", "TVFY_API_KEY", "/var/www/crossbench/.env"],
-    capture_output=True, text=True
-)
-API_KEY = result.stdout.strip().split("=", 1)[-1].strip().strip('"').strip("'")
-print(f"API key loaded: {API_KEY[:8]}...")
+API_KEY = os.environ.get("TVFY_API_KEY", "")
+if not API_KEY:
+    raise RuntimeError("TVFY_API_KEY is required")
 
 def fetch_divisions(start: str, end: str):
     url = f"{BASE}/divisions.json?key={API_KEY}&per_page=100&start_date={start}&end_date={end}"

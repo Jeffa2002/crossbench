@@ -3,10 +3,12 @@
 Extract Senate bill IDs from APH Bills List detail pages (parlInfo-style links).
 These pages use parlinfo.aph.gov.au URLs with billhome/r#### or billhome/s#### identifiers.
 """
-import re, time, urllib.request, psycopg2
+import re, time, urllib.request, psycopg2, os
 from datetime import datetime
 
-DB_URL = "postgresql://crossbench:cb_prod_2026@localhost/crossbench"
+DB_URL = os.environ.get("DATABASE_URL")
+if not DB_URL:
+    raise RuntimeError("DATABASE_URL is required")
 BASE = "https://www.aph.gov.au"
 UA = "Mozilla/5.0 Crossbench/1.0"
 

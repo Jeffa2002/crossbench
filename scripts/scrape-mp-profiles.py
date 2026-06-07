@@ -13,7 +13,9 @@ import sys, os, json, re, time, argparse, urllib.request, urllib.parse
 import psycopg2
 from datetime import datetime
 
-DB_URL = "postgresql://crossbench:cb_prod_2026@localhost/crossbench"
+DB_URL = os.environ.get("DATABASE_URL")
+if not DB_URL:
+    raise RuntimeError("DATABASE_URL is required")
 UA = "Crossbench/1.0 civic-tech research contact@crossbench.io"
 ANTHROPIC_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 

@@ -3,9 +3,11 @@
 Build senator MPID lookup by searching APH one senator at a time by family name.
 The single-name search reliably returns results.
 """
-import re, time, urllib.request, psycopg2
+import re, time, urllib.request, psycopg2, os
 
-DB_URL = "postgresql://crossbench:cb_prod_2026@localhost/crossbench"
+DB_URL = os.environ.get("DATABASE_URL")
+if not DB_URL:
+    raise RuntimeError("DATABASE_URL is required")
 UA = "Crossbench/1.0 civic-tech contact@crossbench.io"
 
 def search_mpid(last_name: str) -> list:

@@ -1,13 +1,21 @@
 import { cookies } from 'next/headers';
-import { createHash, timingSafeEqual } from 'crypto';
-import { auth } from './auth';
-import { prisma } from './prisma';
+import { createHmac, randomBytes, timingSafeEqual } from 'crypto';
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? '';
 const COOKIE_SECRET = process.env.MISSION_COOKIE_SECRET ?? process.env.NEXTAUTH_SECRET ?? '';
+const SESSION_TTL_SECONDS = 8 * 60 * 60;
 
-export function makeAdminToken(password: string): string {
-  return createHash('sha256').update(password + COOKIE_SECRET).digest('hex');
+function sign(value: string): string {
+  return createHmac('sha256', COOKIE_SECRET).update(value).digest('hex');
+}
+
+export function makeAdminToken(): string {
+  const payload = Buffer.from(JSON.stringify({
+    purpose: 'admin',
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS,
+    nonce: randomBytes(16).toString('hex'),
+  })).toString('base64url');
+  return `${payload}.${sign(payload)}`;
 }
 
 function equalTokens(a: string, b: string): boolean {
@@ -17,25 +25,24 @@ function equalTokens(a: string, b: string): boolean {
 }
 
 export async function hasAdminSessionCookie(): Promise<boolean> {
-  if (!ADMIN_PASSWORD || !COOKIE_SECRET) return false;
+  if (!COOKIE_SECRET) return false;
   const jar = await cookies();
   const token = jar.get('admin_session')?.value;
   if (!token) return false;
-  return equalTokens(token, makeAdminToken(ADMIN_PASSWORD));
+  const [payload, signature] = token.split('.');
+  if (!payload || !signature || !equalTokens(signature, sign(payload))) return false;
+
+  try {
+    const decoded = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    return decoded.purpose === 'admin' && typeof decoded.exp === 'number' && decoded.exp > Math.floor(Date.now() / 1000);
+  } catch {
+    return false;
+  }
 }
 
 export async function requireAdminAccess(): Promise<{ email: string } | null> {
   if (await hasAdminSessionCookie()) {
     return { email: process.env.ADMIN_EMAIL ?? 'admin@crossbench.io' };
   }
-
-  const session = await auth();
-  if (!session?.user) return null;
-
-  const user = await prisma.user.findUnique({
-    where: { id: (session.user as any).id },
-    select: { role: true, email: true },
-  });
-
-  return user?.role === 'ADMIN' ? { email: user.email ?? 'admin@crossbench.io' } : null;
+  return null;
 }

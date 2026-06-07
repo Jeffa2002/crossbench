@@ -1,2 +1,2 @@
--- AddIndex
-CREATE INDEX "Bill_parliamentNumber_idx" ON "Bill"("parliamentNumber");
+ALTER TABLE "Bill" ADD COLUMN IF NOT EXISTS "parliamentNumber" INTEGER;
+CREATE INDEX IF NOT EXISTS "Bill_parliamentNumber_idx" ON "Bill"("parliamentNumber");

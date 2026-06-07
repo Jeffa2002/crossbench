@@ -2,10 +2,12 @@
 """
 Ingest current senators — unique name per senator (not per state).
 """
-import json, re, time, urllib.request, psycopg2
+import json, re, time, urllib.request, psycopg2, os
 
-DB_URL = "postgresql://crossbench:cb_prod_2026@localhost/crossbench"
-TVFY_KEY = "MblbGrZ//yamS8FUUeDG"
+DB_URL = os.environ.get("DATABASE_URL")
+if not DB_URL:
+    raise RuntimeError("DATABASE_URL is required")
+TVFY_KEY = os.environ.get("TVFY_API_KEY", "")
 
 STATE_MAP = {
     "New South Wales": "NSW", "Victoria": "VIC", "Queensland": "QLD",

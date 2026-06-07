@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { signIn } from '@/lib/auth';
 import { verifyRecaptcha } from '@/lib/recaptcha';
+import { safeRelativeRedirect } from '@/lib/app-url';
 
 export async function POST(req: NextRequest) {
   const { email, recaptchaToken, redirectTo } = await req.json();
@@ -10,7 +11,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Verify reCAPTCHA score server-side
-  const captcha = await verifyRecaptcha(recaptchaToken, 0.5);
+  const captcha = await verifyRecaptcha(recaptchaToken, 0.5, { expectedAction: 'login' });
   if (!captcha.ok) {
     console.warn(`[reCAPTCHA] Blocked login attempt for ${email}: score=${captcha.score}, error=${captcha.error}`);
     return NextResponse.json(
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest) {
     await signIn('resend', {
       email,
       redirect: false,
-      redirectTo: redirectTo || '/',
+      redirectTo: safeRelativeRedirect(redirectTo),
     });
     return NextResponse.json({ ok: true });
   } catch (e: any) {

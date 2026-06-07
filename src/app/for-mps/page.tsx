@@ -25,10 +25,10 @@ export default function ForMPsPage() {
             Crossbench gives you a live, bill-by-bill read of constituent sentiment in your electorate — verified by address, updated in real time.
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href="/login" style={{ backgroundColor: '#2E8B57', color: '#fff', padding: '14px 32px', borderRadius: '8px', fontWeight: 700, fontSize: '15px', textDecoration: 'none' }}>
+            <Link href="/login?next=/mp-dashboard" style={{ backgroundColor: '#2E8B57', color: '#fff', padding: '14px 32px', borderRadius: '8px', fontWeight: 700, fontSize: '15px', textDecoration: 'none' }}>
               Start free 30-day trial →
             </Link>
-            <Link href="/mp-dashboard" style={{ backgroundColor: 'transparent', color: '#B6C0D1', padding: '14px 28px', borderRadius: '8px', fontWeight: 500, fontSize: '15px', textDecoration: 'none', border: '1px solid #25324D' }}>
+            <Link href="/mp-demo" style={{ backgroundColor: 'transparent', color: '#B6C0D1', padding: '14px 28px', borderRadius: '8px', fontWeight: 500, fontSize: '15px', textDecoration: 'none', border: '1px solid #25324D' }}>
               View demo dashboard
             </Link>
           </div>
@@ -39,7 +39,7 @@ export default function ForMPsPage() {
       {/* Dashboard mock */}
       <section style={{ borderBottom: '1px solid #25324D', padding: 'clamp(48px, 6vw, 80px) 0' }}>
         <div style={s.container}>
-          <p style={{ color: '#7E8AA3', fontSize: '13px', textAlign: 'center', marginBottom: '24px', fontWeight: 500 }}>Live constituent sentiment — exactly what you'd see for your electorate</p>
+          <p style={{ color: '#7E8AA3', fontSize: '13px', textAlign: 'center', marginBottom: '24px', fontWeight: 500 }}>Live constituent sentiment — exactly what you&apos;d see for your electorate</p>
           <div style={{ borderRadius: '16px', overflow: 'hidden', border: '1px solid #25324D', boxShadow: '0 32px 80px rgba(0,0,0,0.5)' }}>
             <Image src="/mp-dashboard-mock.png" alt="MP electorate dashboard showing constituent sentiment" width={1200} height={800} style={{ width: '100%', height: 'auto', display: 'block' }} />
           </div>
@@ -115,7 +115,7 @@ export default function ForMPsPage() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/login" style={{ display: 'block', textAlign: 'center', backgroundColor: plan.highlight ? '#2E8B57' : 'transparent', color: plan.highlight ? '#fff' : '#2E8B57', border: `1px solid ${plan.highlight ? '#2E8B57' : '#2E8B57'}`, padding: '12px', borderRadius: '8px', fontWeight: 700, fontSize: '14px', textDecoration: 'none' }}>
+                <Link href="/login?next=/mp-dashboard" style={{ display: 'block', textAlign: 'center', backgroundColor: plan.highlight ? '#2E8B57' : 'transparent', color: plan.highlight ? '#fff' : '#2E8B57', border: `1px solid ${plan.highlight ? '#2E8B57' : '#2E8B57'}`, padding: '12px', borderRadius: '8px', fontWeight: 700, fontSize: '14px', textDecoration: 'none' }}>
                   Start free trial →
                 </Link>
               </div>
@@ -129,7 +129,7 @@ export default function ForMPsPage() {
         <div style={{ ...s.container, textAlign: 'center' }}>
           <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 700, marginBottom: '16px' }}>Ready to hear from your electorate?</h2>
           <p style={{ color: '#7E8AA3', fontSize: '16px', marginBottom: '32px', maxWidth: '480px', margin: '0 auto 32px' }}>Sign up with your @aph.gov.au email and your 30-day trial starts immediately.</p>
-          <Link href="/login" style={{ backgroundColor: '#2E8B57', color: '#fff', padding: '16px 40px', borderRadius: '8px', fontWeight: 700, fontSize: '16px', textDecoration: 'none', display: 'inline-block' }}>
+          <Link href="/login?next=/mp-dashboard" style={{ backgroundColor: '#2E8B57', color: '#fff', padding: '16px 40px', borderRadius: '8px', fontWeight: 700, fontSize: '16px', textDecoration: 'none', display: 'inline-block' }}>
             Get started free →
           </Link>
           <p style={{ color: '#4A5568', fontSize: '12px', marginTop: '12px' }}>Questions? <Link href="/support" style={{ color: '#4E8FD4', textDecoration: 'none' }}>Contact us</Link></p>

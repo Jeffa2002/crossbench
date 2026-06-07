@@ -1,17 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { createHmac } from 'crypto';
-
-function createVerificationToken(electorateId: string, normalizedAddress: string): string {
-  const payload = JSON.stringify({
-    electorateId,
-    addressHash: createHmac('sha256', process.env.NEXTAUTH_SECRET ?? '').update(normalizedAddress).digest('hex'),
-  });
-  const signature = createHmac('sha256', process.env.NEXTAUTH_SECRET ?? '').update(payload).digest('hex');
-  return Buffer.from(payload).toString('base64url') + '.' + signature;
-}
+import { checkRateLimit, rateLimitKey } from '@/lib/rate-limit';
+import { createVerificationToken } from '@/lib/verification-token';
 
 export async function GET(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const limited = checkRateLimit(rateLimitKey(req, 'electorate-lookup', (session.user as any).id), 10, 10 * 60 * 1000);
+  if (!limited.ok) {
+    return NextResponse.json(
+      { error: 'Too many address lookups. Please wait and try again.' },
+      { status: 429, headers: { 'Retry-After': String(limited.retryAfter) } }
+    );
+  }
+
   const address = req.nextUrl.searchParams.get('address');
   if (!address) return NextResponse.json({ error: 'Address required' }, { status: 400 });
 
@@ -44,7 +48,7 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     normalizedAddress: display_name,
-    verificationToken: createVerificationToken(houseElectorate.id, display_name),
+    verificationToken: createVerificationToken(houseElectorate.id, display_name, (session.user as any).id),
     electorate: houseElectorate,
     senators,
   });

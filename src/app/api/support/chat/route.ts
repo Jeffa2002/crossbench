@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { checkRateLimit, rateLimitKey } from '@/lib/rate-limit';
 
 let anthropicClient: Anthropic | null = null;
 
@@ -11,10 +12,6 @@ function getAnthropic(): Anthropic {
   anthropicClient ??= new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   return anthropicClient;
 }
-
-const RATE_LIMIT_WINDOW_MS = 60_000;
-const RATE_LIMIT_MAX = 8;
-const rateLimit = new Map<string, { count: number; resetAt: number }>();
 
 const SYSTEM_PROMPT = `You are a helpful support assistant for Crossbench, an Australian civic platform.
 
@@ -29,26 +26,6 @@ About Crossbench:
 - The platform is politically neutral — it shows data, not opinions
 
 Your job: Answer support questions clearly and concisely. If something is a bug or you're unsure, tell the user to submit a ticket and the team will look into it. Keep replies short (2-4 sentences max). Don't make up features. Be warm and friendly.`;
-
-function clientKey(req: NextRequest): string {
-  return req.headers.get('cf-connecting-ip')
-    ?? req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-    ?? 'unknown';
-}
-
-function isRateLimited(req: NextRequest): boolean {
-  const key = clientKey(req);
-  const now = Date.now();
-  const current = rateLimit.get(key);
-
-  if (!current || current.resetAt <= now) {
-    rateLimit.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
-    return false;
-  }
-
-  current.count += 1;
-  return current.count > RATE_LIMIT_MAX;
-}
 
 type SupportChatMessage = {
   role: 'user' | 'assistant';
@@ -71,8 +48,12 @@ function parseMessages(value: unknown): SupportChatMessage[] | null {
 }
 
 export async function POST(req: NextRequest) {
-  if (isRateLimited(req)) {
-    return NextResponse.json({ error: 'Too many chat requests. Please wait a minute and try again.' }, { status: 429 });
+  const limited = checkRateLimit(rateLimitKey(req, 'support-chat'), 8, 60_000);
+  if (!limited.ok) {
+    return NextResponse.json(
+      { error: 'Too many chat requests. Please wait a minute and try again.' },
+      { status: 429, headers: { 'Retry-After': String(limited.retryAfter) } }
+    );
   }
 
   const { messages } = await req.json().catch(() => ({}));

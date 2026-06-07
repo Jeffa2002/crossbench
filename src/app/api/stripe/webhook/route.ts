@@ -2,6 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getStripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
 import Stripe from 'stripe';
+import { PLANS } from '@/lib/stripe';
+
+function tierForPrice(priceId: string | null | undefined): 'PRO' | 'TEAM' | null {
+  if (priceId && priceId === PLANS.PRO.priceId) return 'PRO';
+  if (priceId && priceId === PLANS.TEAM.priceId) return 'TEAM';
+  return null;
+}
+
+function statusForSubscription(sub: Stripe.Subscription): 'ACTIVE' | 'PAST_DUE' | 'CANCELLED' | null {
+  if (sub.status === 'active' || sub.status === 'trialing') return 'ACTIVE';
+  if (sub.status === 'past_due' || sub.status === 'unpaid') return 'PAST_DUE';
+  if (sub.status === 'canceled' || sub.status === 'incomplete_expired') return 'CANCELLED';
+  return null;
+}
 
 // App Router reads raw body via req.text() — no bodyParser config needed
 export async function POST(req: NextRequest) {
@@ -20,8 +34,19 @@ export async function POST(req: NextRequest) {
   switch (event.type) {
     case 'checkout.session.completed': {
       const session = event.data.object as Stripe.Checkout.Session;
-      const { userId, tier } = session.metadata ?? {};
-      if (!userId || !tier) break;
+      const { userId } = session.metadata ?? {};
+      if (!userId || !session.subscription || !session.customer) break;
+
+      const sub = await stripe.subscriptions.retrieve(session.subscription as string);
+      const priceId = sub.items.data[0]?.price.id;
+      const tier = tierForPrice(priceId);
+      if (!tier) break;
+
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { stripeCustomerId: true, role: true },
+      });
+      if (!user || user.role !== 'MP' || user.stripeCustomerId !== session.customer) break;
 
       await prisma.user.update({
         where: { id: userId },
@@ -40,15 +65,17 @@ export async function POST(req: NextRequest) {
       const userId = sub.metadata?.userId;
       if (!userId) break;
 
-      const status = sub.status === 'active' ? 'ACTIVE'
-        : sub.status === 'past_due' ? 'PAST_DUE'
-        : sub.status === 'canceled' ? 'CANCELLED'
-        : null;
+      const status = statusForSubscription(sub);
+      const tier = tierForPrice(sub.items.data[0]?.price.id);
 
       if (status) {
         await prisma.user.update({
           where: { id: userId },
-          data: { subscriptionStatus: status, subscriptionId: sub.id } as any,
+          data: {
+            subscriptionStatus: status,
+            subscriptionId: sub.id,
+            ...(tier && { subscriptionTier: tier }),
+          } as any,
         });
       }
       break;

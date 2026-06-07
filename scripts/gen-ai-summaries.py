@@ -4,18 +4,15 @@ Generate AI summaries (via Claude Haiku) for hist_ bills that are missing them.
 Uses title + APH description (no full text for historical bills).
 Rate-limited to ~1 req/sec to stay within Anthropic limits.
 """
-import json, time, re, urllib.request, urllib.error, psycopg2
+import json, time, re, urllib.request, urllib.error, psycopg2, os
 
-DB_URL = "postgresql://crossbench:cb_prod_2026@localhost/crossbench"
+DB_URL = os.environ.get("DATABASE_URL")
+if not DB_URL:
+    raise RuntimeError("DATABASE_URL is required")
 
-# Load API key
-import subprocess
-result = subprocess.run(
-    ["grep", "ANTHROPIC_API_KEY", "/var/www/crossbench/.env"],
-    capture_output=True, text=True
-)
-API_KEY = result.stdout.strip().split("=", 1)[-1].strip().strip('"').strip("'")
-print(f"Anthropic key loaded: {API_KEY[:15]}...")
+API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+if not API_KEY:
+    raise RuntimeError("ANTHROPIC_API_KEY is required")
 
 CLAUDE_URL = "https://api.anthropic.com/v1/messages"
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { checkRateLimit, rateLimitKey } from '@/lib/rate-limit';
 import Anthropic from '@anthropic-ai/sdk';
 
 let anthropicClient: Anthropic | null = null;
@@ -9,30 +10,6 @@ function getAnthropic(): Anthropic | null {
   if (!process.env.ANTHROPIC_API_KEY) return null;
   anthropicClient ??= new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   return anthropicClient;
-}
-
-const TICKET_WINDOW_MS = 10 * 60_000;
-const TICKET_MAX = 3;
-const ticketRateLimit = new Map<string, { count: number; resetAt: number }>();
-
-function clientKey(req: NextRequest): string {
-  return req.headers.get('cf-connecting-ip')
-    ?? req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-    ?? 'unknown';
-}
-
-function isRateLimited(req: NextRequest): boolean {
-  const key = clientKey(req);
-  const now = Date.now();
-  const current = ticketRateLimit.get(key);
-
-  if (!current || current.resetAt <= now) {
-    ticketRateLimit.set(key, { count: 1, resetAt: now + TICKET_WINDOW_MS });
-    return false;
-  }
-
-  current.count += 1;
-  return current.count > TICKET_MAX;
 }
 
 async function sendTelegramNotification(ticket: { id: string; email: string; name: string | null; subject: string; message: string }) {
@@ -77,10 +54,6 @@ Write a friendly, helpful reply. Be concise (2-4 sentences). Don't make up speci
 
 // POST /api/support — submit a ticket
 export async function POST(req: NextRequest) {
-  if (isRateLimited(req)) {
-    return NextResponse.json({ error: 'Too many support tickets. Please wait and try again.' }, { status: 429 });
-  }
-
   const session = await auth();
   const { email, name, subject, message } = await req.json().catch(() => ({}));
 
@@ -95,6 +68,14 @@ export async function POST(req: NextRequest) {
   const finalName = typeof name === 'string' && name.trim() ? name.trim().slice(0, 120) : session?.user?.name || null;
   const finalSubject = subject.trim().slice(0, 160);
   const finalMessage = message.trim().slice(0, 4000);
+  const ipLimit = checkRateLimit(rateLimitKey(req, 'support-ticket'), 3, 10 * 60_000);
+  const emailLimit = checkRateLimit(`support-ticket-email:${finalEmail.toLowerCase()}`, 5, 60 * 60_000);
+  if (!ipLimit.ok || !emailLimit.ok) {
+    return NextResponse.json(
+      { error: 'Too many support tickets. Please wait and try again.' },
+      { status: 429, headers: { 'Retry-After': String(Math.max(ipLimit.retryAfter, emailLimit.retryAfter)) } }
+    );
+  }
 
   // Create ticket
   const ticket = await prisma.supportTicket.create({

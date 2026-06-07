@@ -3,9 +3,11 @@
 Hardcoded senator MPID table from APH (48th parliament).
 Built from APH Parliamentarian search + public data.
 """
-import psycopg2, re
+import psycopg2, re, os
 
-DB_URL = "postgresql://crossbench:cb_prod_2026@localhost/crossbench"
+DB_URL = os.environ.get("DATABASE_URL")
+if not DB_URL:
+    raise RuntimeError("DATABASE_URL is required")
 
 # MPID -> last_name (from the A-Z scrape that DID work earlier + APH public pages)
 # Format: "LastName FirstName": "MPID"

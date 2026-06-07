@@ -12,21 +12,44 @@ function generateNonce(): string {
   return btoa(String.fromCharCode(...array))
 }
 
-async function sha256Hex(value: string): Promise<string> {
-  const bytes = new TextEncoder().encode(value)
-  const digest = await crypto.subtle.digest('SHA-256', bytes)
-  return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('')
+function decodeBase64Url(value: string): string {
+  const padded = value.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(value.length / 4) * 4, '=')
+  return atob(padded)
+}
+
+function hex(bytes: ArrayBuffer): string {
+  return Array.from(new Uint8Array(bytes), byte => byte.toString(16).padStart(2, '0')).join('')
+}
+
+async function hmacHex(value: string, secret: string): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  )
+  return hex(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(value)))
 }
 
 async function hasAdminSession(request: NextRequest): Promise<boolean> {
-  const adminPassword = process.env.ADMIN_PASSWORD ?? ''
   const cookieSecret = process.env.MISSION_COOKIE_SECRET ?? process.env.NEXTAUTH_SECRET ?? ''
   const token = request.cookies.get('admin_session')?.value
 
-  if (!adminPassword || !cookieSecret || !token) return false
+  if (!cookieSecret || !token) return false
 
-  const expected = await sha256Hex(adminPassword + cookieSecret)
-  return token === expected
+  const [payload, signature] = token.split('.')
+  if (!payload || !signature) return false
+
+  const expected = await hmacHex(payload, cookieSecret)
+  if (signature !== expected) return false
+
+  try {
+    const decoded = JSON.parse(decodeBase64Url(payload))
+    return decoded.purpose === 'admin' && typeof decoded.exp === 'number' && decoded.exp > Math.floor(Date.now() / 1000)
+  } catch {
+    return false
+  }
 }
 
 export async function middleware(request: NextRequest) {

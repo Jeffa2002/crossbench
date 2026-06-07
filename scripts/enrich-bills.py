@@ -19,7 +19,9 @@ import tempfile
 from datetime import datetime, timedelta
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
-DB_ENV = {"PGPASSWORD": "cb_prod_2026", "PATH": "/usr/bin:/bin:/usr/local/bin"}
+DB_ENV = {"PATH": os.environ.get("PATH", "/usr/bin:/bin:/usr/local/bin")}
+if os.environ.get("PGPASSWORD"):
+    DB_ENV["PGPASSWORD"] = os.environ["PGPASSWORD"]
 FORCE = "--force" in sys.argv  # re-enrich even if already done
 
 HEADERS = {

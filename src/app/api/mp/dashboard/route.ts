@@ -2,6 +2,12 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
+function hasMpEntitlement(user: { subscriptionStatus: string; trialEndsAt: Date | null }): boolean {
+  if (user.subscriptionStatus === 'ACTIVE') return true;
+  if (user.subscriptionStatus === 'TRIAL' && user.trialEndsAt && user.trialEndsAt.getTime() >= Date.now()) return true;
+  return false;
+}
+
 export async function GET() {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -22,14 +28,26 @@ export async function GET() {
     return NextResponse.json({ error: 'MP access required' }, { status: 403 });
   }
 
+  const trialDaysLeft = (user as any).trialEndsAt
+    ? Math.ceil(((user as any).trialEndsAt.getTime() - Date.now()) / 86400000)
+    : null;
+
+  if (!hasMpEntitlement(user as any)) {
+    return NextResponse.json({
+      error: 'Active subscription or valid trial required',
+      subscription: {
+        status: (user as any).subscriptionStatus,
+        tier: (user as any).subscriptionTier,
+        trialEndsAt: (user as any).trialEndsAt?.toISOString() ?? null,
+        trialDaysLeft,
+      },
+    }, { status: 402 });
+  }
+
   const electorate = (user as any).electorate;
   if (!electorate) {
     return NextResponse.json({ error: 'No electorate linked to your account' }, { status: 404 });
   }
-
-  const trialDaysLeft = (user as any).trialEndsAt
-    ? Math.ceil(((user as any).trialEndsAt.getTime() - Date.now()) / 86400000)
-    : null;
 
   // All votes for this electorate
   const votesByBill = await prisma.vote.groupBy({
