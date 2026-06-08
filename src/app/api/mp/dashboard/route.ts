@@ -1,12 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-
-function hasMpEntitlement(user: { subscriptionStatus: string; trialEndsAt: Date | null }): boolean {
-  if (user.subscriptionStatus === 'ACTIVE') return true;
-  if (user.subscriptionStatus === 'TRIAL' && user.trialEndsAt && user.trialEndsAt.getTime() >= Date.now()) return true;
-  return false;
-}
+import { hasMpEntitlement } from '@/lib/mp-entitlement';
 
 export async function GET() {
   const session = await auth();

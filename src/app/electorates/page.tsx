@@ -127,7 +127,7 @@ export default async function ElectoratesPage({
             Search
           </button>
           {(q || stateFilter || chamber) && (
-            <a
+            <Link
               href="/electorates"
               style={{
                 backgroundColor: '#16213A', color: '#B6C0D1', border: '1px solid #25324D',
@@ -135,7 +135,7 @@ export default async function ElectoratesPage({
               }}
             >
               Clear
-            </a>
+            </Link>
           )}
         </form>
 
