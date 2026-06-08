@@ -44,6 +44,7 @@ export default async function AdminOverview() {
           { label: 'Verified', value: verifiedUsers },
           { label: 'Engagement', value: `${engagementRate}%` },
           { label: 'MPs registered', value: mpUsers },
+          { label: 'Bills tracked', value: totalBills },
           { label: 'Total votes', value: totalVotes },
           { label: 'With comments', value: commentedVotes },
         ].map(({ label, value }) => (

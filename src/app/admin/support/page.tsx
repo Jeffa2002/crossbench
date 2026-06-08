@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 type Reply = { id: string; authorEmail: string; isAdmin: boolean; isAi: boolean; message: string; createdAt: string };
 type Ticket = {
@@ -25,17 +25,17 @@ export default function AdminSupportPage() {
   const [replyText, setReplyText] = useState('');
   const [replying, setReplying] = useState(false);
 
-  async function load() {
+  const load = useCallback(async () => {
     const res = await fetch(`/api/admin/support${statusFilter ? `?status=${statusFilter}` : ''}`);
     if (res.ok) {
       const data = await res.json();
       setTickets(data);
-      if (selected) setSelected(data.find((t: Ticket) => t.id === selected.id) ?? null);
+      setSelected(current => current ? data.find((t: Ticket) => t.id === current.id) ?? null : null);
     }
     setLoading(false);
-  }
+  }, [statusFilter]);
 
-  useEffect(() => { load(); }, [statusFilter]);
+  useEffect(() => { load(); }, [load]);
 
   async function updateStatus(id: string, status: string) {
     await fetch(`/api/admin/support/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });

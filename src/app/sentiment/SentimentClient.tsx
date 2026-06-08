@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 
 type Mp = {
@@ -136,7 +135,7 @@ export default function SentimentClient({ mps, parties }: { mps: Mp[]; parties: 
   const [localCounts, setLocalCounts] = useState<Record<string, { positive: number; negative: number }>>({});
   const [canVote, setCanVote] = useState(false);
   const [authStatus, setAuthStatus] = useState<'loading' | 'none' | 'unverified' | 'verified'>('loading');
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   // Fetch user's existing votes + auth status
   useEffect(() => {
@@ -178,7 +177,7 @@ export default function SentimentClient({ mps, parties }: { mps: Mp[]; parties: 
       setUserVotes(votes);
     }
     init();
-  }, []);
+  }, [mps]);
 
   function handleVote(mpId: string, sentiment: 'POSITIVE' | 'NEGATIVE' | null) {
     if (!canVote) return;

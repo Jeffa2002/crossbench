@@ -9,8 +9,9 @@ interface MarkdownRendererProps {
 
 export default function MarkdownRenderer({ content, className }: MarkdownRendererProps) {
   return (
-    <ReactMarkdown
-      components={{
+    <div className={className}>
+      <ReactMarkdown
+        components={{
         h1: ({ children }) => (
           <h1 style={{ fontSize: '18px', fontWeight: 700, color: '#C8D4E8', margin: '0 0 12px', lineHeight: 1.3 }}>
             {children}
@@ -64,9 +65,10 @@ export default function MarkdownRenderer({ content, className }: MarkdownRendere
             {children}
           </code>
         ),
-      }}
-    >
-      {content}
-    </ReactMarkdown>
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
   );
 }

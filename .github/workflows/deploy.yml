@@ -30,6 +30,12 @@ jobs:
           echo "=== Applying database migrations ==="
           npx prisma migrate deploy
 
+          echo "=== Running tests ==="
+          npm test
+
+          echo "=== Running lint ==="
+          npm run lint
+
           echo "=== Building ==="
           npm run build
 

@@ -12,6 +12,7 @@ const eslintConfig = defineConfig([
       "react-hooks/set-state-in-effect": "off",
       "react-hooks/immutability": "off",
       "react-hooks/refs": "off",
+      "@next/next/no-img-element": "off",
     },
   },
   {

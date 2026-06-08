@@ -4,9 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function ChangeAddressButton({
-  canChange,
   needsTicket,
-  changesThisYear,
 }: {
   canChange: boolean;
   needsTicket: boolean;

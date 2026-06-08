@@ -437,11 +437,6 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
           const secondReadingDivisions = divisions.filter(d =>
             /second reading.*agreed|second reading.*agreement|be read a second time/i.test(d.name)
           );
-          // Amendment/committee/procedural votes (not passage)
-          const amendmentDivisions = divisions.filter(d =>
-            /in committee|consideration in detail|committee of the whole|second reading - |reference to committee/i.test(d.name)
-          );
-
           // Priority: third reading > second reading > nothing (don't show amendment-only noise)
           const finalVotes = finalDivisions.length > 0 ? finalDivisions
             : secondReadingDivisions.length > 0 ? secondReadingDivisions

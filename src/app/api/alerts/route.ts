@@ -4,7 +4,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 // GET /api/alerts - List user's alerts
-export async function GET(req: NextRequest) {
+export async function GET() {
   const session = await auth();
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
