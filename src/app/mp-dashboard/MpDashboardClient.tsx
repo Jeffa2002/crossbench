@@ -18,6 +18,8 @@ type DashboardData = {
   }>;
 };
 
+type SubscriptionState = DashboardData['subscription'];
+
 const PARTY_COLORS: Record<string, string> = {
   labor: '#E53E3E', liberal: '#3182CE', national: '#38A169',
   greens: '#48BB78', independent: '#805AD5', teal: '#319795',
@@ -44,8 +46,18 @@ function Bar({ pct, color, label }: { pct: number; color: string; label: string 
   );
 }
 
+function majorityPosition(overview: DashboardData['overview']) {
+  const positions = [
+    { label: 'Support', pct: overview.supportPct },
+    { label: 'Oppose', pct: overview.opposePct },
+    { label: 'Abstain', pct: overview.abstainPct },
+  ];
+  return positions.sort((a, b) => b.pct - a.pct)[0];
+}
+
 export default function MpDashboardClient() {
   const [data, setData] = useState<DashboardData | null>(null);
+  const [lockedSubscription, setLockedSubscription] = useState<SubscriptionState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -53,6 +65,7 @@ export default function MpDashboardClient() {
     fetch('/api/mp/dashboard')
       .then(r => r.json())
       .then(d => {
+        if (d.subscription) setLockedSubscription(d.subscription);
         if (d.error) { setError(d.error); setLoading(false); return; }
         setData(d);
         setLoading(false);
@@ -62,6 +75,7 @@ export default function MpDashboardClient() {
 
   const isLocked = data?.subscription?.status === 'CANCELLED' ||
     (data?.subscription?.status === 'TRIAL' && (data?.subscription?.trialDaysLeft ?? 0) < 0);
+  const majority = data ? majorityPosition(data.overview) : null;
 
   return (
     <div className="page-container">
@@ -70,7 +84,30 @@ export default function MpDashboardClient() {
         <div style={{ textAlign: 'center', padding: '80px 0', color: '#7E8AA3' }}>Loading your dashboard...</div>
       )}
 
-      {!loading && error && (
+      {!loading && error && lockedSubscription && (
+        <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '48px', textAlign: 'center' }}>
+          <p style={{ fontSize: '20px', fontWeight: 700, marginBottom: '12px' }}>Subscription required</p>
+          <p style={{ color: '#7E8AA3', margin: '0 auto 24px', maxWidth: '520px', lineHeight: 1.6 }}>
+            Your MP dashboard is ready, but constituent data is only available with an active subscription or unexpired trial.
+          </p>
+          <div style={{
+            display: 'inline-flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center',
+            backgroundColor: '#16213A', border: '1px solid #25324D', borderRadius: '10px', padding: '10px 14px', marginBottom: '24px'
+          }}>
+            <span style={{ color: '#B6C0D1', fontSize: '13px' }}>Current status</span>
+            <strong style={{ color: '#D6A94A', fontSize: '13px' }}>
+              {lockedSubscription.status}{lockedSubscription.trialDaysLeft !== null ? ` · ${lockedSubscription.trialDaysLeft}d trial left` : ''}
+            </strong>
+          </div>
+          <div>
+            <Link href="/mp-dashboard/billing" style={{ backgroundColor: '#2E8B57', color: '#fff', padding: '12px 24px', borderRadius: '8px', textDecoration: 'none', fontWeight: 700 }}>
+              View plans →
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {!loading && error && !lockedSubscription && (
         <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '48px', textAlign: 'center' }}>
           <p style={{ fontSize: '18px', fontWeight: 600, marginBottom: '12px' }}>MPs only</p>
           <p style={{ color: '#7E8AA3', marginBottom: '24px' }}>
@@ -181,11 +218,11 @@ export default function MpDashboardClient() {
           ) : (
             <>
               {/* Overview stats */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '16px' }}>
                 {[
                   { label: 'Total votes', value: data.overview.totalVotes.toLocaleString(), sub: 'all constituents', color: '#D6A94A' },
                   { label: 'Verified votes', value: data.overview.verified.totalVotes.toLocaleString(), sub: 'address-confirmed', color: '#2E8B57' },
-                  { label: 'Majority position', value: data.overview.supportPct >= data.overview.opposePct ? 'Support' : 'Oppose', sub: `${Math.max(data.overview.supportPct, data.overview.opposePct)}% of all votes`, color: '#D6A94A' },
+                  { label: 'Leading position', value: majority?.label ?? 'None', sub: `${majority?.pct ?? 0}% of all votes`, color: '#D6A94A' },
                   { label: 'Bills with feedback', value: String(data.bills.length), sub: 'in your electorate', color: '#D6A94A' },
                 ].map(({ label, value, sub, color }) => (
                   <div key={label} style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '10px', padding: '16px' }}>
@@ -197,7 +234,7 @@ export default function MpDashboardClient() {
               </div>
 
               {/* Overall sentiment — all vs verified */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px', marginBottom: '16px' }}>
                 {/* All votes */}
                 <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '24px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>

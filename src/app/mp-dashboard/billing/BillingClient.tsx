@@ -156,7 +156,7 @@ export default function BillingClient() {
       </div>
 
       <p style={{ color: '#4A5568', fontSize: '12px', marginTop: '24px', textAlign: 'center' }}>
-        30-day free trial included · Cancel anytime · Secured by Stripe
+        MP trial starts automatically on APH sign-in · Cancel anytime · Secured by Stripe
       </p>
     </div>
   );
