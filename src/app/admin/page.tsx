@@ -4,9 +4,13 @@ import Link from 'next/link';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminOverview() {
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
   const [
     totalUsers, verifiedUsers, mpUsers,
     totalVotes, commentedVotes, totalBills,
+    openTickets, recentAddressChanges, pastDueMps,
     recentUsers, topBills, recentVotes,
   ] = await Promise.all([
     prisma.user.count(),
@@ -15,6 +19,11 @@ export default async function AdminOverview() {
     prisma.vote.count(),
     prisma.vote.count({ where: { comment: { not: null } } }),
     prisma.bill.count(),
+    prisma.supportTicket.count({ where: { status: { in: ['OPEN', 'IN_PROGRESS'] } } }),
+    prisma.addressChangeLog.count({
+      where: { createdAt: { gte: thirtyDaysAgo } },
+    }),
+    prisma.user.count({ where: { role: 'MP', subscriptionStatus: 'PAST_DUE' } }),
     prisma.user.findMany({ orderBy: { createdAt: 'desc' }, take: 5, include: { electorate: true } }),
     prisma.bill.findMany({
       orderBy: { votes: { _count: 'desc' } },
@@ -52,6 +61,19 @@ export default async function AdminOverview() {
             <div className="text-2xl font-bold text-[#F5F7FB]">{value}</div>
             <div className="text-xs text-[#7E8AA3] mt-1">{label}</div>
           </div>
+        ))}
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        {[
+          { label: 'Open support queue', value: openTickets, href: '/admin/support', tone: openTickets > 0 ? 'text-yellow-300' : 'text-green-300' },
+          { label: 'Address changes, 30d', value: recentAddressChanges, href: '/admin/users?verified=1', tone: 'text-blue-300' },
+          { label: 'Past-due MP accounts', value: pastDueMps, href: '/admin/mps', tone: pastDueMps > 0 ? 'text-red-300' : 'text-green-300' },
+        ].map(item => (
+          <Link key={item.label} href={item.href} className="block bg-[#111A2E] border border-[#25324D] rounded-xl p-4 hover:border-[#2E8B57] transition-colors">
+            <div className={`text-2xl font-bold ${item.tone}`}>{item.value}</div>
+            <div className="text-xs text-[#7E8AA3] mt-1">{item.label}</div>
+          </Link>
         ))}
       </div>
 

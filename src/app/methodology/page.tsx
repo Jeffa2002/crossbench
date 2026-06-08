@@ -34,7 +34,7 @@ export default function MethodologyPage() {
           How Crossbench counts and presents civic sentiment
         </h1>
         <p style={{ color: '#B6C0D1', fontSize: '17px', lineHeight: 1.7, margin: '0 0 32px' }}>
-          Crossbench is not a formal poll and does not claim to be representative of every electorate. It is a verified participation layer: Australians can vote once per bill, linked to their federal electorate, and results are shown as live participation data.
+          Crossbench is not a formal poll and does not claim to represent every voter in an electorate. It is a participation layer: Australians can vote once per bill, link that vote to their federal electorate through address lookup, and see live aggregate sentiment from people who chose to participate.
         </p>
 
         <Section title="What the results mean">
@@ -51,7 +51,8 @@ export default function MethodologyPage() {
             'Users enter their residential address so Crossbench can match them to a federal electorate.',
             'Address lookup uses OpenStreetMap Nominatim geocoding and Crossbench electorate boundary data.',
             'Crossbench stores the electorate assignment and a one-way address hash, not a readable address record.',
-            'Verification is used to prevent duplicate or out-of-electorate voting from distorting local results.',
+            'This is electorate verification and duplicate-resistance, not documentary identity proof.',
+            'Address changes are limited and logged so local results are harder to distort.',
           ]} />
         </Section>
 

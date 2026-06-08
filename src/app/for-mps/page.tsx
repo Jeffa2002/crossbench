@@ -1,6 +1,7 @@
 import Nav from '@/components/Nav';
 import Link from 'next/link';
 import Image from 'next/image';
+import TrackedLink from '@/components/TrackedLink';
 
 const s = {
   page: { backgroundColor: '#0B1220', minHeight: '100vh', color: '#F5F7FB' } as React.CSSProperties,
@@ -22,15 +23,15 @@ export default function ForMPsPage() {
             Know what your electorate actually thinks.
           </h1>
           <p style={{ fontSize: '18px', color: '#B6C0D1', lineHeight: 1.6, maxWidth: '560px', margin: '0 auto 36px' }}>
-            Crossbench gives you a live, bill-by-bill read of constituent sentiment in your electorate — verified by address, updated in real time.
+            Crossbench gives you a live, bill-by-bill read of participating constituent sentiment in your electorate — address-matched, aggregated, and updated as people vote.
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href="/login?next=/mp-dashboard" style={{ backgroundColor: '#2E8B57', color: '#fff', padding: '14px 32px', borderRadius: '8px', fontWeight: 700, fontSize: '15px', textDecoration: 'none' }}>
+            <TrackedLink href="/login?next=/mp-dashboard" event="MP Trial CTA" style={{ backgroundColor: '#2E8B57', color: '#fff', padding: '14px 32px', borderRadius: '8px', fontWeight: 700, fontSize: '15px', textDecoration: 'none' }}>
               Start free 30-day trial →
-            </Link>
-            <Link href="/mp-demo" style={{ backgroundColor: 'transparent', color: '#B6C0D1', padding: '14px 28px', borderRadius: '8px', fontWeight: 500, fontSize: '15px', textDecoration: 'none', border: '1px solid #25324D' }}>
+            </TrackedLink>
+            <TrackedLink href="/mp-demo" event="MP Demo CTA" style={{ backgroundColor: 'transparent', color: '#B6C0D1', padding: '14px 28px', borderRadius: '8px', fontWeight: 500, fontSize: '15px', textDecoration: 'none', border: '1px solid #25324D' }}>
               View demo dashboard
-            </Link>
+            </TrackedLink>
           </div>
           <p style={{ color: '#4A5568', fontSize: '12px', marginTop: '12px' }}>Auto-detected via @aph.gov.au email · No credit card required</p>
         </div>
@@ -52,12 +53,12 @@ export default function ForMPsPage() {
           <h2 style={{ fontSize: '28px', fontWeight: 700, textAlign: 'center', marginBottom: '48px' }}>What you get</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
             {[
-              { icon: '📊', title: 'Bill-by-bill breakdown', desc: 'See exactly how your electorate is voting on every bill before Parliament — support, oppose, and abstain — updated every 5 minutes.' },
-              { icon: '📍', title: 'Verified by address', desc: 'Every vote is tied to a verified residential address. No bots, no duplicates, no out-of-electorate noise. Real signal.' },
+              { icon: '📊', title: 'Bill-by-bill breakdown', desc: 'See how participating constituents are voting on bills before Parliament — support, oppose, and abstain.' },
+              { icon: '📍', title: 'Address-matched electorate signal', desc: 'Votes are linked to a federal electorate using address lookup and stored as aggregate local signal, not raw address data.' },
               { icon: '⚡', title: 'Real-time updates', desc: 'Watch sentiment shift as a bill moves through Parliament. Know before you walk into caucus or speak to media.' },
               { icon: '🔒', title: 'Aggregated, not identified', desc: 'You see electorate-level totals, not individual identities. Privacy-first by design — compliant and trustworthy.' },
-              { icon: '📰', title: 'Ready-to-share insights', desc: 'Export charts and data for newsletters, social posts, media briefings, and electorate reports.' },
-              { icon: '🇦🇺', title: 'All 151 electorates', desc: 'Full national coverage. Compare your electorate to state averages and the national result.' },
+              { icon: '📰', title: 'Briefing-ready view', desc: 'Scan the bills generating feedback, compare local and national sentiment, and spot where constituents are split.' },
+              { icon: '🇦🇺', title: 'National context', desc: 'Compare your electorate with national Crossbench participation data where enough votes have been cast.' },
             ].map(({ icon, title, desc }) => (
               <div key={title} style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '24px' }}>
                 <div style={{ fontSize: '28px', marginBottom: '12px' }}>{icon}</div>
@@ -97,8 +98,8 @@ export default function ForMPsPage() {
           <p style={{ color: '#7E8AA3', textAlign: 'center', fontSize: '15px', marginBottom: '48px' }}>Both plans start with a 30-day free trial.</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', maxWidth: '700px', margin: '0 auto' }}>
             {[
-              { name: 'Pro', price: '$199', period: '/month', logins: '1 login', features: ['Full electorate dashboard', 'All bills, live', 'Data export', 'Email support'], highlight: false },
-              { name: 'Team', price: '$499', period: '/month', logins: '3 logins + API access', features: ['Everything in Pro', 'Up to 3 team members', 'API access', 'Priority support'], highlight: true },
+              { name: 'Pro', price: '$199', period: '/month', logins: '1 login', features: ['Full electorate dashboard', 'Bill-by-bill local sentiment', 'Verified vs all-vote comparison', 'Email support'], highlight: false },
+              { name: 'Team', price: '$499', period: '/month', logins: '3 staff logins', features: ['Everything in Pro', 'Up to 3 team members', 'Priority support', 'Office onboarding support'], highlight: true },
             ].map(plan => (
               <div key={plan.name} style={{ backgroundColor: plan.highlight ? '#0D2818' : '#111A2E', border: `1px solid ${plan.highlight ? '#2E8B57' : '#25324D'}`, borderRadius: '16px', padding: '32px', position: 'relative' }}>
                 {plan.highlight && <div style={{ position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)', backgroundColor: '#2E8B57', color: '#fff', fontSize: '11px', fontWeight: 700, padding: '4px 14px', borderRadius: '999px' }}>MOST POPULAR</div>}
@@ -115,9 +116,9 @@ export default function ForMPsPage() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/login?next=/mp-dashboard" style={{ display: 'block', textAlign: 'center', backgroundColor: plan.highlight ? '#2E8B57' : 'transparent', color: plan.highlight ? '#fff' : '#2E8B57', border: `1px solid ${plan.highlight ? '#2E8B57' : '#2E8B57'}`, padding: '12px', borderRadius: '8px', fontWeight: 700, fontSize: '14px', textDecoration: 'none' }}>
+                <TrackedLink href="/login?next=/mp-dashboard" event={`MP Pricing ${plan.name} CTA`} style={{ display: 'block', textAlign: 'center', backgroundColor: plan.highlight ? '#2E8B57' : 'transparent', color: plan.highlight ? '#fff' : '#2E8B57', border: `1px solid ${plan.highlight ? '#2E8B57' : '#2E8B57'}`, padding: '12px', borderRadius: '8px', fontWeight: 700, fontSize: '14px', textDecoration: 'none' }}>
                   Start free trial →
-                </Link>
+                </TrackedLink>
               </div>
             ))}
           </div>
@@ -129,9 +130,9 @@ export default function ForMPsPage() {
         <div style={{ ...s.container, textAlign: 'center' }}>
           <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 700, marginBottom: '16px' }}>Ready to hear from your electorate?</h2>
           <p style={{ color: '#7E8AA3', fontSize: '16px', marginBottom: '32px', maxWidth: '480px', margin: '0 auto 32px' }}>Sign up with your @aph.gov.au email and your 30-day trial starts immediately.</p>
-          <Link href="/login?next=/mp-dashboard" style={{ backgroundColor: '#2E8B57', color: '#fff', padding: '16px 40px', borderRadius: '8px', fontWeight: 700, fontSize: '16px', textDecoration: 'none', display: 'inline-block' }}>
+          <TrackedLink href="/login?next=/mp-dashboard" event="MP Bottom CTA" style={{ backgroundColor: '#2E8B57', color: '#fff', padding: '16px 40px', borderRadius: '8px', fontWeight: 700, fontSize: '16px', textDecoration: 'none', display: 'inline-block' }}>
             Get started free →
-          </Link>
+          </TrackedLink>
           <p style={{ color: '#4A5568', fontSize: '12px', marginTop: '12px' }}>Questions? <Link href="/support" style={{ color: '#4E8FD4', textDecoration: 'none' }}>Contact us</Link></p>
         </div>
       </section>

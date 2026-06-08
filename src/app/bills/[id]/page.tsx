@@ -250,6 +250,21 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
             {bill.title}
           </h1>
 
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px', marginBottom: '18px' }}>
+            {[
+              { label: 'Status', value: isLapsed ? 'Lapsed' : bill.status },
+              { label: 'Chamber', value: bill.chamber },
+              { label: 'Sponsor', value: bill.sponsorName || 'Not listed' },
+              { label: 'Introduced', value: fmt(b.introducedAt) || 'Not listed' },
+              { label: 'Last checked', value: fmtRel(b.lastCheckedAt) || 'Pending' },
+            ].map(item => (
+              <div key={item.label} style={{ backgroundColor: '#0E1628', border: '1px solid #1C2940', borderRadius: '8px', padding: '10px 12px' }}>
+                <p style={{ fontSize: '10px', color: '#4A5568', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 4px' }}>{item.label}</p>
+                <p style={{ fontSize: '13px', color: '#B6C0D1', margin: 0, fontWeight: 600 }}>{item.value}</p>
+              </div>
+            ))}
+          </div>
+
           {/* AI plain-English breakdown */}
           {b.aiSummary && (
             <div style={{
