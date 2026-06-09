@@ -16,6 +16,11 @@ const STATUS_TABS = [
   { label: "Not Passed", value: "Not Passed" },
 ];
 
+function fmtDate(d: Date | null | undefined) {
+  if (!d) return "Date not listed";
+  return new Date(d).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
+}
+
 export default async function BillsPage({
   searchParams,
 }: {
@@ -38,10 +43,10 @@ export default async function BillsPage({
 
   const activeSort = sort ?? 'newest';
   const orderBy: any =
-    activeSort === 'votes' ? [{ votes: { _count: 'desc' } }, { lastUpdatedAt: 'desc' }]
+    activeSort === 'votes' ? [{ votes: { _count: 'desc' } }, { introducedAt: { sort: 'desc', nulls: 'last' } }, { lastUpdatedAt: 'desc' }]
     : activeSort === 'alpha' ? { title: 'asc' }
-    : activeStatus === 'all' ? [{ status: 'asc' }, { lastUpdatedAt: 'desc' }]
-    : { lastUpdatedAt: 'desc' };
+    : activeStatus === 'all' ? [{ status: 'asc' }, { introducedAt: { sort: 'desc', nulls: 'last' } }, { lastUpdatedAt: 'desc' }]
+    : [{ introducedAt: { sort: 'desc', nulls: 'last' } }, { lastUpdatedAt: 'desc' }];
 
   const [bills, total, counts] = await Promise.all([
     prisma.bill.findMany({
@@ -160,7 +165,7 @@ export default async function BillsPage({
             defaultValue={activeSort}
             ariaLabel="Sort bills"
             options={[
-              { value: "newest", label: "Newest first" },
+              { value: "newest", label: "Newest introduced" },
               { value: "votes", label: "Most voted" },
               { value: "alpha", label: "A–Z" },
             ]}
@@ -250,10 +255,13 @@ export default async function BillsPage({
                       {bill.title}
                     </p>
                     {bill.sponsorName && (
-                      <p style={{ color: "#7E8AA3", fontSize: "12px", margin: "4px 0 0" }}>
+                      <p style={{ color: "#7E8AA3", fontSize: "12px", margin: "5px 0 0" }}>
                         {bill.sponsorName}
                       </p>
                     )}
+                    <p style={{ color: "#4A5568", fontSize: "12px", margin: bill.sponsorName ? "3px 0 0" : "5px 0 0" }}>
+                      Introduced {fmtDate(bill.introducedAt)}
+                    </p>
                   </div>
                   <div style={{ color: "#4E8FD4", fontSize: "20px", flexShrink: 0 }}>→</div>
                 </Link>

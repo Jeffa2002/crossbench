@@ -5,31 +5,40 @@ import { PrismaPg } from '@prisma/adapter-pg';
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
 const BASE = 'https://www.aph.gov.au';
+const APH_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  'Accept-Language': 'en-AU,en;q=0.9',
+  'Sec-Fetch-Dest': 'document',
+  'Sec-Fetch-Mode': 'navigate',
+  'Sec-Fetch-Site': 'same-site',
+  'Referer': 'https://www.aph.gov.au/',
+};
 
 const SOURCES = [
   {
     url: `${BASE}/Parliamentary_Business/Bills_Legislation/Bills_before_Parliament`,
     status: 'Before Parliament',
-    pages: 10,
+    pages: 30,
   },
   {
     url: `${BASE}/Parliamentary_Business/Bills_Legislation/Assented_Bills_of_the_current_Parliament`,
     status: 'Passed',
     outcome: 'Assented',
-    pages: 5,
+    pages: 20,
   },
   {
     url: `${BASE}/Parliamentary_Business/Bills_Legislation/Bills_not_passed_current_Parliament`,
     status: 'Not Passed',
     outcome: 'Not Passed',
-    pages: 5,
+    pages: 20,
   },
 ];
 
 async function fetchPage(url: string, page: number): Promise<string> {
   const pageUrl = page > 1 ? `${url}?page=${page}` : url;
   const res = await fetch(pageUrl, {
-    headers: { 'User-Agent': 'Crossbench/1.0 civic-tech contact@crossbench.io' },
+    headers: APH_HEADERS,
   });
   if (!res.ok) throw new Error(`Fetch failed: ${res.status} ${pageUrl}`);
   return res.text();
