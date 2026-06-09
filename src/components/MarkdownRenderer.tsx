@@ -28,7 +28,7 @@ export default function MarkdownRenderer({ content, className }: MarkdownRendere
           </h3>
         ),
         p: ({ children }) => (
-          <p style={{ color: '#C8D4E8', lineHeight: 1.75, fontSize: '14px', margin: '0 0 10px' }}>
+          <p style={{ color: '#C8D4E8', lineHeight: 1.75, fontSize: '16px', margin: '0 0 12px' }}>
             {children}
           </p>
         ),
@@ -38,12 +38,12 @@ export default function MarkdownRenderer({ content, className }: MarkdownRendere
           </strong>
         ),
         ul: ({ children }) => (
-          <ul style={{ color: '#C8D4E8', lineHeight: 1.75, fontSize: '14px', margin: '4px 0 10px', paddingLeft: '20px' }}>
+          <ul style={{ color: '#C8D4E8', lineHeight: 1.75, fontSize: '16px', margin: '4px 0 12px', paddingLeft: '20px' }}>
             {children}
           </ul>
         ),
         ol: ({ children }) => (
-          <ol style={{ color: '#C8D4E8', lineHeight: 1.75, fontSize: '14px', margin: '4px 0 10px', paddingLeft: '20px' }}>
+          <ol style={{ color: '#C8D4E8', lineHeight: 1.75, fontSize: '16px', margin: '4px 0 12px', paddingLeft: '20px' }}>
             {children}
           </ol>
         ),

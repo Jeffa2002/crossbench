@@ -13,6 +13,7 @@ export async function GET() {
       email: true,
       role: true,
       name: true,
+      verifiedAt: true,
       electorateId: true,
       verificationStatus: true,
       electorateVerified: true,

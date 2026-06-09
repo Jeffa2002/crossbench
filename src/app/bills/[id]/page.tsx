@@ -7,6 +7,8 @@ import Nav from '@/components/Nav';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import BillBadge from '@/components/BillBadge';
 import { getBillTags, makeBillTag } from '@/lib/bill-tags';
+import { safeHttpsUrl, APH_URL_HOSTS } from '@/lib/safe-url';
+import BillTextReader from './BillTextReader';
 
 export const revalidate = 60;
 
@@ -158,6 +160,8 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
     ...(b.revisionsCount > 1 ? [makeBillTag(`${b.revisionsCount} readings`, 'neutral')] : []),
     ...(b.hasAmendments ? [makeBillTag('Amendments circulated', 'gold')] : []),
   ];
+  const safePdfUrl = safeHttpsUrl(b.pdfUrl, APH_URL_HOSTS);
+  const safeAphUrl = safeHttpsUrl(bill.aphUrl, APH_URL_HOSTS);
 
   return (
     <main style={{ backgroundColor: '#0B1220', minHeight: '100vh', color: '#F5F7FB' }}>
@@ -246,9 +250,57 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
             ))}
           </div>
 
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#F5F7FB', marginBottom: '20px', lineHeight: 1.35 }}>
+          <h1 style={{ fontSize: '28px', fontWeight: 750, color: '#F5F7FB', marginBottom: '20px', lineHeight: 1.25, letterSpacing: 0 }}>
             {bill.title}
           </h1>
+
+          {/* AI plain-English breakdown */}
+          {b.aiSummary && (
+            <div style={{
+              backgroundColor: 'rgba(46,139,87,0.07)',
+              border: '1px solid rgba(46,139,87,0.2)',
+              borderRadius: '10px',
+              padding: '22px',
+              marginBottom: '18px',
+              maxWidth: '76ch',
+            }}>
+              <p style={{ fontSize: '12px', fontWeight: 700, color: '#2E8B57', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                Plain-English summary
+              </p>
+              <MarkdownRenderer content={b.aiSummary} />
+            </div>
+          )}
+
+          <div className="bill-glance-grid" style={{ marginBottom: '18px' }}>
+            {[
+              { label: 'What this bill does', value: b.aphDescription || b.summary || 'Read the plain-English summary and official bill text below for the practical effect.' },
+              { label: 'Who it affects', value: bill.portfolio ? `${bill.portfolio} policy area and the people, services, or organisations covered by it.` : 'Australians covered by the policy area in the bill.' },
+              { label: 'What happens next', value: isClosed ? `Parliament has recorded this bill as ${isLapsed ? 'lapsed' : bill.status.toLowerCase()}.` : 'The bill is still before parliament. Crossbench will keep tracking updates and public votes.' },
+            ].map(item => (
+              <div key={item.label} style={{ backgroundColor: '#0E1628', border: '1px solid #1C2940', borderRadius: '8px', padding: '14px 16px' }}>
+                <p style={{ fontSize: '11px', color: '#7E8AA3', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px', fontWeight: 700 }}>{item.label}</p>
+                <p style={{ fontSize: '14px', color: '#C8D4E8', margin: 0, lineHeight: 1.55 }}>{item.value}</p>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ backgroundColor: '#0E1628', border: '1px solid #1C2940', borderRadius: '8px', padding: '14px 16px', marginBottom: '18px' }}>
+            <p style={{ fontSize: '11px', color: '#7E8AA3', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px', fontWeight: 700 }}>Current public sentiment</p>
+            {results.total > 0 ? (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '12px', alignItems: 'center' }}>
+                <div style={{ height: '10px', backgroundColor: '#16213A', borderRadius: '999px', overflow: 'hidden', display: 'flex' }}>
+                  <div style={{ width: `${supportPct}%`, backgroundColor: '#2E8B57' }} />
+                  <div style={{ width: `${opposePct}%`, backgroundColor: '#D95C4B' }} />
+                  <div style={{ width: `${abstainPct}%`, backgroundColor: '#6F7D95' }} />
+                </div>
+                <p style={{ color: '#B6C0D1', fontSize: '13px', margin: 0, whiteSpace: 'nowrap' }}>
+                  {supportPct}% support · {opposePct}% oppose · {results.total.toLocaleString()} votes
+                </p>
+              </div>
+            ) : (
+              <p style={{ color: '#7E8AA3', fontSize: '14px', margin: 0 }}>No Crossbench votes have been recorded yet.</p>
+            )}
+          </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px', marginBottom: '18px' }}>
             {[
@@ -264,22 +316,6 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
               </div>
             ))}
           </div>
-
-          {/* AI plain-English breakdown */}
-          {b.aiSummary && (
-            <div style={{
-              backgroundColor: 'rgba(46,139,87,0.07)',
-              border: '1px solid rgba(46,139,87,0.2)',
-              borderRadius: '8px',
-              padding: '18px',
-              marginBottom: '18px',
-            }}>
-              <p style={{ fontSize: '11px', fontWeight: 700, color: '#2E8B57', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-                ✦ Plain-English Summary
-              </p>
-              <MarkdownRenderer content={b.aiSummary} />
-            </div>
-          )}
 
           {/* Official description */}
           {b.aphDescription && (
@@ -311,14 +347,14 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
               </p>
             )}
             <div style={{ display: 'flex', gap: '14px', marginLeft: 'auto' }}>
-              {b.pdfUrl && (
-                <a href={b.pdfUrl} target="_blank" rel="noopener noreferrer"
+              {safePdfUrl && (
+                <a href={safePdfUrl} target="_blank" rel="noopener noreferrer"
                   style={{ color: '#7B93D4', fontSize: '13px', textDecoration: 'none' }}>
                   Full bill PDF →
                 </a>
               )}
-              {bill.aphUrl && (
-                <a href={bill.aphUrl} target="_blank" rel="noopener noreferrer"
+              {safeAphUrl && (
+                <a href={safeAphUrl} target="_blank" rel="noopener noreferrer"
                   style={{ color: '#2E8B57', fontSize: '13px', textDecoration: 'none' }}>
                   APH page →
                 </a>
@@ -327,10 +363,20 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
           </div>
         </div>
 
+        {b.fullText && (
+          <BillTextReader
+            title={bill.title}
+            fullText={b.fullText}
+            fetchedAt={fmtRel(b.fullTextFetchedAt)}
+            pdfUrl={safePdfUrl}
+            aphUrl={safeAphUrl}
+          />
+        )}
+
         {/* ── Audit trail ── */}
         <div style={{ backgroundColor: '#0E1628', border: '1px solid #1C2940', borderRadius: '10px', padding: '16px 20px', marginBottom: '16px' }}>
           <p style={{ fontSize: '10px', fontWeight: 600, color: '#3A4A6A', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-            Audit History
+            Details and source history
           </p>
           <div className='audit-row'>
             {b.introducedAt && (
@@ -408,9 +454,12 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
           return (
             <div style={{ backgroundColor: '#0E1628', border: '1px solid #1C2940', borderRadius: '10px', padding: '20px 24px', marginBottom: '16px' }}>
               <p style={{ fontSize: '10px', fontWeight: 600, color: '#3A4A6A', margin: '0 0 16px', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-                How Parliament Voted
+                Bill journey
               </p>
-              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${activeChambers.length}, 1fr)`, gap: '20px' }}>
+              <p style={{ fontSize: '12px', color: '#7E8AA3', margin: '-8px 0 16px', lineHeight: 1.55 }}>
+                Key parliamentary steps in plain order. Some procedural steps can happen without a recorded vote.
+              </p>
+              <div className="bill-progress-grid" style={{ gridTemplateColumns: `repeat(${activeChambers.length}, minmax(0, 1fr))` }}>
                 {activeChambers.map(chamber => (
                   <div key={chamber}>
                     <div style={{ fontSize: '12px', fontWeight: 700, color: '#7E8AA3', marginBottom: '10px' }}>
@@ -496,7 +545,10 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
           return (
             <div style={{ backgroundColor: '#0E1628', border: '1px solid #1C2940', borderRadius: '10px', padding: '20px 24px', marginBottom: '16px' }}>
               <p style={{ fontSize: '10px', fontWeight: 600, color: '#3A4A6A', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-                How Parliament Voted
+                Final parliamentary vote
+              </p>
+              <p style={{ fontSize: '12px', color: '#7E8AA3', margin: '0 0 14px', lineHeight: 1.55 }}>
+                A division is a formal counted vote. AYES means members voted for the motion; NOES means they voted against it.
               </p>
               {isAmendmentOnly && (
                 <p style={{ fontSize: '11px', color: '#4E5A73', margin: '0 0 14px', lineHeight: '1.5' }}>
@@ -570,7 +622,7 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
         {/* ── Vote results ── */}
         <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '28px', marginBottom: '16px' }}>
           <h2 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F7FB', marginBottom: '4px' }}>
-            Constituent votes
+            Public votes on Crossbench
             {results.total > 0 && (
               <span style={{ color: '#7E8AA3', fontWeight: 400, fontSize: '14px', marginLeft: '8px' }}>
                 ({results.total.toLocaleString()} total)

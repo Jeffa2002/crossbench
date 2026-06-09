@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { addressVerifiedUserWhere, isAddressVerified } from '@/lib/verification';
 
 // GET /api/sentiment?mpIds=id1,id2,...
 // Returns aggregate sentiment + current user's vote for each mpId
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest) {
   // Aggregate counts per mpId
   const counts = await prisma.mpSentiment.groupBy({
     by: ['mpId', 'sentiment'],
-    where: { mpId: { in: mpIds } },
+    where: { mpId: { in: mpIds }, user: addressVerifiedUserWhere },
     _count: true,
   });
 
@@ -54,10 +55,16 @@ export async function POST(req: NextRequest) {
 
   const user = await prisma.user.findUnique({
     where: { id: (session.user as any).id },
-    select: { id: true, verificationStatus: true },
+    select: {
+      id: true,
+      verifiedAt: true,
+      electorateId: true,
+      electorateVerified: true,
+      verificationStatus: true,
+    },
   });
 
-  if (!user || user.verificationStatus === 'NONE') {
+  if (!user || !isAddressVerified(user)) {
     return NextResponse.json({ error: 'Address verification required to rate MPs' }, { status: 403 });
   }
 

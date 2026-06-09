@@ -64,7 +64,7 @@ export default function VoteButton({ billId, currentVote, isVerified }: Props) {
   return (
     <div className="space-y-4">
       <p className="text-sm font-medium text-[#B6C0D1]">Choose your position:</p>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="bill-vote-choice-grid">
         {buttons.map(({ position, label, color, active }) => (
           <button
             key={position}

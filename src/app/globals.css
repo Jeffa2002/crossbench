@@ -195,6 +195,52 @@ body {
   }
 }
 
+/* ── Bill reader ──────────────────────────────────────────── */
+.bill-glance-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.bill-progress-grid {
+  display: grid;
+  gap: 20px;
+}
+
+.bill-vote-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 720px) {
+  .bill-glance-grid,
+  .bill-progress-grid,
+  .bill-vote-choice-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Politics Pulse ───────────────────────────────────────── */
+.pulse-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.party-pulse-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 760px) {
+  .pulse-stat-grid,
+  .party-pulse-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 /* ── MP header (photo + info) ─────────────────────────────── */
 .mp-header {
   display: flex;

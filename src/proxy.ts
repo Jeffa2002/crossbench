@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// ─── CSP nonce middleware ─────────────────────────────────────────────────────
+// ─── CSP nonce proxy ──────────────────────────────────────────────────────────
 // Generates a fresh cryptographic nonce per request.
 // The nonce is injected into the CSP header and passed to the root layout
 // via a response header (x-nonce) so Next.js can apply it to inline scripts.
@@ -52,16 +52,7 @@ async function hasAdminSession(request: NextRequest): Promise<boolean> {
   }
 }
 
-export async function middleware(request: NextRequest) {
-  if (request.nextUrl.pathname === '/admin' || request.nextUrl.pathname.startsWith('/admin/')) {
-    if (!await hasAdminSession(request)) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/admin-login'
-      url.search = ''
-      return NextResponse.redirect(url)
-    }
-  }
-
+export async function proxy(request: NextRequest) {
   const nonce = generateNonce()
 
   const cspHeader = [
@@ -72,7 +63,7 @@ export async function middleware(request: NextRequest) {
     // Styles: same origin + unsafe-inline (Tailwind v4 CSS-in-JS injects styles)
     `style-src 'self' 'unsafe-inline'`,
     // Images: same origin + data URIs (avatars) + APH/Wikipedia photos
-    `img-src 'self' data: https://www.aph.gov.au https://upload.wikimedia.org https://en.wikipedia.org`,
+    `img-src 'self' data: https://www.aph.gov.au https://*.aph.gov.au https://upload.wikimedia.org https://*.wikimedia.org https://en.wikipedia.org https://*.wikipedia.org`,
     // Fonts: Google Fonts (used in root layout via next/font/google)
     `font-src 'self' https://fonts.gstatic.com`,
     // Connect: same origin API calls + Plausible + reCAPTCHA
@@ -87,8 +78,18 @@ export async function middleware(request: NextRequest) {
     `object-src 'none'`,
     // Force HTTPS for all mixed content
     `upgrade-insecure-requests`,
-    // Report violations to console (swap for report-uri endpoint later)
   ].join('; ')
+
+  if (request.nextUrl.pathname === '/admin' || request.nextUrl.pathname.startsWith('/admin/')) {
+    if (!await hasAdminSession(request)) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/admin-login'
+      url.search = ''
+      const response = NextResponse.redirect(url)
+      response.headers.set('Content-Security-Policy', cspHeader)
+      return response
+    }
+  }
 
   const requestHeaders = new Headers(request.headers)
   // Pass nonce to layout via header so server components can read it
@@ -104,6 +105,8 @@ export async function middleware(request: NextRequest) {
 
   return response
 }
+
+export default proxy
 
 export const config = {
   matcher: [

@@ -19,7 +19,6 @@
     "@vercel/analytics": "^2.0.1",
     "next": "^16.2.7",
     "next-auth": "^5.0.0-beta.30",
-    "prisma": "^7.7.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-markdown": "^10.1.0",
@@ -35,11 +34,13 @@
     "eslint": "^9",
     "eslint-config-next": "^16.2.7",
     "playwright": "^1.59.1",
+    "prisma": "^7.7.0",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
     "typescript": "^5"
   },
   "overrides": {
+    "@hono/node-server": "^1.19.13",
     "postcss": "8.5.15"
   }
 }

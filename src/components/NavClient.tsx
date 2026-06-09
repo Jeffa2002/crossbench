@@ -11,10 +11,11 @@ type NavClientProps = {
 
 const NAV_LINKS = [
   { href: '/bills', label: 'Bills' },
-  { href: '/sentiment', label: 'Sentiment' },
+  { href: '/sentiment', label: 'Politics Pulse' },
   { href: '/stats', label: 'Stats' },
   { href: '/parliament', label: 'Parliament' },
   { href: '/electorates', label: 'Electorates' },
+  { href: '/changelog', label: 'Changelog' },
   { href: '/about', label: 'About' },
 ];
 

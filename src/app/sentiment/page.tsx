@@ -1,6 +1,8 @@
 import Nav from '@/components/Nav';
 import SentimentClient from './SentimentClient';
 import { prisma } from '@/lib/prisma';
+import { safeHttpsUrl, MP_PHOTO_URL_HOSTS } from '@/lib/safe-url';
+import { addressVerifiedUserWhere } from '@/lib/verification';
 
 export const revalidate = 60; // revalidate every 60s
 
@@ -24,8 +26,18 @@ export default async function SentimentPage() {
   // Aggregate sentiment counts
   const sentimentCounts = await prisma.mpSentiment.groupBy({
     by: ['mpId', 'sentiment'],
+    where: { user: addressVerifiedUserWhere },
     _count: true,
   });
+  const [totalResponses, allResponses, latestResponse] = await Promise.all([
+    prisma.mpSentiment.count({ where: { user: addressVerifiedUserWhere } }),
+    prisma.mpSentiment.count(),
+    prisma.mpSentiment.findFirst({
+      where: { user: addressVerifiedUserWhere },
+      orderBy: { updatedAt: 'desc' },
+      select: { updatedAt: true },
+    }),
+  ]);
 
   const countMap: Record<string, { positive: number; negative: number }> = {};
   for (const row of sentimentCounts) {
@@ -36,6 +48,7 @@ export default async function SentimentPage() {
 
   const mps = electorates.map(e => ({
     ...e,
+    mpPhotoUrl: safeHttpsUrl(e.mpPhotoUrl, MP_PHOTO_URL_HOSTS),
     positive: countMap[e.mpId!]?.positive ?? 0,
     negative: countMap[e.mpId!]?.negative ?? 0,
   }));
@@ -64,7 +77,16 @@ export default async function SentimentPage() {
   return (
     <main style={{ backgroundColor: '#0B1220', minHeight: '100vh', color: '#F5F7FB' }}>
       <Nav />
-      <SentimentClient mps={mps as any} parties={parties} />
+      <SentimentClient
+        mps={mps as any}
+        parties={parties}
+        stats={{
+          totalResponses,
+          activeMembers: totalResponses,
+          verifiedShare: allResponses > 0 ? Math.round((totalResponses / allResponses) * 100) : 0,
+          lastUpdated: latestResponse?.updatedAt?.toISOString() ?? null,
+        }}
+      />
     </main>
   );
 }

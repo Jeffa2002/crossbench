@@ -15,6 +15,13 @@ type Party = {
   total: number; positivePct: number; mpCount: number;
 };
 
+type PulseStats = {
+  totalResponses: number;
+  activeMembers: number;
+  verifiedShare: number;
+  lastUpdated: string | null;
+};
+
 const PARTY_COLORS: Record<string, string> = {
   labor: '#E53E3E', liberal: '#3182CE', national: '#38A169',
   greens: '#48BB78', independent: '#805AD5', teal: '#319795',
@@ -26,6 +33,32 @@ function partyColor(p: string | null) {
   const l = p.toLowerCase();
   for (const [k, v] of Object.entries(PARTY_COLORS)) if (l.includes(k)) return v;
   return '#6F7D95';
+}
+
+function confidenceLabel(total: number) {
+  if (total >= 100) return { label: 'Verified signal', color: '#2E8B57' };
+  if (total >= 25) return { label: 'Building sample', color: '#D6A94A' };
+  if (total > 0) return { label: 'Low sample', color: '#7E8AA3' };
+  return { label: 'No sample', color: '#4A5568' };
+}
+
+function fmtLastUpdated(value: string | null) {
+  if (!value) return 'No responses yet';
+  const date = new Date(value);
+  const minutes = Math.max(0, Math.round((Date.now() - date.getTime()) / 60000));
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return `${minutes} min ago`;
+  if (minutes < 1440) return `${Math.round(minutes / 60)} hr ago`;
+  return date.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function hasAddressVerification(me: any) {
+  return !!(
+    me?.verifiedAt &&
+    me?.electorateId &&
+    me?.electorateVerified &&
+    ['ADDRESS', 'IDENTITY'].includes(me?.verificationStatus)
+  );
 }
 
 function ThumbButton({ active, type, count, onClick, disabled }: {
@@ -77,6 +110,7 @@ function MpCard({ mp, userVote, onVote, canVote }: {
   const total = mp.positive + mp.negative;
   const posPct = total > 0 ? Math.round((mp.positive / total) * 100) : 0;
   const color = partyColor(mp.mpParty);
+  const confidence = confidenceLabel(total);
 
   function handleClick(type: 'POSITIVE' | 'NEGATIVE') {
     if (!canVote) return;
@@ -91,7 +125,7 @@ function MpCard({ mp, userVote, onVote, canVote }: {
       {/* Photo */}
       <div style={{ width: '44px', height: '44px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, backgroundColor: '#1A2540', border: `2px solid ${color}` }}>
         {mp.mpPhotoUrl ? (
-          <img src={mp.mpPhotoUrl} alt={mp.mpName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img src={mp.mpPhotoUrl} alt={mp.mpName} referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
           <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>👤</div>
         )}
@@ -116,6 +150,9 @@ function MpCard({ mp, userVote, onVote, canVote }: {
         ) : (
           <p style={{ fontSize: '10px', color: '#3A4A6A', margin: 0 }}>No ratings yet</p>
         )}
+        <span style={{ display: 'inline-block', marginTop: '5px', color: confidence.color, border: `1px solid ${confidence.color}55`, borderRadius: '999px', padding: '2px 7px', fontSize: '10px', fontWeight: 700 }}>
+          {confidence.label}
+        </span>
       </div>
 
       {/* Thumbs */}
@@ -127,7 +164,7 @@ function MpCard({ mp, userVote, onVote, canVote }: {
   );
 }
 
-export default function SentimentClient({ mps, parties }: { mps: Mp[]; parties: Party[] }) {
+export default function SentimentClient({ mps, parties, stats }: { mps: Mp[]; parties: Party[]; stats: PulseStats }) {
   const [filter, setFilter] = useState('');
   const [chamberFilter, setChamberFilter] = useState<'all' | 'House' | 'Senate'>('all');
   const [partyFilter, setPartyFilter] = useState('');
@@ -154,7 +191,7 @@ export default function SentimentClient({ mps, parties }: { mps: Mp[]; parties: 
       const meRes = await fetch('/api/me');
       if (meRes.ok) {
         const me = await meRes.json();
-        if (me.verificationStatus && me.verificationStatus !== 'NONE') {
+        if (hasAddressVerification(me)) {
           setCanVote(true);
           setAuthStatus('verified');
         } else {
@@ -225,13 +262,17 @@ export default function SentimentClient({ mps, parties }: { mps: Mp[]; parties: 
   });
 
   const uniqueParties = [...new Set(mps.map(m => m.mpParty || 'Independent'))].sort();
+  const activeTopics = ['All current politics', 'Cost of living', 'Housing', 'Integrity', 'Climate', 'Healthcare'];
 
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '32px 16px' }}>
+    <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '32px 16px' }}>
       {/* Header */}
-      <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: 700, margin: '0 0 8px' }}>Live MP Sentiment</h1>
-        <p style={{ color: '#7E8AA3', margin: 0 }}>How Australians feel about their representatives. Rate any MP or Senator — one 👍 or 👎 per person.</p>
+      <div style={{ marginBottom: '28px' }}>
+        <p style={{ color: '#2E8B57', fontSize: '12px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 10px' }}>Crossbench member sentiment</p>
+        <h1 style={{ fontSize: 'clamp(32px, 5vw, 48px)', fontWeight: 800, lineHeight: 1.1, margin: '0 0 12px', letterSpacing: 0 }}>Politics Pulse</h1>
+        <p style={{ color: '#B6C0D1', margin: 0, fontSize: '16px', lineHeight: 1.65, maxWidth: '76ch' }}>
+          A live view of how verified Crossbench members are rating parties, MPs, and Senators. This is a participation signal, not a scientific population poll.
+        </p>
         {authStatus === 'none' && (
           <div style={{ marginTop: '12px', backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '8px', padding: '12px 16px', fontSize: '13px', color: '#B6C0D1' }}>
             <Link href='/login' style={{ color: '#2E8B57', fontWeight: 600 }}>Sign in</Link> to rate MPs.
@@ -244,25 +285,65 @@ export default function SentimentClient({ mps, parties }: { mps: Mp[]; parties: 
         )}
       </div>
 
+      <div className="pulse-stat-grid" style={{ marginBottom: '18px' }}>
+        {[
+          { label: 'Active responses', value: stats.activeMembers.toLocaleString() },
+          { label: 'Verified share', value: `${stats.verifiedShare}%` },
+          { label: 'Representatives tracked', value: mps.length.toLocaleString() },
+          { label: 'Last updated', value: fmtLastUpdated(stats.lastUpdated) },
+        ].map(item => (
+          <div key={item.label} style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '10px', padding: '16px' }}>
+            <p style={{ color: '#7E8AA3', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', margin: '0 0 8px', fontWeight: 700 }}>{item.label}</p>
+            <p style={{ color: '#F5F7FB', fontSize: '22px', fontWeight: 800, margin: 0 }}>{item.value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '32px' }}>
+        {activeTopics.map((topic, index) => (
+          <span key={topic} style={{
+            color: index === 0 ? '#F5F7FB' : '#B6C0D1',
+            backgroundColor: index === 0 ? '#2E8B57' : '#111A2E',
+            border: '1px solid #25324D',
+            borderRadius: '999px',
+            padding: '7px 11px',
+            fontSize: '12px',
+            fontWeight: 700,
+          }}>
+            {topic}
+          </span>
+        ))}
+      </div>
+
       {/* Party leaderboard */}
       <div style={{ marginBottom: '32px' }}>
-        <h2 style={{ fontSize: '16px', fontWeight: 600, margin: '0 0 14px', color: '#F5F7FB' }}>Party approval</h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: '14px' }}>
+          <div>
+            <h2 style={{ fontSize: '20px', fontWeight: 750, margin: '0 0 4px', color: '#F5F7FB' }}>Party sentiment board</h2>
+            <p style={{ color: '#7E8AA3', fontSize: '13px', lineHeight: 1.55, margin: 0 }}>Approval and concern are aggregated from member ratings of each party's representatives.</p>
+          </div>
+          <Link href="/methodology" style={{ color: '#2E8B57', fontSize: '13px', fontWeight: 700, textDecoration: 'none' }}>Methodology</Link>
+        </div>
+        <div className="party-pulse-grid">
           {parties.filter(p => p.total > 0).sort((a, b) => b.positivePct - a.positivePct).map(party => (
-            <div key={party.name} style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '10px', padding: '14px 18px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <div key={party.name} style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '10px', padding: '16px 18px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '12px' }}>
                 <div>
                   <span style={{ fontSize: '14px', fontWeight: 600, color: partyColor(party.name) }}>{party.name}</span>
-                  <span style={{ fontSize: '11px', color: '#4A5568', marginLeft: '8px' }}>{party.mpCount} MPs</span>
+                  <p style={{ fontSize: '11px', color: '#4A5568', margin: '3px 0 0' }}>{party.mpCount} MPs/Senators · {confidenceLabel(party.total).label}</p>
                 </div>
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                  <span style={{ fontSize: '13px', color: '#2E8B57', fontWeight: 600 }}>👍 {party.positivePct}%</span>
-                  <span style={{ fontSize: '13px', color: '#D95C4B' }}>👎 {100 - party.positivePct}%</span>
-                  <span style={{ fontSize: '11px', color: '#4A5568' }}>{party.total.toLocaleString()} ratings</span>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '24px', color: '#F5F7FB', fontWeight: 800, lineHeight: 1 }}>{party.positivePct}%</div>
+                  <div style={{ fontSize: '10px', color: '#7E8AA3', fontWeight: 700 }}>approval</div>
                 </div>
               </div>
               <div style={{ height: '6px', backgroundColor: '#16213A', borderRadius: '3px', overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: `${party.positivePct}%`, backgroundColor: partyColor(party.name), opacity: 0.8, borderRadius: '3px', transition: 'width 0.4s' }} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px', color: '#7E8AA3', fontSize: '12px' }}>
+                <span style={{ color: '#2E8B57', fontWeight: 700 }}>Approve {party.positive.toLocaleString()}</span>
+                <span style={{ color: '#D95C4B', fontWeight: 700 }}>Concern {party.negative.toLocaleString()}</span>
+                <span>{party.total.toLocaleString()} total</span>
               </div>
             </div>
           ))}
@@ -295,9 +376,15 @@ export default function SentimentClient({ mps, parties }: { mps: Mp[]; parties: 
       </div>
 
       {/* MP count */}
-      <p style={{ fontSize: '12px', color: '#4A5568', margin: '0 0 12px' }}>
-        Showing {filteredMps.length} of {mps.length} representatives
-      </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', margin: '0 0 12px', flexWrap: 'wrap' }}>
+        <div>
+          <h2 style={{ fontSize: '20px', fontWeight: 750, margin: '0 0 4px', color: '#F5F7FB' }}>Member leaderboard</h2>
+          <p style={{ fontSize: '12px', color: '#4A5568', margin: 0 }}>
+            Showing {filteredMps.length} of {mps.length} representatives
+          </p>
+        </div>
+        <span style={{ color: '#7E8AA3', fontSize: '12px', border: '1px solid #25324D', borderRadius: '999px', padding: '6px 10px' }}>One rating per verified member</span>
+      </div>
 
       {/* MP list */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
