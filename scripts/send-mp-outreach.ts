@@ -10,6 +10,8 @@ const getArg = (name: string, fallback: string) => {
 };
 
 const shouldSend = args.has('--send');
+const allowIncomplete = args.has('--allow-incomplete');
+const allowDuplicates = args.has('--allow-duplicates');
 const limit = Number.parseInt(getArg('--limit', '0'), 10) || undefined;
 const delayMs = Number.parseInt(getArg('--delay-ms', '30000'), 10);
 const chamber = getArg('--chamber', 'all').toLowerCase();
@@ -132,6 +134,12 @@ async function main() {
 
   const deliverable = recipients.filter(r => r.mpEmail);
   const missingEmail = recipients.length - deliverable.length;
+  const emailCounts = new Map<string, number>();
+  for (const recipient of deliverable) {
+    const email = recipient.mpEmail!.toLowerCase();
+    emailCounts.set(email, (emailCounts.get(email) ?? 0) + 1);
+  }
+  const duplicateEmails = [...emailCounts.entries()].filter(([, count]) => count > 1);
   const replyTo = process.env.MP_OUTREACH_REPLY_TO || 'support+mp-outreach@crossbench.io';
   const from = process.env.MP_OUTREACH_FROM || 'Crossbench <noreply@crossbench.io>';
 
@@ -139,9 +147,28 @@ async function main() {
   console.log(`Recipients selected: ${recipients.length}`);
   console.log(`Deliverable recipients: ${deliverable.length}`);
   console.log(`Skipped missing email: ${missingEmail}`);
+  console.log(`Duplicate email mappings: ${duplicateEmails.length}`);
   console.log(`From: ${from}`);
   console.log(`Reply-To: ${replyTo}`);
   console.log(`Delay: ${delayMs}ms`);
+
+  if (duplicateEmails.length) {
+    console.log('\nDuplicate addresses that need review:');
+    for (const [email] of duplicateEmails.slice(0, 20)) {
+      const rows = deliverable
+        .filter(recipient => recipient.mpEmail!.toLowerCase() === email)
+        .map(recipient => `${recipient.name} / ${recipient.mpName || 'No member name'}`)
+        .join('; ');
+      console.log(`- ${email}: ${rows}`);
+    }
+  }
+
+  if (shouldSend && missingEmail > 0 && !allowIncomplete) {
+    throw new Error(`Refusing to send: ${missingEmail} selected recipients are missing mpEmail. Use --allow-incomplete only after approving a partial send.`);
+  }
+  if (shouldSend && duplicateEmails.length > 0 && !allowDuplicates) {
+    throw new Error(`Refusing to send: ${duplicateEmails.length} duplicate email mappings need review. Use --allow-duplicates only after fixing or approving them.`);
+  }
 
   for (let i = 0; i < deliverable.length; i++) {
     const recipient = deliverable[i];
