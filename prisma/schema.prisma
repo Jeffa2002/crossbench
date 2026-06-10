@@ -237,6 +237,13 @@ enum TicketPriority {
   URGENT
 }
 
+enum OutreachEmailStatus {
+  PENDING
+  SENT
+  FAILED
+  SKIPPED
+}
+
 model AddressChangeLog {
   id               String   @id @default(cuid())
   userId           String
@@ -279,6 +286,27 @@ model SupportReply {
   ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
   @@index([ticketId])
+}
+
+model OutreachEmailLog {
+  id             String              @id @default(cuid())
+  campaign       String
+  electorateId   String?
+  chamber        String?
+  recipientName  String?
+  recipientEmail String
+  subject        String
+  status         OutreachEmailStatus @default(PENDING)
+  resendId       String?
+  error          String?
+  sentAt         DateTime?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@unique([campaign, recipientEmail])
+  @@index([campaign])
+  @@index([status])
+  @@index([electorateId])
 }
 
 model VerificationToken {

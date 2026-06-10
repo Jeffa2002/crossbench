@@ -12,10 +12,14 @@ const getArg = (name: string, fallback: string) => {
 const shouldSend = args.has('--send');
 const allowIncomplete = args.has('--allow-incomplete');
 const allowDuplicates = args.has('--allow-duplicates');
+const force = args.has('--force');
 const limit = Number.parseInt(getArg('--limit', '0'), 10) || undefined;
 const delayMs = Number.parseInt(getArg('--delay-ms', '30000'), 10);
 const chamber = getArg('--chamber', 'all').toLowerCase();
 const onlyEmail = getArg('--only', '').toLowerCase();
+const campaign = getArg('--campaign', 'mp_outreach_intro_2026_06');
+const sampleId = getArg('--sample-id', 'bean');
+const testTo = getArg('--test-to', '');
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
@@ -30,6 +34,8 @@ type Recipient = {
   mpEmail: string | null;
   mpChamber: string | null;
 };
+
+type OutreachLogStatus = 'PENDING' | 'SENT' | 'FAILED' | 'SKIPPED';
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -105,6 +111,47 @@ https://crossbench.io`;
   return { subject, plain, html };
 }
 
+function splitEmails(value: string) {
+  return value
+    .split(',')
+    .map(email => email.trim())
+    .filter(Boolean);
+}
+
+function idempotencyKey(campaignName: string, recipient: Recipient, to: string) {
+  const raw = `${campaignName}-${recipient.id}-${to.toLowerCase()}`;
+  return raw.replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 256);
+}
+
+async function writeLog(recipient: Recipient, subject: string, status: OutreachLogStatus, resendId?: string, error?: string) {
+  const recipientEmail = recipient.mpEmail!.toLowerCase();
+  await (prisma as any).outreachEmailLog.upsert({
+    where: { campaign_recipientEmail: { campaign, recipientEmail } },
+    create: {
+      campaign,
+      electorateId: recipient.id,
+      chamber: recipient.mpChamber,
+      recipientName: recipient.mpName || recipient.name,
+      recipientEmail,
+      subject,
+      status,
+      resendId,
+      error,
+      sentAt: status === 'SENT' ? new Date() : null,
+    },
+    update: {
+      electorateId: recipient.id,
+      chamber: recipient.mpChamber,
+      recipientName: recipient.mpName || recipient.name,
+      subject,
+      status,
+      resendId,
+      error,
+      sentAt: status === 'SENT' ? new Date() : undefined,
+    },
+  });
+}
+
 async function main() {
   if (shouldSend && !process.env.RESEND_API_KEY) throw new Error('RESEND_API_KEY is required when using --send');
   if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required');
@@ -114,23 +161,45 @@ async function main() {
     : chamber === 'senate' ? ['Senate']
     : ['House of Reps', 'Senate'];
 
-  const recipients = await prisma.electorate.findMany({
-    where: {
-      mpChamber: { in: chamberFilter },
-      ...(onlyEmail ? { mpEmail: { equals: onlyEmail, mode: 'insensitive' } } : {}),
-    },
-    select: {
-      id: true,
-      name: true,
-      state: true,
-      mpName: true,
-      mpParty: true,
-      mpEmail: true,
-      mpChamber: true,
-    },
-    orderBy: [{ mpChamber: 'asc' }, { state: 'asc' }, { name: 'asc' }],
-    ...(limit ? { take: limit } : {}),
-  });
+  let recipients: Recipient[];
+  const testRecipients = splitEmails(testTo);
+  if (testRecipients.length) {
+    const sample = await prisma.electorate.findUnique({
+      where: { id: sampleId },
+      select: {
+        id: true,
+        name: true,
+        state: true,
+        mpName: true,
+        mpParty: true,
+        mpEmail: true,
+        mpChamber: true,
+      },
+    });
+    if (!sample) throw new Error(`Sample electorate/member not found: ${sampleId}`);
+    recipients = testRecipients.map(email => ({
+      ...sample,
+      mpEmail: email,
+    }));
+  } else {
+    recipients = await prisma.electorate.findMany({
+      where: {
+        mpChamber: { in: chamberFilter },
+        ...(onlyEmail ? { mpEmail: { equals: onlyEmail, mode: 'insensitive' } } : {}),
+      },
+      select: {
+        id: true,
+        name: true,
+        state: true,
+        mpName: true,
+        mpParty: true,
+        mpEmail: true,
+        mpChamber: true,
+      },
+      orderBy: [{ mpChamber: 'asc' }, { state: 'asc' }, { name: 'asc' }],
+      ...(limit ? { take: limit } : {}),
+    });
+  }
 
   const deliverable = recipients.filter(r => r.mpEmail);
   const missingEmail = recipients.length - deliverable.length;
@@ -150,6 +219,8 @@ async function main() {
   console.log(`Duplicate email mappings: ${duplicateEmails.length}`);
   console.log(`From: ${from}`);
   console.log(`Reply-To: ${replyTo}`);
+  console.log(`Campaign: ${campaign}`);
+  if (testRecipients.length) console.log(`Test recipients: ${testRecipients.join(', ')}`);
   console.log(`Delay: ${delayMs}ms`);
 
   if (duplicateEmails.length) {
@@ -187,7 +258,17 @@ async function main() {
       continue;
     }
 
-    const { error } = await resend.emails.send({
+    const existingLog = await (prisma as any).outreachEmailLog.findUnique({
+      where: { campaign_recipientEmail: { campaign, recipientEmail: to.toLowerCase() } },
+      select: { status: true, resendId: true, sentAt: true },
+    });
+    if (existingLog?.status === 'SENT' && !force) {
+      console.log(`  skipped: already sent (${existingLog.resendId || 'no resend id'})`);
+      continue;
+    }
+
+    await writeLog(recipient, email.subject, 'PENDING');
+    const { data, error } = await resend.emails.send({
       from,
       to,
       replyTo,
@@ -195,17 +276,19 @@ async function main() {
       text: email.plain,
       html: email.html,
       tags: [
-        { name: 'campaign', value: 'mp_outreach_intro' },
+        { name: 'campaign', value: campaign.slice(0, 256) },
         { name: 'electorate', value: recipient.id.slice(0, 256) },
       ],
     }, {
-      idempotencyKey: `mp-outreach-intro-${recipient.id}`,
+      idempotencyKey: idempotencyKey(campaign, recipient, to),
     });
 
     if (error) {
+      await writeLog(recipient, email.subject, 'FAILED', undefined, error.message);
       console.error(`  failed: ${error.message}`);
     } else {
-      console.log('  sent');
+      await writeLog(recipient, email.subject, 'SENT', data?.id);
+      console.log(`  sent${data?.id ? ` (${data.id})` : ''}`);
     }
 
     if (i < deliverable.length - 1) await sleep(delayMs);
