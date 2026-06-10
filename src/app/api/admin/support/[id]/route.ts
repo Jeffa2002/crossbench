@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdminAccess } from '@/lib/admin-auth';
+import { sendSupportTicketReply } from '@/lib/support-email';
 
 // PATCH /api/admin/support/[id] — update status/priority or add reply
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -25,27 +26,50 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   // Add admin reply
   if (body.message) {
-    await prisma.supportReply.create({
+    const message = String(body.message).trim().slice(0, 4000);
+    if (!message) return NextResponse.json({ error: 'Reply message is required' }, { status: 400 });
+
+    const ticketBeforeReply = await prisma.supportTicket.findUnique({ where: { id } });
+    if (!ticketBeforeReply) return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
+
+    const reply = await prisma.supportReply.create({
       data: {
         ticketId: id,
         authorEmail: admin.email!,
         isAdmin: true,
         isAi: false,
-        message: body.message,
+        message,
       },
     });
 
-    // Move to IN_PROGRESS if still OPEN
-    await prisma.supportTicket.updateMany({
-      where: { id, status: 'OPEN' },
-      data: { status: 'IN_PROGRESS' },
-    });
+    let emailStatus = { sent: false, resendId: null as string | null, error: null as string | null };
+    try {
+      const resendId = await sendSupportTicketReply(ticketBeforeReply, message, admin.email!);
+      await prisma.supportReply.update({
+        where: { id: reply.id },
+        data: { resendId, emailSentAt: new Date(), emailError: null },
+      });
+      emailStatus = { sent: true, resendId, error: null };
+
+      // Move to IN_PROGRESS if still OPEN
+      await prisma.supportTicket.updateMany({
+        where: { id, status: 'OPEN' },
+        data: { status: 'IN_PROGRESS' },
+      });
+    } catch (error) {
+      const emailError = error instanceof Error ? error.message : 'Unable to send reply email';
+      await prisma.supportReply.update({
+        where: { id: reply.id },
+        data: { emailError },
+      });
+      emailStatus = { sent: false, resendId: null, error: emailError };
+    }
 
     const ticket = await prisma.supportTicket.findUnique({
       where: { id },
       include: { replies: { orderBy: { createdAt: 'asc' } } },
     });
-    return NextResponse.json(ticket);
+    return NextResponse.json({ ticket, email: emailStatus }, { status: emailStatus.sent ? 200 : 502 });
   }
 
   return NextResponse.json({ error: 'No action' }, { status: 400 });

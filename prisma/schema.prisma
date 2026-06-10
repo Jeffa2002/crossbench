@@ -282,6 +282,9 @@ model SupportReply {
   isAdmin     Boolean       @default(false)
   isAi        Boolean       @default(false)
   message     String
+  resendId    String?
+  emailSentAt DateTime?
+  emailError  String?
   createdAt   DateTime      @default(now())
   ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 

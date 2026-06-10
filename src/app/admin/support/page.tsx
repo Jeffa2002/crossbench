@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-type Reply = { id: string; authorEmail: string; isAdmin: boolean; isAi: boolean; message: string; createdAt: string };
+type Reply = { id: string; authorEmail: string; isAdmin: boolean; isAi: boolean; message: string; resendId: string | null; emailSentAt: string | null; emailError: string | null; createdAt: string };
 type Ticket = {
   id: string; email: string; name: string | null; subject: string; message: string;
   status: string; priority: string; aiSuggestedReply: string | null;
@@ -24,6 +24,7 @@ export default function AdminSupportPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [replyText, setReplyText] = useState('');
   const [replying, setReplying] = useState(false);
+  const [replyError, setReplyError] = useState('');
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/admin/support${statusFilter ? `?status=${statusFilter}` : ''}`);
@@ -45,10 +46,22 @@ export default function AdminSupportPage() {
   async function sendReply(ticketId: string) {
     if (!replyText.trim()) return;
     setReplying(true);
-    await fetch(`/api/admin/support/${ticketId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: replyText }) });
-    setReplyText('');
+    setReplyError('');
+    const res = await fetch(`/api/admin/support/${ticketId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: replyText }) });
+    const data = await res.json().catch(() => null);
+    if (res.ok) {
+      const updated = data.ticket ?? data;
+      setTickets(current => current.map(t => t.id === updated.id ? updated : t));
+      setSelected(updated);
+      setReplyText('');
+    } else {
+      setReplyError(data?.email?.error || data?.error || 'Reply saved, but email delivery failed.');
+      if (data?.ticket) {
+        setTickets(current => current.map(t => t.id === data.ticket.id ? data.ticket : t));
+        setSelected(data.ticket);
+      }
+    }
     setReplying(false);
-    load();
   }
 
   function useAiSuggestion() {
@@ -161,6 +174,11 @@ export default function AdminSupportPage() {
                   {r.isAdmin ? '🛡 Admin' : '👤 User'} · {r.authorEmail} · {new Date(r.createdAt).toLocaleString('en-AU')}
                 </p>
                 <p style={{ fontSize: '14px', color: '#F5F7FB', margin: 0, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{r.message}</p>
+                {r.isAdmin && (
+                  <p style={{ fontSize: '11px', color: r.emailError ? '#D95C4B' : '#2E8B57', margin: '8px 0 0' }}>
+                    {r.emailError ? `Email failed: ${r.emailError}` : r.emailSentAt ? `Email sent via Resend${r.resendId ? ` · ${r.resendId}` : ''}` : 'Email delivery not recorded'}
+                  </p>
+                )}
               </div>
             ))}
           </div>
@@ -175,6 +193,7 @@ export default function AdminSupportPage() {
               style={{ width: '100%', backgroundColor: '#16213A', border: '1px solid #25324D', borderRadius: '8px', padding: '10px 14px', fontSize: '14px', color: '#F5F7FB', outline: 'none', resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box' }}
             />
             <div style={{ display: 'flex', gap: '8px', marginTop: '8px', justifyContent: 'flex-end' }}>
+              {replyError && <span style={{ fontSize: '12px', color: '#D95C4B', marginRight: 'auto', alignSelf: 'center' }}>{replyError}</span>}
               <button onClick={useAiSuggestion} disabled={!selected.aiSuggestedReply} style={{ fontSize: '13px', color: '#2E8B57', background: 'none', border: '1px solid rgba(46,139,87,0.3)', borderRadius: '6px', padding: '6px 12px', cursor: 'pointer', opacity: selected.aiSuggestedReply ? 1 : 0.3 }}>✨ Use AI suggestion</button>
               <button onClick={() => sendReply(selected.id)} disabled={replying || !replyText.trim()} style={{ backgroundColor: '#2E8B57', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 20px', fontWeight: 600, fontSize: '14px', cursor: 'pointer', opacity: replying || !replyText.trim() ? 0.5 : 1 }}>
                 {replying ? 'Sending…' : 'Send reply'}

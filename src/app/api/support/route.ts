@@ -2,15 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { checkRateLimit, rateLimitKey } from '@/lib/rate-limit';
-import Anthropic from '@anthropic-ai/sdk';
-
-let anthropicClient: Anthropic | null = null;
-
-function getAnthropic(): Anthropic | null {
-  if (!process.env.ANTHROPIC_API_KEY) return null;
-  anthropicClient ??= new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-  return anthropicClient;
-}
+import { generateSupportAiReply } from '@/lib/support-ai';
 
 async function sendTelegramNotification(ticket: { id: string; email: string; name: string | null; subject: string; message: string }) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -25,31 +17,6 @@ async function sendTelegramNotification(ticket: { id: string; email: string; nam
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown', disable_web_page_preview: true }),
   });
-}
-
-async function generateAiReply(subject: string, message: string): Promise<string> {
-  const anthropic = getAnthropic();
-  if (!anthropic) return '';
-
-  try {
-    const res = await anthropic.messages.create({
-      model: 'claude-haiku-4-5',
-      max_tokens: 500,
-      messages: [{
-        role: 'user',
-        content: `You are a helpful support agent for Crossbench, an Australian civic platform where citizens vote on federal bills and MPs see constituent sentiment data.
-
-A user submitted this support ticket:
-Subject: ${subject}
-Message: ${message}
-
-Write a friendly, helpful reply. Be concise (2-4 sentences). Don't make up specific features or timelines. If it's a bug, acknowledge it and say the team is looking into it. If it's a feature request, thank them. If it's a question, answer it based on what you know about the platform.`,
-      }],
-    });
-    return (res.content[0] as any).text;
-  } catch {
-    return '';
-  }
 }
 
 // POST /api/support — submit a ticket
@@ -90,7 +57,7 @@ export async function POST(req: NextRequest) {
 
   // Fire off AI reply generation + Telegram notification in parallel (non-blocking)
   Promise.all([
-    generateAiReply(finalSubject, finalMessage).then(async (aiReply) => {
+    generateSupportAiReply(finalSubject, finalMessage).then(async (aiReply) => {
       if (aiReply) {
         await prisma.supportTicket.update({
           where: { id: ticket.id },
