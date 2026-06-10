@@ -73,6 +73,7 @@ export async function POST(req: NextRequest) {
   }
 
   const email = received.data;
+  const receivedEmailId = email.id || emailId;
   const fromEmail = cleanEmailAddress(email.from);
   const fromName = cleanDisplayName(email.from);
   const body = (email.text || email.html || '').trim();
@@ -82,7 +83,7 @@ export async function POST(req: NextRequest) {
     `From: ${email.from}`,
     `To: ${email.to.join(', ')}`,
     `Message-ID: ${email.message_id}`,
-    `Resend inbound email ID: ${email.id}`,
+    `Resend inbound email ID: ${receivedEmailId}`,
     ``,
     body || '(No message body supplied by Resend.)',
   ].join('\n').slice(0, 4000);
