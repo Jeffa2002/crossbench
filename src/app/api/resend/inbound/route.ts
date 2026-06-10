@@ -17,13 +17,23 @@ async function sendTelegramNotification(ticket: { id: string; email: string; nam
   const chatId = process.env.TELEGRAM_ADMIN_CHAT_ID;
   if (!token || !chatId) return;
 
-  const preview = ticket.message.slice(0, 200) + (ticket.message.length > 200 ? '...' : '');
-  const text = `*New inbound email support ticket*\n\n*From:* ${ticket.name || 'Unknown'} (${ticket.email})\n*Subject:* ${ticket.subject}\n\n${preview}\n\n[View tickets](https://crossbench.io/admin/support)`;
+  const preview = ticket.message.slice(0, 500) + (ticket.message.length > 500 ? '...' : '');
+  const text = [
+    'New inbound email support ticket',
+    '',
+    `Ticket: ${ticket.id}`,
+    `From: ${ticket.name || 'Unknown'} (${ticket.email})`,
+    `Subject: ${ticket.subject}`,
+    '',
+    preview,
+    '',
+    'View tickets: https://crossbench.io/admin/support',
+  ].join('\n');
 
   await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown', disable_web_page_preview: true }),
+    body: JSON.stringify({ chat_id: chatId, text, disable_web_page_preview: true }),
   });
 }
 
