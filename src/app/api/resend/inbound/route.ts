@@ -28,7 +28,7 @@ async function sendTelegramNotification(ticket: { id: string; email: string; nam
 }
 
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.RESEND_API_KEY;
+  const apiKey = process.env.RESEND_RECEIVING_API_KEY || process.env.RESEND_API_KEY;
   const webhookSecret = process.env.RESEND_WEBHOOK_SECRET;
   if (!apiKey || !webhookSecret) {
     return NextResponse.json({ error: 'Resend inbound is not configured' }, { status: 503 });
