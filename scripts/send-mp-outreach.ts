@@ -129,6 +129,10 @@ function idempotencyKey(campaignName: string, recipient: Recipient, to: string) 
   return raw.replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 256);
 }
 
+function tagValue(value: string) {
+  return value.replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 256);
+}
+
 async function writeLog(recipient: Recipient, subject: string, status: OutreachLogStatus, resendId?: string, error?: string) {
   const recipientEmail = recipient.mpEmail!.toLowerCase();
   await (prisma as any).outreachEmailLog.upsert({
@@ -282,8 +286,8 @@ async function main() {
       text: email.plain,
       html: email.html,
       tags: [
-        { name: 'campaign', value: campaign.slice(0, 256) },
-        { name: 'electorate', value: recipient.id.slice(0, 256) },
+        { name: 'campaign', value: tagValue(campaign) },
+        { name: 'electorate', value: tagValue(recipient.id) },
       ],
     }, {
       idempotencyKey: idempotencyKey(campaign, recipient, to),

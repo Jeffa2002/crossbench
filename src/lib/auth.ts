@@ -10,7 +10,7 @@ function isMpEmail(email: string): boolean {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
-  trustHost: false,
+  trustHost: process.env.AUTH_TRUST_HOST === 'true',
   providers: [
     Resend({
       from: 'Crossbench <noreply@crossbench.io>',
