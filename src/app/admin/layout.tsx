@@ -36,8 +36,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             </Link>
           ))}
         </nav>
-        <form action="/api/admin/login" method="POST" className="hidden md:block px-5 py-4 border-t border-[#25324D]">
-          <Link href="/api/admin/logout" className="text-xs text-[#4E5A73] hover:text-[#B6C0D1]">Sign out</Link>
+        <form action="/api/admin/logout" method="POST" className="hidden md:block px-5 py-4 border-t border-[#25324D]">
+          <button type="submit" className="text-xs text-[#4E5A73] hover:text-[#B6C0D1]">Sign out</button>
         </form>
       </aside>
       <main className="flex-1 overflow-auto p-4 md:p-8">
