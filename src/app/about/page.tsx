@@ -60,13 +60,27 @@ export default function AboutPage() {
           </div>
 
           <div style={{ marginBottom: '48px' }}>
+            <h2 style={{ fontSize: '26px', fontWeight: 700, marginBottom: '16px', marginTop: '0', color: '#F5F7FB' }}>Who built this?</h2>
+            <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.85, marginBottom: '20px' }}>
+              Crossbench is built and operated in Australia by a small independent civic technology team. We are not a government service, political party, campaign group, lobby group, or data broker.
+            </p>
+            <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.85, marginBottom: '20px' }}>
+              The platform exists because representative democracy needs better tools between elections: something practical, neutral, and close enough to the parliamentary process to be useful.
+            </p>
+            <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.85, marginBottom: '20px' }}>
+              If you need to reach us about privacy, security, or platform integrity, contact <a href="mailto:privacy@crossbench.io" style={{ color: '#2E8B57', textDecoration: 'none' }}>privacy@crossbench.io</a> or <a href="mailto:security@crossbench.io" style={{ color: '#2E8B57', textDecoration: 'none' }}>security@crossbench.io</a>.
+            </p>
+          </div>
+
+          <div style={{ marginBottom: '48px' }}>
             <h2 style={{ fontSize: '26px', fontWeight: 700, marginBottom: '16px', marginTop: '0', color: '#F5F7FB' }}>What we're not</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {[
                 { label: 'Not a petition site', desc: 'Petitions aggregate signatures. We aggregate verified constituent sentiment, bill by bill, electorate by electorate. Different thing.' },
-                { label: 'Not a polling service', desc: 'Polls sample. We count every verified vote from your actual electorate. Your MP sees their community, not a statistical approximation of it.' },
+                { label: 'Not a polling service', desc: 'Polls sample. We count every vote cast by verified Crossbench users in an electorate, then show that signal clearly instead of pretending it is a traditional poll.' },
                 { label: 'Not political', desc: 'We have no position on any bill. We do not tell you how to vote. We surface what Australians actually think, across all views, without filter or editorial.' },
-                { label: 'Not government-run', desc: 'Crossbench is independent. We receive no government funding. We have no party affiliation. No agenda beyond making constituent voices easier to hear.' },
+                { label: 'Not government-run', desc: 'Crossbench is independent. We receive no government funding, have no party affiliation, and take no position on the bills people vote on.' },
+                { label: 'Not a data broker', desc: 'We do not sell personal information. Aggregated electorate-level results may be shared or published, but names, emails, readable addresses, and address hashes are not sold.' },
               ].map(({ label, desc }) => (
                 <div key={label} style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '10px', padding: '20px 24px', display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
                   <span style={{ color: '#2E8B57', fontWeight: 700, fontSize: '18px', flexShrink: 0, lineHeight: 1 }}>✗</span>
@@ -82,10 +96,16 @@ export default function AboutPage() {
           <div style={{ marginBottom: '48px' }}>
             <h2 style={{ fontSize: '26px', fontWeight: 700, marginBottom: '16px', marginTop: '0', color: '#F5F7FB' }}>How we handle your data</h2>
             <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.85, marginBottom: '20px' }}>
-              We ask for your address once, to confirm which electorate you are in. After that, we store the electorate, not the address. We know your electorate. We do not need to know your street.
+              We ask for your address to confirm which electorate you are in. That address is used for lookup and electorate matching, including through OpenStreetMap Nominatim geocoding. After that, we store your electorate assignment and a one-way address hash, not a readable street address.
             </p>
             <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.85, marginBottom: '20px' }}>
-              MPs see electorate-level totals. They do not see names. They do not see individual votes. They see how their electorate is leaning on a bill. That is it.
+              Crossbench's core PostgreSQL database is hosted on Australian infrastructure. The point is simple: Australian civic data should be handled here, under Australian privacy expectations, with collection kept to what the product actually needs.
+            </p>
+            <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.85, marginBottom: '20px' }}>
+              We handle personal information in line with the Privacy Act 1988 (Cth) and the Australian Privacy Principles. We also design around the same practical ideas behind Western Australia's Privacy and Responsible Information Sharing reforms: collect less, explain the purpose, protect the information, and share only in responsible, clearly bounded ways.
+            </p>
+            <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.85, marginBottom: '20px' }}>
+              MPs see electorate-level totals. They do not see names beside votes. They do not see readable addresses or address hashes. They see how verified Crossbench users in their electorate are leaning on a bill.
             </p>
             <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.85, marginBottom: '20px' }}>
               We built it this way deliberately. The goal is to make collective sentiment legible to power, not to expose individuals to it.
@@ -121,11 +141,12 @@ export default function AboutPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
             {[
               { q: 'Is it affiliated with the government?', a: 'No. Independent, nonpartisan, and with no government funding.' },
-              { q: 'How does address verification work?', a: 'You enter your residential address. We match it to your federal electorate using AEC boundary data. We keep the electorate, not the address.' },
-              { q: 'Is my vote anonymous?', a: 'Your vote is counted as part of your electorate\'s total. Your name is never shown next to your vote. MPs see aggregated numbers, not individuals.' },
+              { q: 'How does address verification work?', a: 'You enter your residential address. We use it for geocoding and electorate matching, then keep your electorate assignment and a one-way address hash, not a readable address record.' },
+              { q: 'Is my vote anonymous?', a: 'Your vote is counted as part of your electorate\'s total and is not shown by name. MPs see aggregated numbers, not individual voter identities.' },
               { q: 'Can I vote on every bill?', a: 'Bills currently before the 48th Parliament are on Crossbench. You can vote on as many as you like, once per bill.' },
               { q: 'Can MPs really see this?', a: 'Yes. MPs with an @aph.gov.au address get a live electorate dashboard. They see bill-by-bill constituent sentiment from verified addresses only.' },
-              { q: 'Who built this?', a: 'Crossbench is an Australian civic tech platform. We are a small team that believes the tools for civic participation are long overdue for an upgrade.' },
+              { q: 'Who built this?', a: 'Crossbench is Australian-built, independent civic technology. It is operated by a small team, not a government service, party, campaign group, or lobby group.' },
+              { q: 'Where is the data stored?', a: 'The core Crossbench database is hosted on Australian infrastructure. We handle personal information under Australian privacy law and design around responsible information sharing principles.' },
             ].map(({ q, a }, i, arr) => (
               <div key={q} style={{ padding: '24px 0', borderBottom: i < arr.length - 1 ? '1px solid #1C2940' : 'none' }}>
                 <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '8px', color: '#F5F7FB' }}>{q}</h3>
