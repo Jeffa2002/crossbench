@@ -14,16 +14,15 @@ function safePasswordEquals(candidate: unknown): boolean {
 }
 
 export async function POST(req: NextRequest) {
-  const limited = checkRateLimit(rateLimitKey(req, 'admin-login'), 5, 15 * 60 * 1000);
-  if (!limited.ok) {
-    return NextResponse.json(
-      { error: 'Too many login attempts. Please wait and try again.' },
-      { status: 429, headers: { 'Retry-After': String(limited.retryAfter) } }
-    );
-  }
-
   const { password } = await req.json().catch(() => ({}));
   if (!safePasswordEquals(password)) {
+    const limited = checkRateLimit(rateLimitKey(req, 'admin-login'), 5, 15 * 60 * 1000);
+    if (!limited.ok) {
+      return NextResponse.json(
+        { error: 'Too many login attempts. Please wait and try again.' },
+        { status: 429, headers: { 'Retry-After': String(limited.retryAfter) } }
+      );
+    }
     return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
   }
   const token = makeAdminToken();
