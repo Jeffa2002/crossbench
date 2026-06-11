@@ -71,12 +71,12 @@ export default function AdminSupportPage() {
   const counts = { OPEN: tickets.filter(t => t.status === 'OPEN').length, IN_PROGRESS: tickets.filter(t => t.status === 'IN_PROGRESS').length, RESOLVED: tickets.filter(t => t.status === 'RESOLVED').length };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: selected ? '1fr 1.4fr' : '1fr', gap: '16px', height: 'calc(100vh - 120px)' }}>
+    <div className={`support-admin-shell ${selected ? 'has-selected' : ''}`} style={{ display: 'grid', gridTemplateColumns: selected ? '1fr 1.4fr' : '1fr', gap: '16px', height: 'calc(100vh - 120px)' }}>
       {/* Ticket list */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', overflow: 'auto' }}>
+      <div className="support-ticket-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px', overflow: 'auto' }}>
         <div>
           <h1 style={{ fontSize: '22px', fontWeight: 700, margin: '0 0 4px' }}>Support Tickets</h1>
-          <div style={{ display: 'flex', gap: '10px', fontSize: '12px', color: '#7E8AA3', marginBottom: '14px' }}>
+          <div className="support-counts" style={{ display: 'flex', gap: '10px', fontSize: '12px', color: '#7E8AA3', marginBottom: '14px' }}>
             <span style={{ color: '#D6A94A' }}>● {counts.OPEN} open</span>
             <span style={{ color: '#4E8FD4' }}>● {counts.IN_PROGRESS} in progress</span>
             <span style={{ color: '#2E8B57' }}>● {counts.RESOLVED} resolved</span>
@@ -97,13 +97,13 @@ export default function AdminSupportPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {tickets.length === 0 && <p style={{ color: '#4A5568', fontSize: '13px' }}>No tickets.</p>}
             {tickets.map(t => (
-              <div key={t.id} onClick={() => setSelected(t)} style={{
+              <div key={t.id} className="support-ticket-card" onClick={() => setSelected(t)} style={{
                 backgroundColor: selected?.id === t.id ? '#1A2540' : '#111A2E',
                 border: `1px solid ${selected?.id === t.id ? '#4E8FD4' : '#25324D'}`,
                 borderRadius: '10px', padding: '14px 16px', cursor: 'pointer',
               }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '6px' }}>
-                  <span style={{ fontWeight: 600, fontSize: '14px', color: '#F5F7FB', flex: 1 }}>{t.subject}</span>
+                <div className="support-ticket-card-heading" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '6px' }}>
+                  <span style={{ fontWeight: 600, fontSize: '14px', color: '#F5F7FB', flex: 1, minWidth: 0 }}>{t.subject}</span>
                   <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
                     <Badge label={t.status} color={STATUS_COLORS[t.status] || '#7E8AA3'} />
                     {t.priority !== 'NORMAL' && <Badge label={t.priority} color={PRIORITY_COLORS[t.priority] || '#7E8AA3'} />}
@@ -120,18 +120,19 @@ export default function AdminSupportPage() {
 
       {/* Ticket detail */}
       {selected && (
-        <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+        <div className="support-ticket-detail" style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
           {/* Header */}
           <div style={{ padding: '18px 20px', borderBottom: '1px solid #25324D' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
-              <div>
+            <button className="support-mobile-back" onClick={() => setSelected(null)}>← Tickets</button>
+            <div className="support-detail-heading" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+              <div style={{ minWidth: 0 }}>
                 <h2 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 4px' }}>{selected.subject}</h2>
                 <p style={{ fontSize: '12px', color: '#7E8AA3', margin: 0 }}>
                   {selected.name && `${selected.name} · `}{selected.email}
                   {selected.user && <span style={{ color: '#4E8FD4' }}> · {selected.user.role}</span>}
                 </p>
               </div>
-              <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+              <div className="support-status-actions" style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
                 {['OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'].map(s => (
                   <button key={s} onClick={() => updateStatus(selected.id, s)} style={{
                     padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', border: '1px solid',
@@ -184,7 +185,7 @@ export default function AdminSupportPage() {
           </div>
 
           {/* Reply box */}
-          <div style={{ padding: '14px 20px', borderTop: '1px solid #25324D' }}>
+          <div className="support-reply-box" style={{ padding: '14px 20px', borderTop: '1px solid #25324D' }}>
             <textarea
               value={replyText}
               onChange={e => setReplyText(e.target.value)}
@@ -192,7 +193,7 @@ export default function AdminSupportPage() {
               rows={3}
               style={{ width: '100%', backgroundColor: '#16213A', border: '1px solid #25324D', borderRadius: '8px', padding: '10px 14px', fontSize: '14px', color: '#F5F7FB', outline: 'none', resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box' }}
             />
-            <div style={{ display: 'flex', gap: '8px', marginTop: '8px', justifyContent: 'flex-end' }}>
+            <div className="support-reply-actions" style={{ display: 'flex', gap: '8px', marginTop: '8px', justifyContent: 'flex-end' }}>
               {replyError && <span style={{ fontSize: '12px', color: '#D95C4B', marginRight: 'auto', alignSelf: 'center' }}>{replyError}</span>}
               <button onClick={useAiSuggestion} disabled={!selected.aiSuggestedReply} style={{ fontSize: '13px', color: '#2E8B57', background: 'none', border: '1px solid rgba(46,139,87,0.3)', borderRadius: '6px', padding: '6px 12px', cursor: 'pointer', opacity: selected.aiSuggestedReply ? 1 : 0.3 }}>✨ Use AI suggestion</button>
               <button onClick={() => sendReply(selected.id)} disabled={replying || !replyText.trim()} style={{ backgroundColor: '#2E8B57', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 20px', fontWeight: 600, fontSize: '14px', cursor: 'pointer', opacity: replying || !replyText.trim() ? 0.5 : 1 }}>
