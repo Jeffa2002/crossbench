@@ -39,10 +39,16 @@ export default async function MPPage({ params }: { params: Promise<{ id: string 
 
   const partyColor = getPartyColor(electorate.mpParty);
   const isHouse = electorate.mpChamber === 'House of Reps';
-  const registeredMpUser = await prisma.user.findFirst({
-    where: { role: 'MP', electorateId: electorate.id },
-    select: { id: true },
-  });
+  const registeredMpUser = electorate.mpEmail
+    ? await prisma.user.findFirst({
+        where: {
+          role: 'MP',
+          electorateId: electorate.id,
+          email: { equals: electorate.mpEmail, mode: 'insensitive' },
+        },
+        select: { id: true },
+      })
+    : null;
   const isRegisteredOnCrossbench = Boolean(registeredMpUser);
 
   // Get all votes for this electorate, grouped by bill + position

@@ -98,10 +98,16 @@ export default async function ElectoratePage({ params }: { params: Promise<{ id:
   const committees = parseJsonArray<string>(profile?.committees);
   const newsHeadlines = parseJsonArray<any>(profile?.newsHeadlines).slice(0, 8);
   const socialLinks = parseJsonObject<{ twitter?: string; facebook?: string; youtube?: string; website?: string }>(profile?.socialLinks) || {};
-  const registeredMpUser = await prisma.user.findFirst({
-    where: { role: 'MP', electorateId: id },
-    select: { id: true },
-  });
+  const registeredMpUser = electorate.mpEmail
+    ? await prisma.user.findFirst({
+        where: {
+          role: 'MP',
+          electorateId: id,
+          email: { equals: electorate.mpEmail, mode: 'insensitive' },
+        },
+        select: { id: true },
+      })
+    : null;
   const isRegisteredOnCrossbench = Boolean(registeredMpUser);
 
   const votesByBill = await prisma.vote.groupBy({

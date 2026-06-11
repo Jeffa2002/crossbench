@@ -61,16 +61,17 @@ export default async function ElectoratesPage({
     prisma.electorate.groupBy({ by: ['state'], orderBy: { state: 'asc' } }),
   ]);
 
-  const registeredMpUsers = electorates.length > 0
+  const mpEmails = electorates.map(e => e.mpEmail).filter(Boolean) as string[];
+  const registeredMpUsers = mpEmails.length > 0
     ? await prisma.user.findMany({
         where: {
           role: 'MP',
-          electorateId: { in: electorates.map(e => e.id) },
+          email: { in: mpEmails },
         },
-        select: { electorateId: true },
+        select: { email: true },
       })
     : [];
-  const registeredElectorateIds = new Set(registeredMpUsers.map(u => u.electorateId).filter(Boolean));
+  const registeredMpEmails = new Set(registeredMpUsers.map(u => u.email.toLowerCase()));
 
   return (
     <main style={{ backgroundColor: '#0B1220', minHeight: '100vh', color: '#F5F7FB' }}>
@@ -155,7 +156,7 @@ export default async function ElectoratesPage({
           {electorates.map(e => {
             const partyColor = getPartyColor(e.mpParty);
             const isHouse = !e.mpChamber || e.mpChamber === 'House of Reps';
-            const isRegistered = registeredElectorateIds.has(e.id);
+            const isRegistered = e.mpEmail ? registeredMpEmails.has(e.mpEmail.toLowerCase()) : false;
             return (
               <Link
                 key={e.id}
