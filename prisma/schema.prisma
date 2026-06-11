@@ -256,7 +256,7 @@ model AddressChangeLog {
 }
 
 model SupportTicket {
-  id               String          @id @default(cuid())
+  id               String          @id @default(dbgenerated("next_support_ticket_id()"))
   userId           String?
   email            String
   name             String?
