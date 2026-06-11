@@ -2,18 +2,15 @@ import NextAuth from 'next-auth';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import Resend from 'next-auth/providers/resend';
 import { prisma } from './prisma';
-
-// MP email patterns - @aph.gov.au is definitive; senators may use @aph.gov.au too
-function isMpEmail(email: string): boolean {
-  return email.toLowerCase().endsWith('@aph.gov.au');
-}
+import { ensurePrincipalOfficeMembership, isAphEmail } from './mp-office';
 
 async function grantMpEarlyAccess(user: { id?: string | null; email?: string | null; electorateId?: string | null }) {
-  if (!user.id || !user.email || !isMpEmail(user.email)) return;
+  if (!user.id || !user.email || !isAphEmail(user.email)) return;
 
   const electorate = await prisma.electorate.findFirst({
     where: { mpEmail: { equals: user.email, mode: 'insensitive' } },
   });
+  await ensurePrincipalOfficeMembership(user);
 
   await prisma.user.updateMany({
     where: { id: user.id },
@@ -40,8 +37,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ user }) {
       if (!user?.email) return true;
 
-      // Auto-detect MP by email domain
-      if (isMpEmail(user.email)) {
+      // Auto-detect parliamentary accounts by APH email domain.
+      if (isAphEmail(user.email)) {
         const existing = await prisma.user.findUnique({
           where: { email: user.email },
           select: { id: true, electorateId: true },

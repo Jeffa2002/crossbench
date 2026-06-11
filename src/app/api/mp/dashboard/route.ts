@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { hasMpEntitlement } from '@/lib/mp-entitlement';
+import { ensurePrincipalOfficeMembership, getActiveOfficeMembership } from '@/lib/mp-office';
 
 export async function GET() {
   const session = await auth();
@@ -10,18 +11,22 @@ export async function GET() {
   const user = await prisma.user.findUnique({
     where: { id: (session.user as any).id },
     select: {
+      id: true,
+      email: true,
       role: true,
       electorateId: true,
       subscriptionStatus: true,
       subscriptionTier: true,
       trialEndsAt: true,
-      electorate: true,
     },
   });
 
-  if (!user || (user as any).role !== 'MP') {
+  if (!user) {
     return NextResponse.json({ error: 'MP access required' }, { status: 403 });
   }
+
+  await ensurePrincipalOfficeMembership({ id: user.id, email: user.email });
+  const membership = await getActiveOfficeMembership(user.id);
 
   const trialDaysLeft = (user as any).trialEndsAt
     ? Math.ceil(((user as any).trialEndsAt.getTime() - Date.now()) / 86400000)
@@ -39,9 +44,9 @@ export async function GET() {
     }, { status: 402 });
   }
 
-  const electorate = (user as any).electorate;
-  if (!electorate) {
-    return NextResponse.json({ error: 'No electorate linked to your account' }, { status: 404 });
+  const electorate = membership?.electorate;
+  if (!membership || !electorate) {
+    return NextResponse.json({ error: 'No active office membership linked to your account' }, { status: 404 });
   }
 
   // All votes for this electorate
@@ -116,11 +121,16 @@ export async function GET() {
 
   return NextResponse.json({
     electorate: {
+      id: electorate.id,
       name: electorate.name,
       state: electorate.state,
       mpName: electorate.mpName,
       mpParty: electorate.mpParty,
       mpPhotoUrl: electorate.mpPhotoUrl,
+    },
+    officeMembership: {
+      role: membership.role,
+      canManageStaff: membership.role === 'PRINCIPAL' || membership.role === 'OFFICE_ADMIN',
     },
     subscription: {
       status: (user as any).subscriptionStatus,

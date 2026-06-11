@@ -84,6 +84,11 @@ model User {
   accounts           Account[]
   sessions        Session[]
   billAlerts         BillAlert[]
+  officeMemberships  OfficeMembership[] @relation("OfficeMembershipUser")
+  invitedOfficeMemberships OfficeMembership[] @relation("OfficeMembershipInviter")
+  officeInvitesSent OfficeInvite[] @relation("OfficeInviteInviter")
+  officeInvitesAccepted OfficeInvite[] @relation("OfficeInviteAcceptedBy")
+  officeAuditEvents OfficeAuditEvent[] @relation("OfficeAuditActor")
 
   @@index([role])
   @@index([electorateId])
@@ -104,6 +109,9 @@ model Electorate {
   updatedAt DateTime @updatedAt
   users     User[]
   votes     Vote[]
+  officeMemberships OfficeMembership[]
+  officeInvites OfficeInvite[]
+  officeAuditEvents OfficeAuditEvent[]
 
   @@index([state])
 }
@@ -244,6 +252,25 @@ enum OutreachEmailStatus {
   SKIPPED
 }
 
+enum OfficeMembershipRole {
+  PRINCIPAL
+  OFFICE_ADMIN
+  STAFFER
+}
+
+enum OfficeMembershipStatus {
+  ACTIVE
+  BLOCKED
+  REMOVED
+}
+
+enum OfficeInviteStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+  EXPIRED
+}
+
 model AddressChangeLog {
   id               String   @id @default(cuid())
   userId           String
@@ -310,6 +337,71 @@ model OutreachEmailLog {
   @@index([campaign])
   @@index([status])
   @@index([electorateId])
+}
+
+model OfficeMembership {
+  id              String                 @id @default(cuid())
+  electorateId    String
+  userId          String
+  role            OfficeMembershipRole   @default(STAFFER)
+  status          OfficeMembershipStatus @default(ACTIVE)
+  invitedByUserId String?
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  removedAt       DateTime?
+  blockedAt       DateTime?
+  electorate      Electorate             @relation(fields: [electorateId], references: [id], onDelete: Cascade)
+  user            User                   @relation("OfficeMembershipUser", fields: [userId], references: [id], onDelete: Cascade)
+  invitedBy       User?                  @relation("OfficeMembershipInviter", fields: [invitedByUserId], references: [id], onDelete: SetNull)
+
+  @@unique([electorateId, userId])
+  @@index([userId])
+  @@index([electorateId])
+  @@index([status])
+}
+
+model OfficeInvite {
+  id               String               @id @default(cuid())
+  electorateId     String
+  email            String
+  name             String?
+  role             OfficeMembershipRole @default(STAFFER)
+  status           OfficeInviteStatus   @default(PENDING)
+  tokenHash        String               @unique
+  invitedByUserId  String
+  acceptedByUserId String?
+  expiresAt        DateTime
+  acceptedAt       DateTime?
+  revokedAt        DateTime?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  electorate       Electorate           @relation(fields: [electorateId], references: [id], onDelete: Cascade)
+  invitedBy        User                 @relation("OfficeInviteInviter", fields: [invitedByUserId], references: [id], onDelete: Cascade)
+  acceptedBy       User?                @relation("OfficeInviteAcceptedBy", fields: [acceptedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([electorateId])
+  @@index([email])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+model OfficeAuditEvent {
+  id           String     @id @default(cuid())
+  electorateId String
+  actorUserId  String?
+  targetUserId String?
+  targetEmail  String?
+  action       String
+  metadata     String?
+  createdAt    DateTime   @default(now())
+  electorate   Electorate @relation(fields: [electorateId], references: [id], onDelete: Cascade)
+  actor        User?      @relation("OfficeAuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([electorateId])
+  @@index([actorUserId])
+  @@index([targetUserId])
+  @@index([action])
+  @@index([createdAt])
 }
 
 model VerificationToken {

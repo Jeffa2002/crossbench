@@ -3,18 +3,22 @@ import { prisma } from '@/lib/prisma';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminMPs() {
-  const mps = await prisma.user.findMany({
-    where: { role: 'MP' },
-    orderBy: { createdAt: 'desc' },
-    include: {
-      electorate: true,
-      _count: { select: { votes: true } },
-    },
-  });
+  const [mps, officeMembershipCount, pendingInviteCount] = await Promise.all([
+    prisma.user.findMany({
+      where: { role: 'MP' },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        electorate: true,
+        officeMemberships: { include: { electorate: true }, orderBy: { createdAt: 'asc' } },
+        _count: { select: { votes: true } },
+      },
+    }),
+    prisma.officeMembership.count({ where: { status: 'ACTIVE' } }),
+    prisma.officeInvite.count({ where: { status: 'PENDING' } }),
+  ]);
 
   const registered = mps.filter(m => m.emailVerified);
   const withAccess = mps.filter(m => m.subscriptionStatus === 'ACTIVE');
-  const pendingAccess = mps.filter(m => m.subscriptionStatus !== 'ACTIVE');
 
   return (
     <div className="space-y-6">
@@ -29,7 +33,8 @@ export default async function AdminMPs() {
           { label: 'Total MP accounts', value: mps.length },
           { label: 'Email verified', value: registered.length },
           { label: 'Free access active', value: withAccess.length },
-          { label: 'Needs access review', value: pendingAccess.length },
+          { label: 'Office members', value: officeMembershipCount },
+          { label: 'Pending invites', value: pendingInviteCount },
         ].map(({ label, value }) => (
           <div key={label} className="bg-[#111A2E] border border-[#25324D] rounded-xl p-4">
             <div className="text-2xl font-bold text-[#F5F7FB]">{value}</div>
@@ -46,6 +51,7 @@ export default async function AdminMPs() {
               <th className="text-left px-4 py-3">Email</th>
               <th className="text-left px-4 py-3">Electorate</th>
               <th className="text-left px-4 py-3">State</th>
+              <th className="text-left px-4 py-3">Office role</th>
               <th className="text-left px-4 py-3">Email verified</th>
               <th className="text-left px-4 py-3">Access</th>
               <th className="text-left px-4 py-3">Billing</th>
@@ -53,11 +59,16 @@ export default async function AdminMPs() {
             </tr>
           </thead>
           <tbody>
-            {mps.map(mp => (
+            {mps.map(mp => {
+              const activeMembership = mp.officeMemberships.find(membership => membership.status === 'ACTIVE') ?? mp.officeMemberships[0] ?? null;
+              return (
               <tr key={mp.id} className="border-b border-[#1A2640] hover:bg-[#16213A] transition-colors">
                 <td className="px-4 py-3 font-mono text-xs text-[#B6C0D1]">{mp.email}</td>
-                <td className="px-4 py-3 text-xs text-[#B6C0D1]">{mp.electorate?.name ?? '—'}</td>
-                <td className="px-4 py-3 text-xs text-[#7E8AA3]">{mp.electorate?.state ?? '—'}</td>
+                <td className="px-4 py-3 text-xs text-[#B6C0D1]">{activeMembership?.electorate.name ?? mp.electorate?.name ?? '—'}</td>
+                <td className="px-4 py-3 text-xs text-[#7E8AA3]">{activeMembership?.electorate.state ?? mp.electorate?.state ?? '—'}</td>
+                <td className="px-4 py-3 text-xs text-[#B6C0D1]">
+                  {activeMembership ? `${activeMembership.role.replace('_', ' ')} · ${activeMembership.status}` : '—'}
+                </td>
                 <td className="px-4 py-3">
                   {mp.emailVerified
                     ? <span className="text-green-400 text-xs">✓</span>
@@ -76,9 +87,10 @@ export default async function AdminMPs() {
                 </td>
                 <td className="px-4 py-3 text-xs text-[#B6C0D1]">{mp._count.votes}</td>
               </tr>
-            ))}
+              );
+            })}
             {mps.length === 0 && (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-[#4E5A73]">No MP accounts yet</td></tr>
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-[#4E5A73]">No MP accounts yet</td></tr>
             )}
           </tbody>
         </table>

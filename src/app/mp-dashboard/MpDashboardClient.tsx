@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
 type DashboardData = {
-  electorate: { name: string; state: string; mpName: string; mpParty: string; mpPhotoUrl: string | null };
+  electorate: { id: string; name: string; state: string; mpName: string; mpParty: string; mpPhotoUrl: string | null };
+  officeMembership: { role: string; canManageStaff: boolean };
   subscription: { status: string; tier: string; trialEndsAt: string | null; trialDaysLeft: number | null };
   overview: {
     totalVotes: number; supportPct: number; opposePct: number; abstainPct: number;
@@ -152,6 +153,11 @@ export default function MpDashboardClient() {
             <Link href="/mp-updates" style={{ color: '#F5F7FB', backgroundColor: '#16213A', border: '1px solid #25324D', padding: '10px 14px', borderRadius: '8px', textDecoration: 'none', fontSize: '13px', fontWeight: 800 }}>
               View updates
             </Link>
+            {data.officeMembership.canManageStaff && (
+              <Link href="/mp-dashboard/staff" style={{ color: '#F5F7FB', backgroundColor: '#16213A', border: '1px solid #25324D', padding: '10px 14px', borderRadius: '8px', textDecoration: 'none', fontSize: '13px', fontWeight: 800 }}>
+                Manage staff
+              </Link>
+            )}
           </div>
 
           {/* MP header card */}
