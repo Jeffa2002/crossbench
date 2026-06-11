@@ -19,7 +19,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         ...(body.status && { status: body.status }),
         ...(body.priority && { priority: body.priority }),
       },
-      include: { replies: { orderBy: { createdAt: 'asc' } } },
+      include: { replies: { orderBy: { createdAt: 'desc' } } },
     });
     return NextResponse.json(ticket);
   }
@@ -51,10 +51,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       });
       emailStatus = { sent: true, resendId, error: null };
 
-      // Move to IN_PROGRESS if still OPEN
-      await prisma.supportTicket.updateMany({
-        where: { id, status: 'OPEN' },
-        data: { status: 'IN_PROGRESS' },
+      await prisma.supportTicket.update({
+        where: { id },
+        data: ticketBeforeReply.status === 'OPEN' ? { status: 'IN_PROGRESS' } : { updatedAt: new Date() },
       });
     } catch (error) {
       const emailError = error instanceof Error ? error.message : 'Unable to send reply email';
@@ -62,12 +61,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         where: { id: reply.id },
         data: { emailError },
       });
+      await prisma.supportTicket.update({
+        where: { id },
+        data: { updatedAt: new Date() },
+      });
       emailStatus = { sent: false, resendId: null, error: emailError };
     }
 
     const ticket = await prisma.supportTicket.findUnique({
       where: { id },
-      include: { replies: { orderBy: { createdAt: 'asc' } } },
+      include: { replies: { orderBy: { createdAt: 'desc' } } },
     });
     return NextResponse.json({ ticket, email: emailStatus }, { status: emailStatus.sent ? 200 : 502 });
   }

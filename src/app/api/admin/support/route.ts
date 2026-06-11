@@ -9,8 +9,8 @@ export async function GET(req: NextRequest) {
   const status = req.nextUrl.searchParams.get('status');
   const tickets = await prisma.supportTicket.findMany({
     where: status ? { status: status as any } : undefined,
-    orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
-    include: { replies: { orderBy: { createdAt: 'asc' } }, user: { select: { email: true, name: true, role: true } } },
+    orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+    include: { replies: { orderBy: { createdAt: 'desc' } }, user: { select: { email: true, name: true, role: true } } },
   });
 
   return NextResponse.json(tickets);

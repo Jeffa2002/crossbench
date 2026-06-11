@@ -6,7 +6,7 @@ type Reply = { id: string; authorEmail: string; isAdmin: boolean; isAi: boolean;
 type Ticket = {
   id: string; email: string; name: string | null; subject: string; message: string;
   status: string; priority: string; aiSuggestedReply: string | null;
-  createdAt: string; replies: Reply[];
+  createdAt: string; updatedAt: string; replies: Reply[];
   user: { email: string; name: string | null; role: string } | null;
 };
 
@@ -30,6 +30,18 @@ function isFounderMarkedTicket(ticket: Ticket) {
   return haystack.includes(FOUNDER_EMAIL);
 }
 
+function latestActivityAt(ticket: Ticket) {
+  return ticket.replies[0]?.createdAt ?? ticket.updatedAt ?? ticket.createdAt;
+}
+
+function latestPreview(ticket: Ticket) {
+  return ticket.replies[0]?.message ?? ticket.message;
+}
+
+function sortByLatestActivity(tickets: Ticket[]) {
+  return [...tickets].sort((a, b) => new Date(latestActivityAt(b)).getTime() - new Date(latestActivityAt(a)).getTime());
+}
+
 export default function AdminSupportPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,7 +55,7 @@ export default function AdminSupportPage() {
     const res = await fetch(`/api/admin/support${statusFilter ? `?status=${statusFilter}` : ''}`);
     if (res.ok) {
       const data = await res.json();
-      setTickets(data);
+      setTickets(sortByLatestActivity(data));
       setSelected(current => current ? data.find((t: Ticket) => t.id === current.id) ?? null : null);
     }
     setLoading(false);
@@ -64,13 +76,13 @@ export default function AdminSupportPage() {
     const data = await res.json().catch(() => null);
     if (res.ok) {
       const updated = data.ticket ?? data;
-      setTickets(current => current.map(t => t.id === updated.id ? updated : t));
+      setTickets(current => sortByLatestActivity(current.map(t => t.id === updated.id ? updated : t)));
       setSelected(updated);
       setReplyText('');
     } else {
       setReplyError(data?.email?.error || data?.error || 'Reply saved, but email delivery failed.');
       if (data?.ticket) {
-        setTickets(current => current.map(t => t.id === data.ticket.id ? data.ticket : t));
+        setTickets(current => sortByLatestActivity(current.map(t => t.id === data.ticket.id ? data.ticket : t)));
         setSelected(data.ticket);
       }
     }
@@ -127,8 +139,8 @@ export default function AdminSupportPage() {
                   </div>
                 </div>
                 <p style={{ fontSize: '12px', color: '#7E8AA3', margin: '0 0 4px' }}>{t.name || t.email}</p>
-                <p style={{ fontSize: '12px', color: '#3A4A6A', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.message}</p>
-                <p style={{ fontSize: '11px', color: '#2A3A5A', margin: '6px 0 0' }}>{new Date(t.createdAt).toLocaleString('en-AU')} · {t.replies.length} repl{t.replies.length === 1 ? 'y' : 'ies'}</p>
+                <p style={{ fontSize: '12px', color: '#3A4A6A', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{latestPreview(t)}</p>
+                <p style={{ fontSize: '11px', color: '#2A3A5A', margin: '6px 0 0' }}>Latest: {new Date(latestActivityAt(t)).toLocaleString('en-AU')} · {t.replies.length} repl{t.replies.length === 1 ? 'y' : 'ies'}</p>
               </div>
             );})}
           </div>
@@ -169,12 +181,6 @@ export default function AdminSupportPage() {
 
           {/* Thread */}
           <div style={{ flex: 1, overflow: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {/* Original message */}
-            <div style={{ backgroundColor: '#0E1628', borderRadius: '8px', padding: '14px' }}>
-              <p style={{ fontSize: '11px', color: '#4A5568', margin: '0 0 8px' }}>Original message · {new Date(selected.createdAt).toLocaleString('en-AU')}</p>
-              <p style={{ fontSize: '14px', color: '#F5F7FB', margin: 0, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{selected.message}</p>
-            </div>
-
             {/* AI suggested reply */}
             {selected.aiSuggestedReply && (
               <div style={{ backgroundColor: '#0A1820', border: '1px solid rgba(46,139,87,0.3)', borderRadius: '8px', padding: '14px' }}>
@@ -204,6 +210,12 @@ export default function AdminSupportPage() {
                 )}
               </div>
             ))}
+
+            {/* Original message */}
+            <div style={{ backgroundColor: '#0E1628', borderRadius: '8px', padding: '14px' }}>
+              <p style={{ fontSize: '11px', color: '#4A5568', margin: '0 0 8px' }}>Original message · {new Date(selected.createdAt).toLocaleString('en-AU')}</p>
+              <p style={{ fontSize: '14px', color: '#F5F7FB', margin: 0, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{selected.message}</p>
+            </div>
           </div>
 
           {/* Reply box */}
