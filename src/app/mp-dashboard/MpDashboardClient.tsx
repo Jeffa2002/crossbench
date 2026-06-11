@@ -73,8 +73,6 @@ export default function MpDashboardClient() {
       .catch(() => { setError('Failed to load dashboard'); setLoading(false); });
   }, []);
 
-  const isLocked = data?.subscription?.status === 'CANCELLED' ||
-    (data?.subscription?.status === 'TRIAL' && (data?.subscription?.trialDaysLeft ?? 0) < 0);
   const majority = data ? majorityPosition(data.overview) : null;
 
   return (
@@ -86,9 +84,9 @@ export default function MpDashboardClient() {
 
       {!loading && error && lockedSubscription && (
         <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '48px', textAlign: 'center' }}>
-          <p style={{ fontSize: '20px', fontWeight: 700, marginBottom: '12px' }}>Subscription required</p>
+          <p style={{ fontSize: '20px', fontWeight: 700, marginBottom: '12px' }}>MP access unavailable</p>
           <p style={{ color: '#7E8AA3', margin: '0 auto 24px', maxWidth: '520px', lineHeight: 1.6 }}>
-            Your MP dashboard is ready, but constituent data is only available with an active subscription or unexpired trial.
+            Your MP dashboard is free during early access, but we could not unlock this account automatically.
           </p>
           <div style={{
             display: 'inline-flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center',
@@ -101,7 +99,7 @@ export default function MpDashboardClient() {
           </div>
           <div>
             <Link href="/mp-dashboard/billing" style={{ backgroundColor: '#2E8B57', color: '#fff', padding: '12px 24px', borderRadius: '8px', textDecoration: 'none', fontWeight: 700 }}>
-              View plans →
+              View access details →
             </Link>
           </div>
         </div>
@@ -121,46 +119,17 @@ export default function MpDashboardClient() {
 
       {!loading && data && (
         <>
-          {/* Trial banner */}
-          {data.subscription.status === 'TRIAL' && (data.subscription.trialDaysLeft ?? 0) >= 0 && (
-            <div style={{
-              backgroundColor: 'rgba(214,169,74,0.12)', border: '1px solid rgba(214,169,74,0.3)',
-              borderRadius: '10px', padding: '14px 18px', marginBottom: '20px',
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px'
-            }}>
-              <div>
-                <span style={{ color: '#D6A94A', fontWeight: 700, fontSize: '14px' }}>
-                  🎁 Free trial — {data.subscription.trialDaysLeft} day{data.subscription.trialDaysLeft !== 1 ? 's' : ''} remaining
-                </span>
-                <p style={{ color: '#7E8AA3', fontSize: '13px', margin: '2px 0 0' }}>
-                  Full Pro access included. Subscribe before your trial ends.
-                </p>
-              </div>
-              <Link href="/mp-dashboard/billing" style={{
-                backgroundColor: '#D6A94A', color: '#0B1220', padding: '8px 18px',
-                borderRadius: '8px', fontWeight: 700, fontSize: '13px', textDecoration: 'none', flexShrink: 0
-              }}>
-                Subscribe now
-              </Link>
-            </div>
-          )}
-
-          {/* Past due banner */}
-          {data.subscription.status === 'PAST_DUE' && (
-            <div style={{
-              backgroundColor: 'rgba(217,92,75,0.12)', border: '1px solid rgba(217,92,75,0.3)',
-              borderRadius: '10px', padding: '14px 18px', marginBottom: '20px',
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px'
-            }}>
-              <span style={{ color: '#D95C4B', fontWeight: 700 }}>⚠️ Payment overdue — update your billing to restore access</span>
-              <Link href="/mp-dashboard/billing" style={{
-                backgroundColor: '#D95C4B', color: '#fff', padding: '8px 18px',
-                borderRadius: '8px', fontWeight: 700, fontSize: '13px', textDecoration: 'none'
-              }}>
-                Fix billing →
-              </Link>
-            </div>
-          )}
+          <div style={{
+            backgroundColor: 'rgba(46,139,87,0.12)', border: '1px solid rgba(46,139,87,0.3)',
+            borderRadius: '10px', padding: '14px 18px', marginBottom: '20px'
+          }}>
+            <span style={{ color: '#2E8B57', fontWeight: 700, fontSize: '14px' }}>
+              Free early access is enabled
+            </span>
+            <p style={{ color: '#7E8AA3', fontSize: '13px', margin: '2px 0 0' }}>
+              MP dashboards are free while Crossbench builds enough constituent signal to reach critical mass.
+            </p>
+          </div>
 
           {/* MP header card */}
           <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '24px', marginBottom: '16px' }}>
@@ -184,39 +153,22 @@ export default function MpDashboardClient() {
                 </p>
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
                   <span style={{
-                    backgroundColor: data.subscription.status === 'ACTIVE' ? 'rgba(46,139,87,0.15)' : 'rgba(214,169,74,0.15)',
-                    color: data.subscription.status === 'ACTIVE' ? '#2E8B57' : '#D6A94A',
+                    backgroundColor: 'rgba(46,139,87,0.15)',
+                    color: '#2E8B57',
                     fontSize: '11px', padding: '3px 10px', borderRadius: '20px', fontWeight: 600,
-                    border: `1px solid ${data.subscription.status === 'ACTIVE' ? 'rgba(46,139,87,0.3)' : 'rgba(214,169,74,0.3)'}`
+                    border: '1px solid rgba(46,139,87,0.3)'
                   }}>
-                    {data.subscription.status === 'ACTIVE' ? `✓ ${data.subscription.tier} Plan` :
-                     data.subscription.status === 'TRIAL' ? `Trial · ${data.subscription.trialDaysLeft}d left` :
-                     data.subscription.status === 'PAST_DUE' ? '⚠ Payment due' : 'Inactive'}
+                    Free early access
                   </span>
                   <Link href="/mp-dashboard/billing" style={{ fontSize: '12px', color: '#7E8AA3', textDecoration: 'none' }}>
-                    Manage billing →
+                    Access details →
                   </Link>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Paywall */}
-          {isLocked ? (
-            <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '48px', textAlign: 'center' }}>
-              <p style={{ fontSize: '20px', fontWeight: 700, marginBottom: '12px' }}>Subscribe to access your constituent data</p>
-              <p style={{ color: '#7E8AA3', maxWidth: '480px', margin: '0 auto 28px', lineHeight: 1.6 }}>
-                Real-time constituent sentiment — the only tool of its kind in Australian politics.
-              </p>
-              <Link href="/mp-dashboard/billing" style={{
-                backgroundColor: '#2E8B57', color: '#fff', padding: '14px 32px',
-                borderRadius: '8px', fontWeight: 700, fontSize: '15px', textDecoration: 'none'
-              }}>
-                View plans →
-              </Link>
-            </div>
-          ) : (
-            <>
+          <>
               {/* Overview stats */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '16px' }}>
                 {[
@@ -347,8 +299,7 @@ export default function MpDashboardClient() {
                   </div>
                 </div>
               )}
-            </>
-          )}
+          </>
         </>
       )}
     </div>

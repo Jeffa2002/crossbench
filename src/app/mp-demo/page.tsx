@@ -23,7 +23,7 @@ export default function MpDemoPage() {
               </p>
             </div>
             <Link href="/login?next=/mp-dashboard" style={{ backgroundColor: '#2E8B57', color: '#fff', padding: '12px 22px', borderRadius: '8px', fontWeight: 700, fontSize: '14px', textDecoration: 'none' }}>
-              Start trial
+              Get free MP access
             </Link>
           </div>
 

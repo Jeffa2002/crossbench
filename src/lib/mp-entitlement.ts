@@ -4,7 +4,9 @@ export type MpEntitlementInput = {
 };
 
 export function hasMpEntitlement(user: MpEntitlementInput, now = Date.now()): boolean {
-  if (user.subscriptionStatus === 'ACTIVE') return true;
-  if (user.subscriptionStatus === 'TRIAL' && user.trialEndsAt && user.trialEndsAt.getTime() >= now) return true;
-  return false;
+  // MP access is free during early access. Billing fields remain for future paid
+  // office features, but they should not block the core dashboard.
+  void user;
+  void now;
+  return true;
 }

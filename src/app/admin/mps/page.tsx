@@ -13,8 +13,8 @@ export default async function AdminMPs() {
   });
 
   const registered = mps.filter(m => m.emailVerified);
-  const withSubscription = mps.filter(m => m.subscriptionStatus === 'ACTIVE');
-  const onTrial = mps.filter(m => m.subscriptionStatus === 'TRIAL');
+  const withAccess = mps.filter(m => m.subscriptionStatus === 'ACTIVE');
+  const pendingAccess = mps.filter(m => m.subscriptionStatus !== 'ACTIVE');
 
   return (
     <div className="space-y-6">
@@ -28,8 +28,8 @@ export default async function AdminMPs() {
         {[
           { label: 'Total MP accounts', value: mps.length },
           { label: 'Email verified', value: registered.length },
-          { label: 'Active subscription', value: withSubscription.length },
-          { label: 'On trial', value: onTrial.length },
+          { label: 'Free access active', value: withAccess.length },
+          { label: 'Needs access review', value: pendingAccess.length },
         ].map(({ label, value }) => (
           <div key={label} className="bg-[#111A2E] border border-[#25324D] rounded-xl p-4">
             <div className="text-2xl font-bold text-[#F5F7FB]">{value}</div>
@@ -47,8 +47,8 @@ export default async function AdminMPs() {
               <th className="text-left px-4 py-3">Electorate</th>
               <th className="text-left px-4 py-3">State</th>
               <th className="text-left px-4 py-3">Email verified</th>
-              <th className="text-left px-4 py-3">Subscription</th>
-              <th className="text-left px-4 py-3">Trial ends</th>
+              <th className="text-left px-4 py-3">Access</th>
+              <th className="text-left px-4 py-3">Billing</th>
               <th className="text-left px-4 py-3">Votes cast</th>
             </tr>
           </thead>
@@ -69,10 +69,10 @@ export default async function AdminMPs() {
                     mp.subscriptionStatus === 'TRIAL' ? 'bg-blue-900/40 text-blue-300' :
                     mp.subscriptionStatus === 'PAST_DUE' ? 'bg-red-900/40 text-red-300' :
                     'bg-[#16213A] text-[#7E8AA3]'
-                  }`}>{mp.subscriptionStatus}</span>
+                  }`}>{mp.subscriptionStatus === 'ACTIVE' ? 'FREE ACCESS' : mp.subscriptionStatus}</span>
                 </td>
                 <td className="px-4 py-3 text-xs text-[#4E5A73]">
-                  {mp.trialEndsAt ? new Date(mp.trialEndsAt).toLocaleDateString() : '—'}
+                  {mp.trialEndsAt ? `Trial ended ${new Date(mp.trialEndsAt).toLocaleDateString()}` : 'Not required'}
                 </td>
                 <td className="px-4 py-3 text-xs text-[#B6C0D1]">{mp._count.votes}</td>
               </tr>

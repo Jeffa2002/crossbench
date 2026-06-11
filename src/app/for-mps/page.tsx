@@ -27,13 +27,13 @@ export default function ForMPsPage() {
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <TrackedLink href="/login?next=/mp-dashboard" event="MP Trial CTA" style={{ backgroundColor: '#2E8B57', color: '#fff', padding: '14px 32px', borderRadius: '8px', fontWeight: 700, fontSize: '15px', textDecoration: 'none' }}>
-              Start free 30-day trial →
+              Get free MP access →
             </TrackedLink>
             <TrackedLink href="/mp-demo" event="MP Demo CTA" style={{ backgroundColor: 'transparent', color: '#B6C0D1', padding: '14px 28px', borderRadius: '8px', fontWeight: 500, fontSize: '15px', textDecoration: 'none', border: '1px solid #25324D' }}>
               View demo dashboard
             </TrackedLink>
           </div>
-          <p style={{ color: '#4A5568', fontSize: '12px', marginTop: '12px' }}>Auto-detected via @aph.gov.au email · No credit card required</p>
+          <p style={{ color: '#4A5568', fontSize: '12px', marginTop: '12px' }}>Auto-detected via @aph.gov.au email · Free during early access · No credit card required</p>
         </div>
       </section>
 
@@ -77,9 +77,9 @@ export default function ForMPsPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', maxWidth: '900px', margin: '0 auto' }}>
             {[
               { step: '01', title: 'Sign up with your APH email', desc: 'Use your @aph.gov.au address and we automatically verify your MP status and link you to your electorate.' },
-              { step: '02', title: '30-day free trial', desc: 'Full Pro access from day one. No credit card required until you decide to continue.' },
+              { step: '02', title: 'Free early access', desc: 'Full dashboard access from day one while Crossbench builds enough verified constituent participation.' },
               { step: '03', title: 'Your dashboard, live', desc: 'See constituent sentiment on every current bill, updated continuously as Australians vote.' },
-              { step: '04', title: 'Upgrade or invite your team', desc: 'Pro for solo use, Team plan for your office. Invite chiefs of staff and advisers on Team.' },
+              { step: '04', title: 'Office tools later', desc: 'Paid office features can come later for team workflows, exports, alerts, and briefing packs.' },
             ].map(({ step, title, desc }) => (
               <div key={step} style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '28px', position: 'relative' }}>
                 <div style={{ color: '#2E8B57', fontSize: '13px', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '12px' }}>{step}</div>
@@ -91,36 +91,29 @@ export default function ForMPsPage() {
         </div>
       </section>
 
-      {/* Pricing */}
+      {/* Access */}
       <section style={{ borderBottom: '1px solid #25324D', padding: 'clamp(48px, 6vw, 80px) 0' }}>
         <div style={s.container}>
-          <h2 style={{ fontSize: '28px', fontWeight: 700, textAlign: 'center', marginBottom: '8px' }}>Simple pricing</h2>
-          <p style={{ color: '#7E8AA3', textAlign: 'center', fontSize: '15px', marginBottom: '48px' }}>Both plans start with a 30-day free trial.</p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', maxWidth: '700px', margin: '0 auto' }}>
-            {[
-              { name: 'Pro', price: '$199', period: '/month', logins: '1 login', features: ['Full electorate dashboard', 'Bill-by-bill local sentiment', 'Verified vs all-vote comparison', 'Email support'], highlight: false },
-              { name: 'Team', price: '$499', period: '/month', logins: '3 staff logins', features: ['Everything in Pro', 'Up to 3 team members', 'Priority support', 'Office onboarding support'], highlight: true },
-            ].map(plan => (
-              <div key={plan.name} style={{ backgroundColor: plan.highlight ? '#0D2818' : '#111A2E', border: `1px solid ${plan.highlight ? '#2E8B57' : '#25324D'}`, borderRadius: '16px', padding: '32px', position: 'relative' }}>
-                {plan.highlight && <div style={{ position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)', backgroundColor: '#2E8B57', color: '#fff', fontSize: '11px', fontWeight: 700, padding: '4px 14px', borderRadius: '999px' }}>MOST POPULAR</div>}
-                <div style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>{plan.name}</div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '36px', fontWeight: 700, color: '#F5F7FB' }}>{plan.price}</span>
-                  <span style={{ color: '#7E8AA3', fontSize: '14px' }}>{plan.period} AUD</span>
-                </div>
-                <p style={{ color: '#7E8AA3', fontSize: '13px', marginBottom: '20px' }}>{plan.logins}</p>
-                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {plan.features.map(f => (
-                    <li key={f} style={{ fontSize: '14px', color: '#B6C0D1', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ color: '#2E8B57', fontWeight: 700 }}>✓</span>{f}
-                    </li>
-                  ))}
-                </ul>
-                <TrackedLink href="/login?next=/mp-dashboard" event={`MP Pricing ${plan.name} CTA`} style={{ display: 'block', textAlign: 'center', backgroundColor: plan.highlight ? '#2E8B57' : 'transparent', color: plan.highlight ? '#fff' : '#2E8B57', border: `1px solid ${plan.highlight ? '#2E8B57' : '#2E8B57'}`, padding: '12px', borderRadius: '8px', fontWeight: 700, fontSize: '14px', textDecoration: 'none' }}>
-                  Start free trial →
-                </TrackedLink>
-              </div>
-            ))}
+          <h2 style={{ fontSize: '28px', fontWeight: 700, textAlign: 'center', marginBottom: '8px' }}>Free during early access</h2>
+          <p style={{ color: '#7E8AA3', textAlign: 'center', fontSize: '15px', margin: '0 auto 32px', maxWidth: '620px', lineHeight: 1.6 }}>
+            MPs and Senators can use the core dashboard without paying while Crossbench grows verified constituent participation.
+          </p>
+          <div style={{ backgroundColor: '#0D2818', border: '1px solid #2E8B57', borderRadius: '16px', padding: '32px', maxWidth: '720px', margin: '0 auto' }}>
+            <div style={{ color: '#2E8B57', fontSize: '12px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '10px' }}>Included now</div>
+            <h3 style={{ fontSize: '22px', fontWeight: 700, margin: '0 0 10px' }}>Full MP dashboard access</h3>
+            <p style={{ color: '#B6C0D1', fontSize: '14px', lineHeight: 1.6, margin: '0 0 20px' }}>
+              Paid plans can wait until there is enough constituent signal to make advanced office features worth buying.
+            </p>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' }}>
+              {['Electorate dashboard', 'Bill-by-bill sentiment', 'Verified vote breakdowns', 'National comparison', 'Email support'].map(f => (
+                <li key={f} style={{ fontSize: '14px', color: '#B6C0D1', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ color: '#2E8B57', fontWeight: 700 }}>✓</span>{f}
+                </li>
+              ))}
+            </ul>
+            <TrackedLink href="/login?next=/mp-dashboard" event="MP Free Access CTA" style={{ display: 'inline-block', backgroundColor: '#2E8B57', color: '#fff', border: '1px solid #2E8B57', padding: '12px 18px', borderRadius: '8px', fontWeight: 700, fontSize: '14px', textDecoration: 'none' }}>
+              Get free MP access →
+            </TrackedLink>
           </div>
         </div>
       </section>
@@ -129,7 +122,7 @@ export default function ForMPsPage() {
       <section style={{ padding: 'clamp(48px, 6vw, 80px) 0' }}>
         <div style={{ ...s.container, textAlign: 'center' }}>
           <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 700, marginBottom: '16px' }}>Ready to hear from your electorate?</h2>
-          <p style={{ color: '#7E8AA3', fontSize: '16px', marginBottom: '32px', maxWidth: '480px', margin: '0 auto 32px' }}>Sign up with your @aph.gov.au email and your 30-day trial starts immediately.</p>
+          <p style={{ color: '#7E8AA3', fontSize: '16px', marginBottom: '32px', maxWidth: '480px', margin: '0 auto 32px' }}>Sign up with your @aph.gov.au email and your free MP access starts immediately.</p>
           <TrackedLink href="/login?next=/mp-dashboard" event="MP Bottom CTA" style={{ backgroundColor: '#2E8B57', color: '#fff', padding: '16px 40px', borderRadius: '8px', fontWeight: 700, fontSize: '16px', textDecoration: 'none', display: 'inline-block' }}>
             Get started free →
           </TrackedLink>

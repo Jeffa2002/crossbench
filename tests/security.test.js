@@ -42,12 +42,12 @@ test('login redirects only allow same-site relative paths', () => {
   assert.equal(safeRelativeRedirect(null), '/');
 });
 
-test('MP dashboard entitlement requires active subscription or unexpired trial', () => {
+test('MP dashboard entitlement is open during free early access', () => {
   const now = Date.UTC(2026, 0, 1);
 
   assert.equal(hasMpEntitlement({ subscriptionStatus: 'ACTIVE', trialEndsAt: null }, now), true);
   assert.equal(hasMpEntitlement({ subscriptionStatus: 'TRIAL', trialEndsAt: new Date(now + 1000) }, now), true);
-  assert.equal(hasMpEntitlement({ subscriptionStatus: 'TRIAL', trialEndsAt: new Date(now - 1000) }, now), false);
-  assert.equal(hasMpEntitlement({ subscriptionStatus: 'CANCELLED', trialEndsAt: new Date(now + 1000) }, now), false);
-  assert.equal(hasMpEntitlement({ subscriptionStatus: 'PAST_DUE', trialEndsAt: null }, now), false);
+  assert.equal(hasMpEntitlement({ subscriptionStatus: 'TRIAL', trialEndsAt: new Date(now - 1000) }, now), true);
+  assert.equal(hasMpEntitlement({ subscriptionStatus: 'CANCELLED', trialEndsAt: new Date(now + 1000) }, now), true);
+  assert.equal(hasMpEntitlement({ subscriptionStatus: 'PAST_DUE', trialEndsAt: null }, now), true);
 });

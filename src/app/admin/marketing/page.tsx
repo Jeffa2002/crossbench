@@ -30,7 +30,7 @@ const MP_DATA = {
     { name: "David Morgan", age: 49, role: "Independent MP or Senator", motivation: "Needs differentiated, evidence-led representation — a story that he listens better than major parties.", painPoint: "Strong qualitative feedback but no credible, repeatable way to quantify it.", pitch: "Prove the independent model, show responsiveness, and publish a transparent local mandate." },
   ],
   channels: [
-    { channel: "Warm outbound email to MPs, chiefs of staff & electorate offices", priority: "high", tactic: "3-step sequence: 1) localised screenshot with the member's electorate, 2) 2-line value prop, 3) 10-min walkthrough offer + free trial. Reference one live bill relevant to the seat.", cost: "Low", expectedROI: "Highest near-term conversion — product is immediately legible to political staffers" },
+    { channel: "Warm outbound email to MPs, chiefs of staff & electorate offices", priority: "high", tactic: "3-step sequence: 1) localised screenshot with the member's electorate, 2) 2-line value prop, 3) 10-min walkthrough offer + free early access. Reference one live bill relevant to the seat.", cost: "Low", expectedROI: "Highest near-term conversion — product is immediately legible to political staffers" },
     { channel: "LinkedIn founder-led posting", priority: "high", tactic: "Post seat-specific dashboards, screenshots, and short takes on sitting-week bills. Tag MPs only when the content is genuinely useful, not promotional.", cost: "Low", expectedROI: "High for credibility and inbound from staffers, researchers, and political operators" },
     { channel: "Warm intros through policy & comms networks", priority: "high", tactic: "Leverage former staff, lobbyists, advisers, and journalists for warm intros to offices.", cost: "Low", expectedROI: "Very high — trust is the purchase barrier" },
     { channel: "Parliament-adjacent events in Canberra", priority: "medium", tactic: "Attend Australia Institute / Grattan / CIS panels, ACTU-style policy events, committee briefings, and Canberra networking drinks.", cost: "Medium", expectedROI: "Moderate but strong for legitimacy and deal acceleration" },
@@ -48,7 +48,7 @@ const MP_DATA = {
   ],
   messages: {
     "LinkedIn": ["Your electorate has a live opinion on this bill. Crossbench turns that into a dashboard your office can actually use.", "If you are still relying on random emails and call notes to judge constituent sentiment, you are missing the pattern.", "New on Crossbench: electorate-level views on current federal bills, updated as Australians vote."],
-    "Email subject lines": ["See how your electorate is splitting on [Bill Name]", "A better way to brief your member before sitting week", "Free trial for [electorate name] dashboard"],
+    "Email subject lines": ["See how your electorate is splitting on [Bill Name]", "A better way to brief your member before sitting week", "Free early access for [electorate name] dashboard"],
     "In person": ["We help you answer one simple question staff never get a clean answer to — what do my constituents think about this bill right now?", "Think of it as a live constituency pulse, not another generic analytics tool.", "If your office wants a tailored electorate demo, we can build it in minutes."],
   },
   competitive: [
@@ -68,9 +68,9 @@ const MP_DATA = {
     { name: "The Squiz Today", platform: "Newsletter / podcast", why: "Mass reach to busy professionals who like digestible politics.", approach: "Offer a simple explainer graphic and one-line insight for their politics newsletter." },
   ],
   kpis: {
-    "3 months": ["20–30 office contacts in CRM, at least 8 warm intros", "5–10 product demos delivered", "2–3 paid pilots or trials started", "1 clear testimonial from a staffer or adviser", "Email open rates above 40% on personalised office outreach"],
-    "6 months": ["10–15 paying offices (mix of Pro and Team)", "1–2 Canberra media or podcast mentions", "50–100 verified voter signups/week from organic channels", "3+ repeat offices using the product across multiple sitting weeks", "Outreach → demo conversion rate above 20%"],
-    "12 months": ["30–50 paying offices with low churn", "Meaningful presence in Canberra political discourse", "Repeatable pipeline with monthly inbound from staffers and MPs", "5,000+ verified voters across multiple electorates", "Seat-level dashboard content consistently reused by offices"],
+    "3 months": ["20–30 office contacts in CRM, at least 8 warm intros", "5–10 product demos delivered", "2–3 active early-access offices", "1 clear testimonial from a staffer or adviser", "Email open rates above 40% on personalised office outreach"],
+    "6 months": ["10–15 active offices using free early access", "1–2 Canberra media or podcast mentions", "50–100 verified voter signups/week from organic channels", "3+ repeat offices using the product across multiple sitting weeks", "Outreach → demo conversion rate above 20%"],
+    "12 months": ["30–50 active offices and clear premium-feature demand", "Meaningful presence in Canberra political discourse", "Repeatable pipeline with monthly inbound from staffers and MPs", "5,000+ verified voters across multiple electorates", "Seat-level dashboard content consistently reused by offices"],
   },
   budget: [
     { category: "Founder-led sales & outreach", monthlyAud: 1200, rationale: "List building, personalisation, demos, follow-up, CRM. Highest leverage activity." },

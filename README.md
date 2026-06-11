@@ -4,7 +4,7 @@
 
 🌐 **Live:** [crossbench.io](https://crossbench.io)
 
-Crossbench bridges the gap between Australian citizens and their parliament. Citizens can sign up, verify their address to their electorate, and cast Support / Oppose / Abstain votes on actual bills currently before—or passed through—the federal legislature. MPs and Senators get a paid constituent-sentiment dashboard giving them real-time insights from the people they represent.
+Crossbench bridges the gap between Australian citizens and their parliament. Citizens can sign up, verify their address to their electorate, and cast Support / Oppose / Abstain votes on actual bills currently before—or passed through—the federal legislature. MPs and Senators get free early access to a constituent-sentiment dashboard giving them real-time insights from the people they represent.
 
 ---
 
@@ -23,10 +23,10 @@ Crossbench bridges the gap between Australian citizens and their parliament. Cit
 - **MP profile pages** — constituent sentiment bars, bill-by-bill local vs national comparison
 - **Statistics dashboard** — bills passed/total, pass rate, median days, donut chart, origin chart, parliament composition, voice vote vs division breakdown, fastest / slowest / most-contested bills
 
-### For MPs & Senators (paid)
+### For MPs & Senators
 - **Constituent sentiment dashboard** — live Support / Oppose / Abstain breakdown per bill, filtered to their electorate
 - **Auto-detected** via `@aph.gov.au` email domain on sign-up
-- **30-day free trial**, then Pro **$199/mo** or Team **$499/mo**
+- **Free early access** while the product builds verified constituent participation
 - Subscription management via Stripe Customer Portal
 
 ### Support & Admin
@@ -45,7 +45,7 @@ Crossbench bridges the gap between Australian citizens and their parliament. Cit
 - **Database:** PostgreSQL with PostGIS extension (spatial electorate lookups)
 - **ORM:** Prisma 7 with `@prisma/adapter-pg`
 - **Auth:** NextAuth v5 — magic-link email flow via Resend
-- **Payments:** Stripe (Checkout, Customer Portal, webhooks) — Pro $199/mo, Team $499/mo
+- **Payments:** Stripe integration is present for future paid office features; core MP dashboard access is free during early access
 - **AI:** `@anthropic-ai/sdk` — Claude Sonnet (bill summaries) + Claude Haiku (support chat)
 - **Styling:** Tailwind CSS v4
 - **Rendering:** `react-markdown`
@@ -289,7 +289,7 @@ crossbench/
 | `/login` | Magic-link sign-in |
 | `/dashboard` | Citizen — personal vote history |
 | `/account/verify` | Address → electorate verification |
-| `/mp-dashboard` | MP constituent dashboard (requires paid subscription) |
+| `/mp-dashboard` | MP constituent dashboard (free early access) |
 | `/admin` | Admin panel (separate cookie-based auth) |
 
 ---
@@ -312,7 +312,7 @@ crossbench/
 | `POST` | `/api/stripe/checkout` | Create Stripe Checkout session |
 | `GET` | `/api/stripe/portal` | Redirect to Stripe Customer Portal |
 | `POST` | `/api/stripe/webhook` | Handle Stripe events (subscription lifecycle) |
-| `GET` | `/api/mp/dashboard` | Constituent sentiment data for MP (paid) |
+| `GET` | `/api/mp/dashboard` | Constituent sentiment data for MP |
 | `POST` | `/api/admin/login` | Admin panel login |
 | `POST` | `/api/admin/logout` | Admin panel logout |
 

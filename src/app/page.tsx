@@ -116,12 +116,12 @@ export default async function HomePage() {
             </div>
             {/* MPs */}
             <div style={{ backgroundColor: '#0D2818', border: '1px solid rgba(46,139,87,0.3)', borderRadius: '16px', padding: '32px', position: 'relative' }}>
-              <div style={{ position: 'absolute', top: '20px', right: '20px', backgroundColor: 'rgba(46,139,87,0.2)', color: '#2E8B57', border: '1px solid rgba(46,139,87,0.4)', padding: '4px 12px', borderRadius: '999px', fontSize: '11px', fontWeight: 700 }}>30-day free trial</div>
+              <div style={{ position: 'absolute', top: '20px', right: '20px', backgroundColor: 'rgba(46,139,87,0.2)', color: '#2E8B57', border: '1px solid rgba(46,139,87,0.4)', padding: '4px 12px', borderRadius: '999px', fontSize: '11px', fontWeight: 700 }}>Free early access</div>
               <div style={{ fontSize: '32px', marginBottom: '16px' }}>🏛️</div>
               <h3 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '12px' }}>For MPs & Senators</h3>
-              <p style={{ color: '#7E8AA3', fontSize: '15px', lineHeight: 1.7, marginBottom: '24px' }}>A live electorate dashboard showing bill-by-bill constituent sentiment. Sign up with your @aph.gov.au email and your trial starts immediately.</p>
+              <p style={{ color: '#7E8AA3', fontSize: '15px', lineHeight: 1.7, marginBottom: '24px' }}>A live electorate dashboard showing bill-by-bill constituent sentiment. Sign up with your @aph.gov.au email and access starts immediately.</p>
               <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {['Live electorate dashboard', 'Verified, address-linked data', 'All current bills tracked', 'Pro $199/mo · Team $499/mo'].map(f => (
+                {['Live electorate dashboard', 'Verified, address-linked data', 'All current bills tracked', 'Free during early access'].map(f => (
                   <li key={f} style={{ color: '#B6C0D1', fontSize: '14px', display: 'flex', gap: '8px' }}>
                     <span style={{ color: '#2E8B57', fontWeight: 700, flexShrink: 0 }}>✓</span>{f}
                   </li>

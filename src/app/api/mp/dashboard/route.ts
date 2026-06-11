@@ -29,7 +29,7 @@ export async function GET() {
 
   if (!hasMpEntitlement(user as any)) {
     return NextResponse.json({
-      error: 'Active subscription or valid trial required',
+      error: 'MP early access required',
       subscription: {
         status: (user as any).subscriptionStatus,
         tier: (user as any).subscriptionTier,

@@ -8,6 +8,25 @@ function isMpEmail(email: string): boolean {
   return email.toLowerCase().endsWith('@aph.gov.au');
 }
 
+async function grantMpEarlyAccess(user: { id?: string | null; email?: string | null; electorateId?: string | null }) {
+  if (!user.id || !user.email || !isMpEmail(user.email)) return;
+
+  const electorate = await prisma.electorate.findFirst({
+    where: { mpEmail: { equals: user.email, mode: 'insensitive' } },
+  });
+
+  await prisma.user.updateMany({
+    where: { id: user.id },
+    data: {
+      role: 'MP',
+      electorateId: electorate?.id ?? user.electorateId ?? null,
+      subscriptionStatus: 'ACTIVE',
+      subscriptionTier: 'PRO',
+      trialEndsAt: null,
+    } as any,
+  });
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   trustHost: process.env.AUTH_TRUST_HOST === 'true',
@@ -25,37 +44,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (isMpEmail(user.email)) {
         const existing = await prisma.user.findUnique({
           where: { email: user.email },
-          select: { id: true, role: true, electorateId: true, trialEndsAt: true },
+          select: { id: true, electorateId: true },
         });
 
-        if (existing && existing.role !== 'MP') {
-          // Find matching electorate by mpEmail
-          const electorate = await prisma.electorate.findFirst({
-            where: { mpEmail: { equals: user.email, mode: 'insensitive' } },
-          });
-
-          const trialEndsAt = new Date();
-          trialEndsAt.setDate(trialEndsAt.getDate() + 30);
-
-          await prisma.user.update({
-            where: { id: existing.id },
-            data: {
-              role: 'MP',
-              electorateId: electorate?.id ?? existing.electorateId,
-              subscriptionStatus: 'TRIAL',
-              subscriptionTier: 'PRO', // Full Pro during trial
-              trialEndsAt,
-            } as any,
-          });
-        } else if (existing && existing.role === 'MP' && !existing.trialEndsAt) {
-          // Existing MP without trial date set - fix it
-          const trialEndsAt = new Date();
-          trialEndsAt.setDate(trialEndsAt.getDate() + 30);
-          await prisma.user.update({
-            where: { id: existing.id },
-            data: { trialEndsAt, subscriptionTier: 'PRO' } as any,
-          });
-        }
+        await grantMpEarlyAccess({
+          id: existing?.id ?? user.id,
+          email: user.email,
+          electorateId: existing?.electorateId ?? null,
+        });
       }
 
       return true;
@@ -75,5 +71,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: {
     signIn: '/login',
     verifyRequest: '/verify-email',
+  },
+  events: {
+    async createUser({ user }) {
+      await grantMpEarlyAccess(user);
+    },
   },
 });
