@@ -17,7 +17,7 @@ const limit = Number.parseInt(getArg('--limit', '0'), 10) || undefined;
 const delayMs = Number.parseInt(getArg('--delay-ms', '30000'), 10);
 const chamber = getArg('--chamber', 'all').toLowerCase();
 const onlyEmail = getArg('--only', '').toLowerCase();
-const campaign = getArg('--campaign', 'mp_outreach_intro_2026_06');
+const campaign = getArg('--campaign', 'mp_outreach_free_access_2026_06');
 const sampleId = getArg('--sample-id', 'bean');
 const testTo = getArg('--test-to', '');
 
@@ -56,63 +56,74 @@ function greeting(recipient: Recipient) {
 }
 
 function dashboardPath(recipient: Recipient) {
-  if (recipient.mpChamber === 'Senate') return 'https://crossbench.io/parliament?chamber=senate';
-  return `https://crossbench.io/electorates/${recipient.id}`;
+  if (recipient.mpChamber === 'Senate') return 'https://www.crossbench.io/parliament?chamber=senate';
+  return `https://www.crossbench.io/electorates/${recipient.id}`;
 }
 
 function buildEmail(recipient: Recipient) {
   const electorateLabel = recipient.mpChamber === 'Senate'
     ? `${recipient.state} Senate`
     : recipient.name;
-  const subject = 'Early access to Crossbench for your electorate';
+  const subject = 'A note from Crossbench: we should have made this free from the start';
   const plain = `${greeting(recipient)},
 
-I am writing to introduce Crossbench, an independent civic platform built to help Australians understand federal bills and show their position on them in a structured, electorate-aware way.
+I wanted to write personally with a simple admission: we got one part of our Crossbench launch wrong.
 
-Crossbench gives voters plain-English explanations of bills before Parliament, lets them record whether they support, oppose, or abstain, and verifies electorate information so results can be shown in aggregate by seat. For MPs and Senators, the goal is simple: a clearer live signal of what participating constituents are saying about legislation, without exposing individual voters.
+Crossbench is built around a classic chicken-and-egg problem. Voters are much more likely to engage when they can see that their elected representatives are present, interested, and willing to listen. At the same time, MPs and Senators need to see that the platform is worth their office's time before making it part of their public engagement toolkit.
 
-Crossbench is new, and we are inviting MPs and Senators to sign in before the wider public launch. That gives your office time to review the public profile for ${electorateLabel}, understand the dashboard, and be ready to engage as constituents start using the service.
+In hindsight, we should have recognised that more clearly from day one.
 
-What your office can use it for:
+So, first: we apologise for not making Crossbench free for MPs and Senators up front, and for a far longer period. We are correcting that now. Crossbench will be available free for all federal MPs and Senators for a minimum of 12 months.
+
+Our reasoning is straightforward. Crossbench needs elected representatives on the platform before it can properly serve voters. When voters can see their MP or Senator is participating, it gives them a clearer reason to join, follow issues, ask questions, and engage constructively. For offices, it creates a new channel to understand public sentiment, communicate directly, and build trust outside the noise of traditional social media.
+
+We also want to apologise for not properly introducing the founder behind Crossbench earlier. Trust matters, especially when a platform is asking elected representatives and their teams to try something new. My name is Jeffrey E, and if you would like to understand who is behind the product, why it was built, and how it can support your office, I would be very happy to arrange a short introductory call.
+
+Crossbench is designed to become a practical engagement tool for Parliamentarians, staff, and the public. It gives voters a better way to follow federal issues and gives elected offices a structured, transparent way to be seen as present, listening, and engaged.
+
+What your office can use now:
 
 - See bill-by-bill public sentiment for ${electorateLabel}.
 - Compare local verified responses with national Crossbench participation.
 - Understand which bills are drawing support, concern, or confusion.
-- Give your constituents another practical way to engage with current legislation.
+- Invite trusted @aph.gov.au staff to help manage your office dashboard.
 
 Crossbench is not a scientific population poll, not party-affiliated, and not a replacement for direct constituent correspondence. It is a participation layer: verified Australians, real bills, aggregated results, and a clearer feedback loop between Parliament and the people affected by its decisions.
-
-As an early-access offer, offices that activate a paid Crossbench member dashboard before the public launch can receive a 50% account credit after their first paid month. If your office is interested, reply to this email and we will apply the credit to your account.
 
 You can view the public profile for ${electorateLabel} here:
 ${dashboardPath(recipient)}
 
 MP and Senator offices can sign in with an @aph.gov.au email to access the member dashboard:
-https://crossbench.io/for-mps
+https://www.crossbench.io/for-mps
 
-If anything on your profile needs correcting, or if your office wants a walkthrough, just reply to this email and it will go into the Crossbench support queue.
+If anything on your profile needs correcting, or if your office wants a walkthrough or founder introduction, just reply to this email and it will go into the Crossbench support queue.
 
 Regards,
-Crossbench
-https://crossbench.io`;
+Jeffrey E
+Founder, Crossbench
+jeffrey.e@crossbench.io
+https://www.crossbench.io`;
 
   const html = `<p>${greeting(recipient)},</p>
-<p>I am writing to introduce <strong>Crossbench</strong>, an independent civic platform built to help Australians understand federal bills and show their position on them in a structured, electorate-aware way.</p>
-<p>Crossbench gives voters plain-English explanations of bills before Parliament, lets them record whether they support, oppose, or abstain, and verifies electorate information so results can be shown in aggregate by seat. For MPs and Senators, the goal is simple: a clearer live signal of what participating constituents are saying about legislation, without exposing individual voters.</p>
-<p>Crossbench is new, and we are inviting MPs and Senators to sign in before the wider public launch. That gives your office time to review the public profile for ${electorateLabel}, understand the dashboard, and be ready to engage as constituents start using the service.</p>
-<p><strong>What your office can use it for:</strong></p>
+<p>I wanted to write personally with a simple admission: we got one part of our Crossbench launch wrong.</p>
+<p>Crossbench is built around a classic chicken-and-egg problem. Voters are much more likely to engage when they can see that their elected representatives are present, interested, and willing to listen. At the same time, MPs and Senators need to see that the platform is worth their office's time before making it part of their public engagement toolkit.</p>
+<p>In hindsight, we should have recognised that more clearly from day one.</p>
+<p>So, first: we apologise for not making Crossbench free for MPs and Senators up front, and for a far longer period. We are correcting that now. <strong>Crossbench will be available free for all federal MPs and Senators for a minimum of 12 months.</strong></p>
+<p>Our reasoning is straightforward. Crossbench needs elected representatives on the platform before it can properly serve voters. When voters can see their MP or Senator is participating, it gives them a clearer reason to join, follow issues, ask questions, and engage constructively. For offices, it creates a new channel to understand public sentiment, communicate directly, and build trust outside the noise of traditional social media.</p>
+<p>We also want to apologise for not properly introducing the founder behind Crossbench earlier. Trust matters, especially when a platform is asking elected representatives and their teams to try something new. My name is <strong>Jeffrey E</strong>, and if you would like to understand who is behind the product, why it was built, and how it can support your office, I would be very happy to arrange a short introductory call.</p>
+<p>Crossbench is designed to become a practical engagement tool for Parliamentarians, staff, and the public. It gives voters a better way to follow federal issues and gives elected offices a structured, transparent way to be seen as present, listening, and engaged.</p>
+<p><strong>What your office can use now:</strong></p>
 <ul>
   <li>See bill-by-bill public sentiment for ${electorateLabel}.</li>
   <li>Compare local verified responses with national Crossbench participation.</li>
   <li>Understand which bills are drawing support, concern, or confusion.</li>
-  <li>Give your constituents another practical way to engage with current legislation.</li>
+  <li>Invite trusted @aph.gov.au staff to help manage your office dashboard.</li>
 </ul>
 <p>Crossbench is not a scientific population poll, not party-affiliated, and not a replacement for direct constituent correspondence. It is a participation layer: verified Australians, real bills, aggregated results, and a clearer feedback loop between Parliament and the people affected by its decisions.</p>
-<p><strong>Early-access offer:</strong> offices that activate a paid Crossbench member dashboard before the public launch can receive a 50% account credit after their first paid month. If your office is interested, reply to this email and we will apply the credit to your account.</p>
 <p>You can view the public profile for ${electorateLabel} here:<br><a href="${dashboardPath(recipient)}">${dashboardPath(recipient)}</a></p>
-<p>MP and Senator offices can sign in with an @aph.gov.au email to access the member dashboard:<br><a href="https://crossbench.io/for-mps">https://crossbench.io/for-mps</a></p>
-<p>If anything on your profile needs correcting, or if your office wants a walkthrough, just reply to this email and it will go into the Crossbench support queue.</p>
-<p>Regards,<br>Crossbench<br><a href="https://crossbench.io">https://crossbench.io</a></p>`;
+<p>MP and Senator offices can sign in with an @aph.gov.au email to access the member dashboard:<br><a href="https://www.crossbench.io/for-mps">https://www.crossbench.io/for-mps</a></p>
+<p>If anything on your profile needs correcting, or if your office wants a walkthrough or founder introduction, just reply to this email and it will go into the Crossbench support queue.</p>
+<p>Regards,<br>Jeffrey E<br>Founder, Crossbench<br><a href="mailto:jeffrey.e@crossbench.io">jeffrey.e@crossbench.io</a><br><a href="https://www.crossbench.io">https://www.crossbench.io</a></p>`;
 
   return { subject, plain, html };
 }

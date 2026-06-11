@@ -23,12 +23,12 @@ export const mpUpdates: MpUpdate[] = [
   {
     date: '11 Jun 2026',
     label: 'Access',
-    title: 'MP dashboards are now free during early access',
-    summary: 'MPs and Senators can use Crossbench without payment while the platform builds verified constituent participation.',
+    title: 'MP dashboards are free for at least 12 months',
+    summary: 'MPs and Senators can use Crossbench without payment for a minimum of 12 months while the platform builds verified constituent participation.',
     details: [
       'APH email sign-in now unlocks the MP dashboard immediately.',
       'Existing MP accounts have been moved to active free early access.',
-      'Paid office workflows can come later, once there is enough constituent signal to make them clearly useful.',
+      'Founder introductions and short walkthrough calls are available for offices that want to meet the person behind Crossbench before adopting it.',
     ],
   },
   {

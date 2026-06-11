@@ -12,9 +12,22 @@ type Ticket = {
 
 const STATUS_COLORS: Record<string, string> = { OPEN: '#D6A94A', IN_PROGRESS: '#4E8FD4', RESOLVED: '#2E8B57', CLOSED: '#4A5568' };
 const PRIORITY_COLORS: Record<string, string> = { LOW: '#4A5568', NORMAL: '#7E8AA3', HIGH: '#D6A94A', URGENT: '#D95C4B' };
+const FOUNDER_EMAIL = 'jeffrey.e@crossbench.io';
 
 function Badge({ label, color }: { label: string; color: string }) {
   return <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '999px', backgroundColor: `${color}22`, color, border: `1px solid ${color}44` }}>{label}</span>;
+}
+
+function isFounderMarkedTicket(ticket: Ticket) {
+  const haystack = [
+    ticket.email,
+    ticket.subject,
+    ticket.message,
+    ticket.user?.email,
+    ...ticket.replies.flatMap(reply => [reply.authorEmail, reply.message]),
+  ].filter(Boolean).join('\n').toLowerCase();
+
+  return haystack.includes(FOUNDER_EMAIL);
 }
 
 export default function AdminSupportPage() {
@@ -96,15 +109,19 @@ export default function AdminSupportPage() {
         {loading ? <p style={{ color: '#4A5568', fontSize: '13px' }}>Loading…</p> : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {tickets.length === 0 && <p style={{ color: '#4A5568', fontSize: '13px' }}>No tickets.</p>}
-            {tickets.map(t => (
+            {tickets.map(t => {
+              const founderMarked = isFounderMarkedTicket(t);
+              return (
               <div key={t.id} className="support-ticket-card" onClick={() => setSelected(t)} style={{
-                backgroundColor: selected?.id === t.id ? '#1A2540' : '#111A2E',
-                border: `1px solid ${selected?.id === t.id ? '#4E8FD4' : '#25324D'}`,
+                backgroundColor: founderMarked ? (selected?.id === t.id ? '#2B2310' : '#1C1A12') : (selected?.id === t.id ? '#1A2540' : '#111A2E'),
+                border: `1px solid ${founderMarked ? '#D6A94A' : selected?.id === t.id ? '#4E8FD4' : '#25324D'}`,
+                boxShadow: founderMarked ? '0 0 0 1px rgba(214,169,74,0.12)' : 'none',
                 borderRadius: '10px', padding: '14px 16px', cursor: 'pointer',
               }}>
                 <div className="support-ticket-card-heading" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '6px' }}>
                   <span style={{ fontWeight: 600, fontSize: '14px', color: '#F5F7FB', flex: 1, minWidth: 0 }}>{t.subject}</span>
                   <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
+                    {founderMarked && <Badge label="JEFFREY E" color="#D6A94A" />}
                     <Badge label={t.status} color={STATUS_COLORS[t.status] || '#7E8AA3'} />
                     {t.priority !== 'NORMAL' && <Badge label={t.priority} color={PRIORITY_COLORS[t.priority] || '#7E8AA3'} />}
                   </div>
@@ -113,7 +130,7 @@ export default function AdminSupportPage() {
                 <p style={{ fontSize: '12px', color: '#3A4A6A', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.message}</p>
                 <p style={{ fontSize: '11px', color: '#2A3A5A', margin: '6px 0 0' }}>{new Date(t.createdAt).toLocaleString('en-AU')} · {t.replies.length} repl{t.replies.length === 1 ? 'y' : 'ies'}</p>
               </div>
-            ))}
+            );})}
           </div>
         )}
       </div>
@@ -126,6 +143,11 @@ export default function AdminSupportPage() {
             <button className="support-mobile-back" onClick={() => setSelected(null)}>← Tickets</button>
             <div className="support-detail-heading" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
               <div style={{ minWidth: 0 }}>
+                {isFounderMarkedTicket(selected) && (
+                  <div style={{ marginBottom: '8px' }}>
+                    <Badge label={`Marked to ${FOUNDER_EMAIL}`} color="#D6A94A" />
+                  </div>
+                )}
                 <h2 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 4px' }}>{selected.subject}</h2>
                 <p style={{ fontSize: '12px', color: '#7E8AA3', margin: 0 }}>
                   {selected.name && `${selected.name} · `}{selected.email}
