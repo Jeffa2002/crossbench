@@ -1,5 +1,7 @@
 import { createHash } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import { getActiveOfficeMembership } from '@/lib/mp-office';
 import { prisma } from '@/lib/prisma';
 import { checkRateLimit, rateLimitKey } from '@/lib/rate-limit';
 
@@ -55,6 +57,25 @@ function browserName(userAgent: string | null) {
   return 'Other';
 }
 
+async function visitorIdentity() {
+  const session = await auth();
+  const userId = (session?.user as any)?.id as string | undefined;
+  if (!userId) return { userId: null, visitorType: 'GUEST' };
+
+  const membership = await getActiveOfficeMembership(userId);
+  if (membership?.electorate?.mpChamber === 'Senate') return { userId, visitorType: 'SENATOR' };
+  if (membership) return { userId, visitorType: 'MP' };
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true, electorate: { select: { mpChamber: true } } },
+  });
+  if (user?.role === 'MP') {
+    return { userId, visitorType: user.electorate?.mpChamber === 'Senate' ? 'SENATOR' : 'MP' };
+  }
+  return { userId, visitorType: 'REGISTERED' };
+}
+
 export async function POST(req: NextRequest) {
   const limited = checkRateLimit(rateLimitKey(req, 'analytics-pageview'), 120, 60 * 1000);
   if (!limited.ok) return NextResponse.json({ error: 'Rate limited' }, { status: 429 });
@@ -68,11 +89,14 @@ export async function POST(req: NextRequest) {
 
   const userAgent = cleanString(req.headers.get('user-agent'), 800);
   const now = new Date();
+  const identity = await visitorIdentity();
 
   await prisma.webVisitSession.upsert({
     where: { id: sessionId },
     create: {
       id: sessionId,
+      userId: identity.userId,
+      visitorType: identity.visitorType,
       ipHash: hashIp(clientIp(req)),
       countryCode: cleanString(req.headers.get('cf-ipcountry'), 8),
       region: cleanString(req.headers.get('cf-region'), 120),
@@ -87,6 +111,8 @@ export async function POST(req: NextRequest) {
       lastSeenAt: now,
     },
     update: {
+      userId: identity.userId,
+      visitorType: identity.visitorType,
       lastPath: path,
       lastSeenAt: now,
     },

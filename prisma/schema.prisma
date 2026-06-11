@@ -496,6 +496,8 @@ model MpNewsletterDelivery {
 
 model WebVisitSession {
   id          String        @id
+  userId      String?
+  visitorType String         @default("GUEST")
   ipHash      String?
   countryCode String?
   region      String?
@@ -511,6 +513,8 @@ model WebVisitSession {
   pageViews   WebPageView[]
 
   @@index([countryCode])
+  @@index([visitorType])
+  @@index([userId])
   @@index([startedAt])
   @@index([lastSeenAt])
   @@index([ipHash])

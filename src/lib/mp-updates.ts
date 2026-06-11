@@ -8,6 +8,19 @@ export type MpUpdate = {
 
 export const mpUpdates: MpUpdate[] = [
   {
+    date: '12 Jun 2026',
+    label: 'Media release',
+    title: 'Crossbench launches office staff access for MPs and Senators',
+    summary: 'Crossbench is now available to parliamentary offices as a shared office workspace, allowing MPs and Senators to invite trusted APH staff into their electorate or Senate dashboard.',
+    details: [
+      'Why it matters: parliamentary offices are team environments, and constituent sentiment is most useful when chiefs of staff, advisers, electorate officers, and digital staff can access the same live picture.',
+      'Principals can invite @aph.gov.au staff as staffers or office admins, giving offices control over who can view the dashboard and who can help manage access.',
+      'Office admins can invite, block, remove, and manage the staff accounts they create, while principal MP and Senator accounts remain protected.',
+      'Every office access change is audited, so invitations, removals, blocks, unblocks, and role changes have a clear record.',
+      'Available now: signed-in MPs and Senators can open the MP dashboard and use the Staff access area to start inviting their office team.',
+    ],
+  },
+  {
     date: '11 Jun 2026',
     label: 'Access',
     title: 'MP dashboards are now free during early access',

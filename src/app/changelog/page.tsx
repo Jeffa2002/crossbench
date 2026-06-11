@@ -9,6 +9,19 @@ export const metadata: Metadata = {
 
 const updates = [
   {
+    date: '12 June 2026',
+    title: 'MP office staff access and richer web analytics',
+    summary: 'Crossbench now supports delegated parliamentary office access and gives admins clearer visibility into site traffic by audience type and country.',
+    items: [
+      'Added office memberships for MP and Senator offices, with principal accounts, office admins, staffers, pending invites, blocking/removal, and audit logging.',
+      'Added /mp-dashboard/staff so principals can invite @aph.gov.au staff, promote office admins, block/unblock accounts, remove access, and revoke pending invites.',
+      'Changed MP dashboard authorization to use active office membership rather than a loose MP role, keeping staff access tied to the correct electorate or Senate office.',
+      'Added MP/Senator staff access visibility to /admin/mps, including office membership and pending invite counts.',
+      'Enhanced first-party web analytics with guest, registered user, MP, and senator audience breakdowns.',
+      'Added a world traffic-strength map to /admin/web-analytics, using Cloudflare country data to show where visits are coming from.',
+    ],
+  },
+  {
     date: '11 June 2026',
     title: 'MP early access, communications, and admin support improvements',
     summary: 'Crossbench now treats MP and Senator access as free during early access, adds public registration signals, and gives admins better tools for support and MP communications.',
