@@ -3,6 +3,8 @@ import Nav from '@/components/Nav';
 import Link from 'next/link';
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import { isAddressVerified } from '@/lib/verification';
+import { needsCitizenAddressOnboarding } from '@/lib/user-onboarding';
 
 export const revalidate = 60;
 
@@ -57,9 +59,10 @@ export default async function DashboardPage() {
   });
 
   if (!user) redirect('/login');
+  if (needsCitizenAddressOnboarding(user)) redirect('/account/verify');
 
   const electorate = user.electorate as any;
-  const isVerified = !!user.verifiedAt;
+  const isVerified = isAddressVerified(user);
 
   // User's vote history
   const myVotes = await prisma.vote.findMany({

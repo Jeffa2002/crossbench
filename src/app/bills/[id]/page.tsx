@@ -9,6 +9,7 @@ import BillBadge from '@/components/BillBadge';
 import { getBillTags, makeBillTag } from '@/lib/bill-tags';
 import { safeHttpsUrl, APH_URL_HOSTS } from '@/lib/safe-url';
 import BillTextReader from './BillTextReader';
+import { isAddressVerified } from '@/lib/verification';
 
 export const revalidate = 60;
 
@@ -681,7 +682,7 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
               <VoteButton
                 billId={bill.id}
                 currentVote={userVote as any}
-                isVerified={!!(session.user as any).verifiedAt}
+                isVerified={isAddressVerified(session.user as any)}
               />
             ) : (
               <Link href={`/login?next=/bills/${bill.id}`} style={{

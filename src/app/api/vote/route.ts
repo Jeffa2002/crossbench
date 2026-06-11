@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { isAddressVerified } from "@/lib/verification";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -8,7 +9,7 @@ export async function POST(req: NextRequest) {
 
   const user = await prisma.user.findUnique({ where: { id: session.user.id } });
 
-  if (!user?.verifiedAt || !user?.electorateId)
+  if (!isAddressVerified(user))
     return NextResponse.json({ error: "Address verification required before voting" }, { status: 403 });
 
   if (!user?.termsAcceptedAt)

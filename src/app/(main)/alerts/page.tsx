@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import Nav from '@/components/Nav';
 import AlertsClient from './AlertsClient';
+import { needsCitizenAddressOnboarding } from '@/lib/user-onboarding';
 
 export default async function AlertsPage() {
   const session = await auth();
@@ -15,6 +16,7 @@ export default async function AlertsPage() {
     where: { id: userId },
   });
   if (!user) redirect('/login');
+  if (needsCitizenAddressOnboarding(user)) redirect('/account/verify');
 
   const alerts = await prisma.billAlert.findMany({
     where: { userId: user.id },

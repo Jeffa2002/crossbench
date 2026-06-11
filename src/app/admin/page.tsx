@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
+import { addressVerifiedUserWhere, isAddressVerified } from '@/lib/verification';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +15,7 @@ export default async function AdminOverview() {
     recentUsers, topBills, recentVotes,
   ] = await Promise.all([
     prisma.user.count(),
-    prisma.user.count({ where: { verifiedAt: { not: null } } }),
+    prisma.user.count({ where: addressVerifiedUserWhere }),
     prisma.user.count({ where: { role: 'MP' } }),
     prisma.vote.count(),
     prisma.vote.count({ where: { comment: { not: null } } }),
@@ -50,7 +51,7 @@ export default async function AdminOverview() {
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {[
           { label: 'Total users', value: totalUsers },
-          { label: 'Verified', value: verifiedUsers },
+          { label: 'Address verified', value: verifiedUsers },
           { label: 'Engagement', value: `${engagementRate}%` },
           { label: 'MPs registered', value: mpUsers },
           { label: 'Bills tracked', value: totalBills },
@@ -89,7 +90,9 @@ export default async function AdminOverview() {
               <div key={u.id} className="flex items-center justify-between text-sm">
                 <div>
                   <div className="text-[#F5F7FB] truncate max-w-[160px]">{u.email}</div>
-                  <div className="text-xs text-[#4E5A73]">{u.electorate?.name ?? 'unverified'}</div>
+                  <div className="text-xs text-[#4E5A73]">
+                    {isAddressVerified(u) ? u.electorate?.name : u.electorate ? `${u.electorate.name} · linked only` : 'email only'}
+                  </div>
                 </div>
                 <span className={`text-xs px-2 py-0.5 rounded-full ${u.role === 'MP' ? 'bg-purple-900/40 text-purple-300' : 'bg-[#16213A] text-[#7E8AA3]'}`}>
                   {u.role}

@@ -13,7 +13,7 @@ declare global {
 
 export default function LoginClient() {
   const searchParams = useSearchParams();
-  const next = searchParams.get('next') || '/';
+  const requestedNext = searchParams.get('next');
   const [email, setEmail] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -59,10 +59,13 @@ export default function LoginClient() {
         recaptchaToken = await window.grecaptcha.execute(siteKey, { action: 'login' });
       }
 
+      const normalizedEmail = email.trim().toLowerCase();
+      const redirectTo = requestedNext || (normalizedEmail.endsWith('@aph.gov.au') ? '/mp-dashboard' : '/account/verify');
+
       const res = await fetch('/api/auth/send-magic-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, recaptchaToken, redirectTo: next }),
+        body: JSON.stringify({ email: normalizedEmail, recaptchaToken, redirectTo }),
       });
 
       const data = await res.json();

@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import Nav from '@/components/Nav';
 import ChangeAddressButton from './ChangeAddressButton';
+import { isAddressVerified } from '@/lib/verification';
 
 type AccountVote = {
   id: string;
@@ -23,11 +24,12 @@ export default async function AccountPage() {
     },
   });
   if (!user) redirect('/login');
+  const addressVerified = isAddressVerified(user);
 
   // Check address change eligibility
   const oneYearAgo = new Date();
   oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-  const addressChangesThisYear = user.verifiedAt
+  const addressChangesThisYear = addressVerified
     ? await prisma.addressChangeLog.count({ where: { userId, createdAt: { gte: oneYearAgo } } })
     : 0;
   const canChangeAddress = addressChangesThisYear < 1;
@@ -52,7 +54,7 @@ export default async function AccountPage() {
         {/* Verification */}
         <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '24px' }}>
           <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px', color: '#F5F7FB' }}>Electorate verification</h2>
-          {user.verifiedAt && user.electorate ? (
+          {addressVerified && user.electorate ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <span style={{ fontSize: '24px' }}>✅</span>
