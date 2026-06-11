@@ -3,8 +3,28 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { checkRateLimit, rateLimitKey } from '@/lib/rate-limit';
 
+const SENSITIVE_QUERY_KEYS = /token|secret|code|email|password|callback|redirect|session|state/i;
+
 function cleanString(value: unknown, max = 500) {
   return typeof value === 'string' && value.trim() ? value.trim().slice(0, max) : null;
+}
+
+function sanitizeUrlValue(value: string | null, max = 500) {
+  if (!value) return null;
+  try {
+    const url = value.startsWith('/') ? new URL(value, 'https://crossbench.io') : new URL(value);
+    const clean = new URLSearchParams();
+    url.searchParams.forEach((paramValue, key) => {
+      if (!SENSITIVE_QUERY_KEYS.test(key)) clean.set(key, paramValue);
+    });
+    const query = clean.toString();
+    const safeValue = value.startsWith('/')
+      ? `${url.pathname}${query ? `?${query}` : ''}`
+      : `${url.origin}${url.pathname}${query ? `?${query}` : ''}`;
+    return safeValue.slice(0, max);
+  } catch {
+    return value.split('?')[0].slice(0, max);
+  }
 }
 
 function clientIp(req: NextRequest) {
@@ -41,7 +61,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => ({}));
   const sessionId = cleanString(body.sessionId, 120);
-  const path = cleanString(body.path, 500);
+  const path = sanitizeUrlValue(cleanString(body.path, 500), 500);
   if (!sessionId || !path || path.startsWith('/admin')) {
     return new NextResponse(null, { status: 204 });
   }
@@ -62,7 +82,7 @@ export async function POST(req: NextRequest) {
       browser: browserName(userAgent),
       firstPath: path,
       lastPath: path,
-      referrer: cleanString(body.referrer, 800),
+      referrer: sanitizeUrlValue(cleanString(body.referrer, 800), 800),
       startedAt: now,
       lastSeenAt: now,
     },
@@ -77,7 +97,7 @@ export async function POST(req: NextRequest) {
       sessionId,
       path,
       title: cleanString(body.title, 300),
-      referrer: cleanString(body.referrer, 800),
+      referrer: sanitizeUrlValue(cleanString(body.referrer, 800), 800),
       startedAt: now,
     },
     select: { id: true },

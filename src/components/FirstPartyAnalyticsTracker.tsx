@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 
 const SESSION_KEY = 'crossbench_analytics_session';
+const SENSITIVE_QUERY_KEYS = /token|secret|code|email|password|callback|redirect|session|state/i;
 
 function sessionId() {
   try {
@@ -31,6 +32,32 @@ function postJson(url: string, body: unknown, beacon = false) {
   }).catch(() => {});
 }
 
+function safePath(pathname: string, searchParams: URLSearchParams | null) {
+  if (!searchParams?.toString()) return pathname;
+  const clean = new URLSearchParams();
+  searchParams.forEach((value, key) => {
+    if (!SENSITIVE_QUERY_KEYS.test(key)) clean.set(key, value);
+  });
+  const query = clean.toString();
+  return query ? `${pathname}?${query}` : pathname;
+}
+
+function safeReferrer(referrer: string) {
+  if (!referrer) return '';
+  try {
+    const url = new URL(referrer);
+    const clean = new URLSearchParams();
+    url.searchParams.forEach((value, key) => {
+      if (!SENSITIVE_QUERY_KEYS.test(key)) clean.set(key, value);
+    });
+    url.search = clean.toString();
+    url.hash = '';
+    return url.toString();
+  } catch {
+    return referrer.split('?')[0].slice(0, 500);
+  }
+}
+
 export default function FirstPartyAnalyticsTracker() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -48,7 +75,7 @@ export default function FirstPartyAnalyticsTracker() {
       currentView.current = null;
     }
 
-    const url = `${pathname}${searchParams?.toString() ? `?${searchParams.toString()}` : ''}`;
+    const url = safePath(pathname, searchParams);
     let active = true;
     fetch('/api/analytics/pageview', {
       method: 'POST',
@@ -57,7 +84,7 @@ export default function FirstPartyAnalyticsTracker() {
         sessionId: sessionId(),
         path: url,
         title: document.title,
-        referrer: document.referrer,
+        referrer: safeReferrer(document.referrer),
         screenWidth: window.screen.width,
         screenHeight: window.screen.height,
       }),
