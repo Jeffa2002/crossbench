@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useTransition } from 'react';
+import { useState, useEffect, useMemo, useTransition } from 'react';
 import Link from 'next/link';
 
 type Mp = {
@@ -50,6 +50,14 @@ function fmtLastUpdated(value: string | null) {
   if (minutes < 60) return `${minutes} min ago`;
   if (minutes < 1440) return `${Math.round(minutes / 60)} hr ago`;
   return date.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function normalizeSearch(value: string | null | undefined) {
+  return (value || '').toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+function normalizeChamber(value: string | null) {
+  return value?.toLowerCase().includes('senate') ? 'Senate' : 'House';
 }
 
 function hasAddressVerification(me: any) {
@@ -253,13 +261,22 @@ export default function SentimentClient({ mps, parties, stats }: { mps: Mp[]; pa
     return localCounts[mp.mpId] ?? { positive: mp.positive, negative: mp.negative };
   }
 
-  const filteredMps = mps.filter(mp => {
-    const q = filter.toLowerCase();
-    const nameMatch = !q || mp.mpName.toLowerCase().includes(q) || (mp.mpParty || '').toLowerCase().includes(q) || mp.state.toLowerCase().includes(q) || mp.name.toLowerCase().includes(q);
-    const chamberMatch = chamberFilter === 'all' || mp.mpChamber === chamberFilter;
-    const partyMatch = !partyFilter || (mp.mpParty || 'Independent') === partyFilter;
-    return nameMatch && chamberMatch && partyMatch;
-  });
+  const filteredMps = useMemo(() => {
+    const q = normalizeSearch(filter);
+    return mps.filter(mp => {
+      const haystack = [
+        mp.mpName,
+        mp.mpParty || 'Independent',
+        mp.state,
+        mp.name,
+        normalizeChamber(mp.mpChamber),
+      ].map(normalizeSearch).join(' ');
+      const nameMatch = !q || haystack.includes(q);
+      const chamberMatch = chamberFilter === 'all' || normalizeChamber(mp.mpChamber) === chamberFilter;
+      const partyMatch = !partyFilter || (mp.mpParty || 'Independent') === partyFilter;
+      return nameMatch && chamberMatch && partyMatch;
+    });
+  }, [mps, filter, chamberFilter, partyFilter]);
 
   const uniqueParties = [...new Set(mps.map(m => m.mpParty || 'Independent'))].sort();
   const activeTopics = ['All current politics', 'Cost of living', 'Housing', 'Integrity', 'Climate', 'Healthcare'];
@@ -387,7 +404,7 @@ export default function SentimentClient({ mps, parties, stats }: { mps: Mp[]; pa
       </div>
 
       {/* MP list */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div key={`${filter}-${chamberFilter}-${partyFilter}`} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {filteredMps.map(mp => {
           const counts = getCounts(mp);
           return (
@@ -400,6 +417,11 @@ export default function SentimentClient({ mps, parties, stats }: { mps: Mp[]; pa
             />
           );
         })}
+        {filteredMps.length === 0 && (
+          <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '10px', padding: '18px', color: '#7E8AA3', fontSize: '14px' }}>
+            No representatives match those filters.
+          </div>
+        )}
       </div>
     </div>
   );

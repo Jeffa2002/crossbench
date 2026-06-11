@@ -27,12 +27,15 @@ export async function POST(req: NextRequest) {
   }
   const token = makeAdminToken();
   const jar = await cookies();
+  const productionCookieDomain = process.env.NODE_ENV === 'production' ? '.crossbench.io' : undefined;
+  jar.delete({ name: 'admin_session', path: '/' });
   jar.set('admin_session', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
     maxAge: 60 * 60 * 8,
+    ...(productionCookieDomain ? { domain: productionCookieDomain } : {}),
   });
   return NextResponse.json({ ok: true });
 }
@@ -40,5 +43,8 @@ export async function POST(req: NextRequest) {
 export async function DELETE() {
   const jar = await cookies();
   jar.delete({ name: 'admin_session', path: '/' });
+  if (process.env.NODE_ENV === 'production') {
+    jar.delete({ name: 'admin_session', path: '/', domain: '.crossbench.io' });
+  }
   return NextResponse.json({ ok: true });
 }
