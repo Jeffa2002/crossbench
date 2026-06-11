@@ -61,13 +61,9 @@ export default async function ElectoratesPage({
     prisma.electorate.groupBy({ by: ['state'], orderBy: { state: 'asc' } }),
   ]);
 
-  const mpEmails = electorates.map(e => e.mpEmail).filter(Boolean) as string[];
-  const registeredMpUsers = mpEmails.length > 0
+  const registeredMpUsers = electorates.length > 0
     ? await prisma.user.findMany({
-        where: {
-          role: 'MP',
-          email: { in: mpEmails },
-        },
+        where: { role: 'MP' },
         select: { email: true },
       })
     : [];
