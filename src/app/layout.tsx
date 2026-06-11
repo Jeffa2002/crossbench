@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Suspense } from "react";
 import { headers } from "next/headers";
 import Footer from "@/components/Footer";
+import FirstPartyAnalyticsTracker from "@/components/FirstPartyAnalyticsTracker";
 import PlausibleTracker from "@/components/PlausibleTracker";
 import "./globals.css";
 
@@ -27,6 +29,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {children}
         <Footer />
         <PlausibleTracker />
+        <Suspense fallback={null}>
+          <FirstPartyAnalyticsTracker />
+        </Suspense>
       </body>
     </html>
   )

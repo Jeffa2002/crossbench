@@ -8,6 +8,7 @@ const NAV = [
   { href: '/admin/mps', label: '🏛️ MPs' },
   { href: '/admin/bills', label: '📋 Bills' },
   { href: '/admin/support', label: '🎫 Support' },
+  { href: '/admin/web-analytics', label: '🌐 Web Analyzer' },
   { href: '/admin/mp-newsletter', label: '✉️ MP Newsletter' },
   { href: '/admin/votes', label: '🗳️ Votes & Comments' },
   { href: '/admin/marketing', label: '📈 Marketing Strategy' },
