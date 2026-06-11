@@ -346,3 +346,20 @@ model BillAlertNotification {
   @@unique([alertId, billId])
   @@index([alertId])
 }
+
+model MpNewsletterSubscription {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  name              String?
+  electorateId      String?
+  source            String?
+  active            Boolean   @default(true)
+  unsubscribeToken  String    @unique
+  subscribedAt      DateTime  @default(now())
+  unsubscribedAt    DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([active])
+  @@index([electorateId])
+}

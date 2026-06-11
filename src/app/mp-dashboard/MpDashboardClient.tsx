@@ -131,6 +131,29 @@ export default function MpDashboardClient() {
             </p>
           </div>
 
+          <div style={{
+            backgroundColor: '#111A2E',
+            border: '1px solid #25324D',
+            borderRadius: '10px',
+            padding: '14px 18px',
+            marginBottom: '20px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: '12px',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+          }}>
+            <div>
+              <span style={{ color: '#D6A94A', fontWeight: 800, fontSize: '13px' }}>MP communications</span>
+              <p style={{ color: '#7E8AA3', fontSize: '13px', margin: '2px 0 0' }}>
+                Read product updates for parliamentary offices or subscribe to the MP update newsletter.
+              </p>
+            </div>
+            <Link href="/mp-updates" style={{ color: '#F5F7FB', backgroundColor: '#16213A', border: '1px solid #25324D', padding: '10px 14px', borderRadius: '8px', textDecoration: 'none', fontSize: '13px', fontWeight: 800 }}>
+              View updates
+            </Link>
+          </div>
+
           {/* MP header card */}
           <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '12px', padding: '24px', marginBottom: '16px' }}>
             <div className="mp-header">

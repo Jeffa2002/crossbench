@@ -32,6 +32,9 @@ export default function ForMPsPage() {
             <TrackedLink href="/mp-demo" event="MP Demo CTA" style={{ backgroundColor: 'transparent', color: '#B6C0D1', padding: '14px 28px', borderRadius: '8px', fontWeight: 500, fontSize: '15px', textDecoration: 'none', border: '1px solid #25324D' }}>
               View demo dashboard
             </TrackedLink>
+            <TrackedLink href="/mp-updates" event="MP Updates CTA" style={{ backgroundColor: 'transparent', color: '#B6C0D1', padding: '14px 28px', borderRadius: '8px', fontWeight: 500, fontSize: '15px', textDecoration: 'none', border: '1px solid #25324D' }}>
+              Latest updates
+            </TrackedLink>
           </div>
           <p style={{ color: '#4A5568', fontSize: '12px', marginTop: '12px' }}>Auto-detected via @aph.gov.au email · Free during early access · No credit card required</p>
         </div>
@@ -105,7 +108,7 @@ export default function ForMPsPage() {
               Paid plans can wait until there is enough constituent signal to make advanced office features worth buying.
             </p>
             <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' }}>
-              {['Electorate dashboard', 'Bill-by-bill sentiment', 'Verified vote breakdowns', 'National comparison', 'Email support'].map(f => (
+              {['Electorate dashboard', 'Bill-by-bill sentiment', 'Verified vote breakdowns', 'National comparison', 'MP update newsletter', 'Email support'].map(f => (
                 <li key={f} style={{ fontSize: '14px', color: '#B6C0D1', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ color: '#2E8B57', fontWeight: 700 }}>✓</span>{f}
                 </li>
@@ -114,6 +117,9 @@ export default function ForMPsPage() {
             <TrackedLink href="/login?next=/mp-dashboard" event="MP Free Access CTA" style={{ display: 'inline-block', backgroundColor: '#2E8B57', color: '#fff', border: '1px solid #2E8B57', padding: '12px 18px', borderRadius: '8px', fontWeight: 700, fontSize: '14px', textDecoration: 'none' }}>
               Get free MP access →
             </TrackedLink>
+            <Link href="/mp-updates" style={{ display: 'inline-block', marginLeft: '10px', color: '#B6C0D1', border: '1px solid #25324D', padding: '12px 18px', borderRadius: '8px', fontWeight: 700, fontSize: '14px', textDecoration: 'none' }}>
+              Read MP updates
+            </Link>
           </div>
         </div>
       </section>
