@@ -32,12 +32,7 @@ async function hmacHex(value: string, secret: string): Promise<string> {
   return hex(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(value)))
 }
 
-async function hasAdminSession(request: NextRequest): Promise<boolean> {
-  const cookieSecret = process.env.MISSION_COOKIE_SECRET ?? process.env.NEXTAUTH_SECRET ?? ''
-  const token = request.cookies.get('admin_session')?.value
-
-  if (!cookieSecret || !token) return false
-
+async function isValidAdminSessionToken(token: string, cookieSecret: string): Promise<boolean> {
   const [payload, signature] = token.split('.')
   if (!payload || !signature) return false
 
@@ -50,6 +45,17 @@ async function hasAdminSession(request: NextRequest): Promise<boolean> {
   } catch {
     return false
   }
+}
+
+async function hasAdminSession(request: NextRequest): Promise<boolean> {
+  const cookieSecret = process.env.MISSION_COOKIE_SECRET ?? process.env.NEXTAUTH_SECRET ?? ''
+  if (!cookieSecret) return false
+
+  const tokens = request.cookies.getAll('admin_session').map(cookie => cookie.value)
+  for (const token of tokens) {
+    if (await isValidAdminSessionToken(token, cookieSecret)) return true
+  }
+  return false
 }
 
 export async function proxy(request: NextRequest) {

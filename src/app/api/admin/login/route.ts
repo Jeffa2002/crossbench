@@ -29,14 +29,23 @@ export async function POST(req: NextRequest) {
   const jar = await cookies();
   const productionCookieDomain = process.env.NODE_ENV === 'production' ? '.crossbench.io' : undefined;
   jar.delete({ name: 'admin_session', path: '/' });
-  jar.set('admin_session', token, {
+  if (productionCookieDomain) jar.delete({ name: 'admin_session', path: '/', domain: productionCookieDomain });
+  const cookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    sameSite: 'lax' as const,
     path: '/',
     maxAge: 60 * 60 * 8,
-    ...(productionCookieDomain ? { domain: productionCookieDomain } : {}),
+  };
+  jar.set('admin_session', token, {
+    ...cookieOptions,
   });
+  if (productionCookieDomain) {
+    jar.set('admin_session', token, {
+      ...cookieOptions,
+      domain: productionCookieDomain,
+    });
+  }
   return NextResponse.json({ ok: true });
 }
 

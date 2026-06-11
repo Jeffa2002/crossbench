@@ -24,10 +24,8 @@ function equalTokens(a: string, b: string): boolean {
   return aBuffer.length === bBuffer.length && timingSafeEqual(aBuffer, bBuffer);
 }
 
-export async function hasAdminSessionCookie(): Promise<boolean> {
+export function isValidAdminToken(token: string | undefined | null): boolean {
   if (!COOKIE_SECRET) return false;
-  const jar = await cookies();
-  const token = jar.get('admin_session')?.value;
   if (!token) return false;
   const [payload, signature] = token.split('.');
   if (!payload || !signature || !equalTokens(signature, sign(payload))) return false;
@@ -38,6 +36,12 @@ export async function hasAdminSessionCookie(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+export async function hasAdminSessionCookie(): Promise<boolean> {
+  if (!COOKIE_SECRET) return false;
+  const jar = await cookies();
+  return jar.getAll('admin_session').some(cookie => isValidAdminToken(cookie.value));
 }
 
 export async function requireAdminAccess(): Promise<{ email: string } | null> {
