@@ -9,6 +9,21 @@ export const metadata: Metadata = {
 
 const updates = [
   {
+    date: '11 June 2026',
+    title: 'MP early access, communications, and admin support improvements',
+    summary: 'Crossbench now treats MP and Senator access as free during early access, adds public registration signals, and gives admins better tools for support and MP communications.',
+    items: [
+      'Made MP and Senator dashboard access free during early access, with APH email sign-in unlocking dashboards immediately and existing MP accounts moved to active free access.',
+      'Added Crossbench registered badges on electorate cards, electorate profiles, and MP/Senator profiles when an official APH-linked account has registered.',
+      'Added an MP updates hub at /mp-updates with product notes for parliamentary offices and a newsletter subscription/unsubscribe flow.',
+      'Added an admin MP newsletter console with active/unsubscribed subscriber lists, MP account gaps, recent send history, raw HTML/plain-text composing, test sends, Resend delivery tracking, and attachments.',
+      'Improved support ticket operations: CS01000-style ticket IDs, emailed admin replies through Resend, per-ticket reply addresses, AI suggested replies for inbound email tickets, and mobile-friendly admin support screens.',
+      'Fixed admin session handling across crossbench.io and www.crossbench.io so admin/support no longer drops a valid login when the browser changes host.',
+      'Fixed Politics Pulse filtering so the representative cards update with the count, including normalized search and House/Senate filtering.',
+      'Updated /about to explain who built Crossbench without naming the founder, strengthen independence/accountability language, and clarify Australian data hosting and privacy handling.',
+    ],
+  },
+  {
     date: '10 June 2026',
     title: 'Bill reader and Politics Pulse',
     summary: 'Crossbench bill pages now lead with plain-English context and include an in-page official bill reader. Sentiment has been redesigned as Politics Pulse.',
