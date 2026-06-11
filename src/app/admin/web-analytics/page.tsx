@@ -81,15 +81,7 @@ function WorldTrafficMap({ rows }: { rows: Array<{ countryCode: string | null; _
 
   return (
     <svg viewBox="0 0 1000 460" className="w-full h-auto" role="img" aria-label="World traffic map">
-      <rect x="0" y="0" width="1000" height="460" rx="18" fill="#0B1220" />
-      <g fill="#16213A" stroke="#25324D" strokeWidth="1.5" opacity="0.95">
-        <path d="M150 110 C115 125 92 160 102 202 C112 246 150 258 174 300 C194 334 208 380 250 392 C285 402 306 370 296 333 C286 295 315 268 330 235 C350 192 324 151 288 126 C250 98 190 94 150 110Z" />
-        <path d="M280 72 C330 42 405 46 466 78 C510 101 530 142 505 176 C480 210 418 191 380 216 C340 242 314 220 318 180 C322 137 240 105 280 72Z" />
-        <path d="M455 134 C492 110 552 111 598 138 C625 154 624 189 596 203 C558 222 520 214 486 236 C458 254 425 230 430 194 C433 169 434 150 455 134Z" />
-        <path d="M548 224 C585 198 635 216 650 260 C665 302 646 365 608 392 C575 416 536 398 528 354 C520 310 512 250 548 224Z" />
-        <path d="M615 90 C700 54 812 72 882 126 C938 170 922 230 850 240 C780 250 745 208 692 226 C640 244 584 216 596 160 C602 130 595 104 615 90Z" />
-        <path d="M742 258 C790 240 856 254 902 292 C940 323 918 370 865 372 C812 374 765 357 735 324 C710 296 712 270 742 258Z" />
-      </g>
+      <image href="/world-map.svg" x="0" y="0" width="1000" height="460" preserveAspectRatio="xMidYMid meet" />
       <g>
         {plotted.map(row => {
           const strength = row._count._all / max;
