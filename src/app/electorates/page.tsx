@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import Nav from '@/components/Nav';
+import CrossbenchRegisteredBadge from '@/components/CrossbenchRegisteredBadge';
 import Link from 'next/link';
 
 export const metadata: Metadata = { title: 'Electorates — Crossbench' };
@@ -60,6 +61,16 @@ export default async function ElectoratesPage({
     prisma.electorate.groupBy({ by: ['state'], orderBy: { state: 'asc' } }),
   ]);
 
+  const registeredMpUsers = electorates.length > 0
+    ? await prisma.user.findMany({
+        where: {
+          role: 'MP',
+          electorateId: { in: electorates.map(e => e.id) },
+        },
+        select: { electorateId: true },
+      })
+    : [];
+  const registeredElectorateIds = new Set(registeredMpUsers.map(u => u.electorateId).filter(Boolean));
 
   return (
     <main style={{ backgroundColor: '#0B1220', minHeight: '100vh', color: '#F5F7FB' }}>
@@ -144,6 +155,7 @@ export default async function ElectoratesPage({
           {electorates.map(e => {
             const partyColor = getPartyColor(e.mpParty);
             const isHouse = !e.mpChamber || e.mpChamber === 'House of Reps';
+            const isRegistered = registeredElectorateIds.has(e.id);
             return (
               <Link
                 key={e.id}
@@ -203,6 +215,11 @@ export default async function ElectoratesPage({
                     }}>
                       {e.mpParty.replace('Australian ', '').replace(' of Australia', '')}
                     </span>
+                  )}
+                  {isRegistered && (
+                    <div style={{ marginTop: '8px' }}>
+                      <CrossbenchRegisteredBadge compact />
+                    </div>
                   )}
 
                 </div>

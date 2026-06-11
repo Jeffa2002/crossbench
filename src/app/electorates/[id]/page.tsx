@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import Nav from '@/components/Nav';
+import CrossbenchRegisteredBadge from '@/components/CrossbenchRegisteredBadge';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
@@ -97,6 +98,11 @@ export default async function ElectoratePage({ params }: { params: Promise<{ id:
   const committees = parseJsonArray<string>(profile?.committees);
   const newsHeadlines = parseJsonArray<any>(profile?.newsHeadlines).slice(0, 8);
   const socialLinks = parseJsonObject<{ twitter?: string; facebook?: string; youtube?: string; website?: string }>(profile?.socialLinks) || {};
+  const registeredMpUser = await prisma.user.findFirst({
+    where: { role: 'MP', electorateId: id },
+    select: { id: true },
+  });
+  const isRegisteredOnCrossbench = Boolean(registeredMpUser);
 
   const votesByBill = await prisma.vote.groupBy({
     by: ['billId', 'position'],
@@ -175,6 +181,7 @@ export default async function ElectoratePage({ params }: { params: Promise<{ id:
                 </div>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
                   {electorate.mpParty && <span style={{ backgroundColor: `${partyColor}22`, color: partyColor, border: `1px solid ${partyColor}55`, padding: '6px 10px', borderRadius: '999px', fontSize: '12px', fontWeight: 700 }}>{electorate.mpParty}</span>}
+                  {isRegisteredOnCrossbench && <CrossbenchRegisteredBadge />}
                   <span style={{ backgroundColor: 'rgba(78,143,212,0.14)', color: '#4E8FD4', border: '1px solid rgba(78,143,212,0.28)', padding: '6px 10px', borderRadius: '999px', fontSize: '12px', fontWeight: 700 }}>{isHouse ? 'House of Reps' : 'Senate'}</span>
                   <span style={{ backgroundColor: '#111A2E', color: '#7E8AA3', border: '1px solid #1C2940', padding: '6px 10px', borderRadius: '999px', fontSize: '12px', fontWeight: 700 }}>{electorate.name} · {electorate.state}</span>
                 </div>

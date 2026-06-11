@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import Nav from '@/components/Nav';
+import CrossbenchRegisteredBadge from '@/components/CrossbenchRegisteredBadge';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
@@ -38,6 +39,11 @@ export default async function MPPage({ params }: { params: Promise<{ id: string 
 
   const partyColor = getPartyColor(electorate.mpParty);
   const isHouse = electorate.mpChamber === 'House of Reps';
+  const registeredMpUser = await prisma.user.findFirst({
+    where: { role: 'MP', electorateId: electorate.id },
+    select: { id: true },
+  });
+  const isRegisteredOnCrossbench = Boolean(registeredMpUser);
 
   // Get all votes for this electorate, grouped by bill + position
   const votesByBill = await prisma.vote.groupBy({
@@ -110,6 +116,7 @@ export default async function MPPage({ params }: { params: Promise<{ id: string 
             )}
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                {isRegisteredOnCrossbench && <CrossbenchRegisteredBadge />}
                 <span style={{
                   backgroundColor: isHouse ? 'rgba(49,130,206,0.15)' : 'rgba(130,80,200,0.15)',
                   color: isHouse ? '#63B3ED' : '#B794F4',
