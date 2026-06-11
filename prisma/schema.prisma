@@ -359,7 +359,45 @@ model MpNewsletterSubscription {
   unsubscribedAt    DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
+  deliveries        MpNewsletterDelivery[]
 
   @@index([active])
   @@index([electorateId])
+}
+
+model MpNewsletterCampaign {
+  id              String    @id @default(cuid())
+  subject         String
+  textBody        String
+  htmlBody        String?
+  sentBy          String
+  recipientMode   String
+  attachmentNames String?
+  totalRecipients Int       @default(0)
+  sentCount       Int       @default(0)
+  failedCount     Int       @default(0)
+  createdAt       DateTime  @default(now())
+  sentAt          DateTime?
+  deliveries      MpNewsletterDelivery[]
+
+  @@index([createdAt])
+}
+
+model MpNewsletterDelivery {
+  id             String                    @id @default(cuid())
+  campaignId     String
+  subscriptionId String?
+  email          String
+  status         String
+  resendId       String?
+  error          String?
+  sentAt         DateTime?
+  createdAt      DateTime                  @default(now())
+  campaign       MpNewsletterCampaign      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  subscription   MpNewsletterSubscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+  @@index([campaignId])
+  @@index([subscriptionId])
+  @@index([email])
+  @@index([status])
 }
