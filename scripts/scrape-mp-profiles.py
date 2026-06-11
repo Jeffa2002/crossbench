@@ -19,6 +19,27 @@ if not DB_URL:
 UA = "Crossbench/1.0 civic-tech research contact@crossbench.io"
 ANTHROPIC_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 
+MANUAL_PROFILE_OVERRIDES = {
+    "casey": {
+        "shortBio": "Aaron Violi MP is the Federal Member for Casey and serves as Shadow Minister for the Digital Economy, Science, Technology and Innovation, and Cyber Security.",
+        "longBio": (
+            "Aaron Violi MP is the Federal Member for Casey and a member of the Liberal Party of Australia. "
+            "He has represented Casey in the House of Representatives since the 2022 federal election.\n\n"
+            "Violi serves as Shadow Minister for the Digital Economy, Shadow Minister for Science, Technology "
+            "and Innovation, and Shadow Minister for Cyber Security. These portfolios focus on Australia's "
+            "digital economy, science and technology capability, innovation policy, and cyber resilience.\n\n"
+            "Casey is a federal electorate in Victoria covering Melbourne's Outer East, the Yarra Valley and "
+            "the Dandenong Ranges. It is separate from the Casey Council Area."
+        ),
+        "portfolios": json.dumps([
+            "Federal Member for Casey",
+            "Shadow Minister for the Digital Economy",
+            "Shadow Minister for Science, Technology and Innovation",
+            "Shadow Minister for Cyber Security",
+        ]),
+    },
+}
+
 # ─── helpers ───────────────────────────────────────────────────────────────
 
 def fetch(url, timeout=15):
@@ -358,6 +379,7 @@ def process_mp(row, conn):
         "socialLinks":   json.dumps(social) if social else "{}",
         "website":       social.get("website", ""),
     }
+    profile.update(MANUAL_PROFILE_OVERRIDES.get(elec_id, {}))
 
     # Upsert into MpProfile
     cur.execute("""
