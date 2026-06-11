@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { prisma } from '@/lib/prisma';
 import { generateSupportAiReply } from '@/lib/support-ai';
+import { isClearlyAutomaticSupportReply } from '@/lib/support-auto-reply';
 
 function cleanEmailAddress(value: string) {
   const match = value.match(/<([^>]+)>/);
@@ -111,6 +112,7 @@ export async function POST(req: NextRequest) {
   const fromEmail = cleanEmailAddress(email.from);
   const fromName = cleanDisplayName(email.from);
   const body = (email.text || email.html || '').trim();
+  const isAutoReply = isClearlyAutomaticSupportReply({ subject: email.subject, body });
   const attachmentSummary = formatAttachmentSummary(email.attachments || []);
   const threadTicketId = findThreadTicketId([
     ...(email.to || []),
@@ -125,6 +127,7 @@ export async function POST(req: NextRequest) {
     email.cc?.length ? `Cc: ${email.cc.join(', ')}` : '',
     `Message-ID: ${email.message_id}`,
     `Resend inbound email ID: ${receivedEmailId}`,
+    isAutoReply ? `Automatic reply detected: ticket closed automatically.` : '',
     ``,
     body || '(No message body supplied by Resend.)',
     attachmentSummary,
@@ -145,27 +148,29 @@ export async function POST(req: NextRequest) {
 
       await prisma.supportTicket.update({
         where: { id: existingTicket.id },
-        data: { status: 'OPEN' },
+        data: { status: isAutoReply ? 'CLOSED' : 'OPEN' },
       });
 
-      generateSupportAiReply(existingTicket.subject, message).then(async (aiReply) => {
-        if (aiReply) {
-          await prisma.supportTicket.update({
-            where: { id: existingTicket.id },
-            data: { aiSuggestedReply: aiReply },
-          });
-        }
-      }).catch(console.error);
+      if (!isAutoReply) {
+        generateSupportAiReply(existingTicket.subject, message).then(async (aiReply) => {
+          if (aiReply) {
+            await prisma.supportTicket.update({
+              where: { id: existingTicket.id },
+              data: { aiSuggestedReply: aiReply },
+            });
+          }
+        }).catch(console.error);
 
-      sendTelegramNotification({
-        id: existingTicket.id,
-        email: fromEmail,
-        name: fromName,
-        subject: `Reply: ${existingTicket.subject}`,
-        message,
-      }).catch(console.error);
+        sendTelegramNotification({
+          id: existingTicket.id,
+          email: fromEmail,
+          name: fromName,
+          subject: `Reply: ${existingTicket.subject}`,
+          message,
+        }).catch(console.error);
+      }
 
-      return NextResponse.json({ ok: true, ticketId: existingTicket.id, threaded: true });
+      return NextResponse.json({ ok: true, ticketId: existingTicket.id, threaded: true, autoClosed: isAutoReply });
     }
   }
 
@@ -175,19 +180,23 @@ export async function POST(req: NextRequest) {
       name: fromName,
       subject: email.subject?.trim().slice(0, 160) || 'Inbound email reply',
       message,
-      priority: 'NORMAL',
+      status: isAutoReply ? 'CLOSED' : 'OPEN',
+      priority: isAutoReply ? 'LOW' : 'NORMAL',
     },
   });
 
-  generateSupportAiReply(ticket.subject, message).then(async (aiReply) => {
-    if (aiReply) {
-      await prisma.supportTicket.update({
-        where: { id: ticket.id },
-        data: { aiSuggestedReply: aiReply },
-      });
-    }
-  }).catch(console.error);
+  if (!isAutoReply) {
+    generateSupportAiReply(ticket.subject, message).then(async (aiReply) => {
+      if (aiReply) {
+        await prisma.supportTicket.update({
+          where: { id: ticket.id },
+          data: { aiSuggestedReply: aiReply },
+        });
+      }
+    }).catch(console.error);
 
-  sendTelegramNotification(ticket).catch(console.error);
-  return NextResponse.json({ ok: true, ticketId: ticket.id });
+    sendTelegramNotification(ticket).catch(console.error);
+  }
+
+  return NextResponse.json({ ok: true, ticketId: ticket.id, autoClosed: isAutoReply });
 }

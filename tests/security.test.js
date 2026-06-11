@@ -6,6 +6,7 @@ require('ts-node/register');
 
 const { safeRelativeRedirect } = require('../src/lib/app-url.ts');
 const { hasMpEntitlement } = require('../src/lib/mp-entitlement.ts');
+const { isClearlyAutomaticSupportReply } = require('../src/lib/support-auto-reply.ts');
 const { createVerificationToken, readVerificationToken } = require('../src/lib/verification-token.ts');
 
 function signedVerificationToken(payload, secret) {
@@ -50,4 +51,21 @@ test('MP dashboard entitlement is open during free early access', () => {
   assert.equal(hasMpEntitlement({ subscriptionStatus: 'TRIAL', trialEndsAt: new Date(now - 1000) }, now), true);
   assert.equal(hasMpEntitlement({ subscriptionStatus: 'CANCELLED', trialEndsAt: new Date(now + 1000) }, now), true);
   assert.equal(hasMpEntitlement({ subscriptionStatus: 'PAST_DUE', trialEndsAt: null }, now), true);
+});
+
+test('support inbound detection closes only clear automatic replies', () => {
+  assert.equal(isClearlyAutomaticSupportReply({
+    subject: 'Automatic reply: Parliamentary office',
+    body: 'Thank you for your email.',
+  }), true);
+
+  assert.equal(isClearlyAutomaticSupportReply({
+    subject: 'Re: Crossbench introduction',
+    body: 'Thank you for your email. I am currently out of the office and will return next week.',
+  }), true);
+
+  assert.equal(isClearlyAutomaticSupportReply({
+    subject: 'Re: Crossbench introduction',
+    body: 'Thanks for getting in touch. Could you send through a few times for a call?',
+  }), false);
 });
