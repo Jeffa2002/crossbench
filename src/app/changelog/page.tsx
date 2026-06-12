@@ -11,7 +11,7 @@ const updates = [
   {
     date: '12 June 2026',
     title: 'MP office staff access and richer web analytics',
-    summary: 'Crossbench now supports delegated parliamentary office access and gives admins clearer visibility into site traffic by audience type and country.',
+    summary: 'Crossbench now supports delegated parliamentary office access and gives admins clearer visibility into acquisition, funnels, geography, traffic quality, and office engagement.',
     items: [
       'Added office memberships for MP and Senator offices, with principal accounts, office admins, staffers, pending invites, blocking/removal, and audit logging.',
       'Added /mp-dashboard/staff so principals can invite @aph.gov.au staff, promote office admins, block/unblock accounts, remove access, and revoke pending invites.',
@@ -19,6 +19,7 @@ const updates = [
       'Added MP/Senator staff access visibility to /admin/mps, including office membership and pending invite counts.',
       'Enhanced first-party web analytics with guest, registered user, MP, and senator audience breakdowns.',
       'Added a world traffic-strength map to /admin/web-analytics, using Cloudflare country data to show where visits are coming from.',
+      'Expanded /admin/web-analytics with campaign attribution, acquisition channels, signup/address/vote funnel metrics, Australian regional drill-down, content categories, bill interest, MP office warm-lead views, referrer grouping, and bot/suspicious traffic scoring.',
     ],
   },
   {

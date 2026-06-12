@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { addressVerifiedUserWhere } from '@/lib/verification';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,6 +40,8 @@ const COUNTRY_POINTS: Record<string, [number, number]> = {
   NL: [5, 52], IE: [-8, 53], IT: [12, 43], ES: [-4, 40], SE: [15, 62], NO: [8, 61], FI: [26, 64],
 };
 
+type SessionWithViews = Awaited<ReturnType<typeof loadSessions7d>>[number];
+
 function countryName(code: string | null) {
   if (!code) return 'Unknown';
   return COUNTRY_NAMES[code] ? `${COUNTRY_NAMES[code]} (${code})` : code;
@@ -64,6 +67,98 @@ function visitorTone(type: string | null) {
   return 'bg-[#7E8AA3]';
 }
 
+function pct(part: number, total: number) {
+  return total > 0 ? Math.round((part / total) * 100) : 0;
+}
+
+function safeDate(value: Date | string | null | undefined) {
+  if (!value) return null;
+  return new Date(value);
+}
+
+function pathOnly(value: string | null | undefined) {
+  if (!value) return '/';
+  try {
+    return new URL(value, 'https://crossbench.io').pathname;
+  } catch {
+    return value.split('?')[0] || '/';
+  }
+}
+
+function pathParams(value: string | null | undefined) {
+  try {
+    return new URL(value || '/', 'https://crossbench.io').searchParams;
+  } catch {
+    return new URLSearchParams();
+  }
+}
+
+function referrerHost(value: string | null | undefined) {
+  if (!value) return null;
+  try {
+    return new URL(value).hostname.replace(/^www\./, '');
+  } catch {
+    return null;
+  }
+}
+
+function groupReferrer(host: string | null) {
+  if (!host) return 'Direct / none';
+  if (/google\./i.test(host)) return 'Google';
+  if (/facebook\.com|instagram\.com|fb\.me/i.test(host)) return 'Meta';
+  if (/x\.com|twitter\.com|t\.co/i.test(host)) return 'X / Twitter';
+  if (/linkedin\.com/i.test(host)) return 'LinkedIn';
+  if (/aph\.gov\.au|parlinfo/i.test(host)) return 'APH / Parliament';
+  if (/news|abc\.net\.au|smh\.com\.au|theage\.com\.au|theguardian\.com|skynews|nine\.com\.au|news\.com\.au/i.test(host)) return 'Media';
+  if (/crossbench\.io/i.test(host)) return 'Internal';
+  return host;
+}
+
+function campaignFor(session: Pick<SessionWithViews, 'firstPath' | 'referrer' | 'deviceType'>) {
+  const params = pathParams(session.firstPath);
+  const utmCampaign = params.get('utm_campaign') || params.get('campaign');
+  const utmSource = params.get('utm_source') || params.get('source');
+  const utmMedium = params.get('utm_medium') || params.get('medium');
+  const host = referrerHost(session.referrer);
+
+  if (utmCampaign || utmSource || utmMedium) {
+    return {
+      label: utmCampaign || utmSource || 'Tagged campaign',
+      source: utmSource || groupReferrer(host),
+      medium: utmMedium || 'tagged',
+    };
+  }
+  if (session.deviceType === 'bot') return { label: 'Bot / crawler', source: 'Bot', medium: 'crawler' };
+  return { label: groupReferrer(host), source: groupReferrer(host), medium: host ? 'referral' : 'direct' };
+}
+
+function pageCategory(path: string | null | undefined) {
+  const clean = pathOnly(path);
+  if (clean === '/') return 'Home';
+  if (clean === '/login' || clean === '/verify-email') return 'Auth';
+  if (clean === '/account/verify') return 'Address verification';
+  if (clean.startsWith('/mp-dashboard')) return 'MP dashboard';
+  if (clean.startsWith('/mp-updates')) return 'MP updates';
+  if (clean.startsWith('/for-mps') || clean.startsWith('/mp-demo')) return 'MP funnel';
+  if (clean === '/bills' || clean.startsWith('/bills/')) return 'Bills';
+  if (clean.startsWith('/electorates') || clean.startsWith('/mp/')) return 'Electorates and MPs';
+  if (clean === '/sentiment') return 'Sentiment';
+  if (clean === '/support') return 'Support';
+  if (clean === '/about' || clean === '/methodology' || clean === '/privacy' || clean === '/terms') return 'Trust content';
+  return 'Other';
+}
+
+function addCount(map: Map<string, number>, key: string, amount = 1) {
+  map.set(key, (map.get(key) || 0) + amount);
+}
+
+function topRows(map: Map<string, number>, limit = 10) {
+  return [...map.entries()]
+    .map(([label, count]) => ({ label, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, limit);
+}
+
 function mapPoint(code: string | null) {
   if (!code || !COUNTRY_POINTS[code]) return null;
   const [lon, lat] = COUNTRY_POINTS[code];
@@ -71,6 +166,15 @@ function mapPoint(code: string | null) {
     x: ((lon + 180) / 360) * 1000,
     y: ((90 - lat) / 180) * 460,
   };
+}
+
+async function loadSessions7d(since7d: Date) {
+  return prisma.webVisitSession.findMany({
+    where: { startedAt: { gte: since7d } },
+    orderBy: { lastSeenAt: 'desc' },
+    take: 1500,
+    include: { pageViews: { orderBy: { startedAt: 'asc' }, take: 80 } },
+  });
 }
 
 function WorldTrafficMap({ rows }: { rows: Array<{ countryCode: string | null; _count: { _all: number } }> }) {
@@ -102,15 +206,56 @@ function WorldTrafficMap({ rows }: { rows: Array<{ countryCode: string | null; _
   );
 }
 
+function MetricCard({ label, value, tone = 'text-[#F5F7FB]', sub }: { label: string; value: string; tone?: string; sub?: string }) {
+  return (
+    <div className="bg-[#111A2E] border border-[#25324D] rounded-xl p-4">
+      <div className={`text-xl font-bold ${tone}`}>{value}</div>
+      <div className="text-xs text-[#7E8AA3] mt-1">{label}</div>
+      {sub && <div className="text-[11px] text-[#4E5A73] mt-1">{sub}</div>}
+    </div>
+  );
+}
+
+function BarRow({ label, count, total, color = 'bg-[#2E8B57]', detail }: { label: string; count: number; total: number; color?: string; detail?: string }) {
+  const width = total > 0 ? Math.max(4, pct(count, total)) : 0;
+  return (
+    <div>
+      <div className="flex justify-between gap-3 text-sm mb-1">
+        <span className="text-[#B6C0D1] truncate">{label}</span>
+        <span className="text-[#F5F7FB] font-bold whitespace-nowrap">{count.toLocaleString()}{detail ? ` · ${detail}` : ''}</span>
+      </div>
+      <div className="h-2 bg-[#16213A] rounded-full overflow-hidden">
+        <div className={`h-full ${color}`} style={{ width: `${width}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function Panel({ title, children, subtitle }: { title: string; children: React.ReactNode; subtitle?: string }) {
+  return (
+    <section className="bg-[#111A2E] border border-[#25324D] rounded-xl overflow-hidden">
+      <div className="px-4 py-3 border-b border-[#25324D]">
+        <h2 className="font-bold">{title}</h2>
+        {subtitle && <p className="text-xs text-[#7E8AA3] mt-1">{subtitle}</p>}
+      </div>
+      <div className="p-4">{children}</div>
+    </section>
+  );
+}
+
 export default async function AdminWebAnalyticsPage() {
   const since24h = new Date();
   since24h.setDate(since24h.getDate() - 1);
+  const previous24hStart = new Date(since24h);
+  previous24hStart.setDate(previous24hStart.getDate() - 1);
   const since7d = new Date();
   since7d.setDate(since7d.getDate() - 7);
 
   const [
     sessions24h,
     views24h,
+    prevSessions24h,
+    prevViews24h,
     sessions7d,
     views7d,
     durationSum,
@@ -122,9 +267,16 @@ export default async function AdminWebAnalyticsPage() {
     franceSessions,
     franceViews,
     recentSessions,
+    sessions7dFull,
+    newUsers7d,
+    addressVerified7d,
+    votes7d,
+    mpNewsletterDeliveries7d,
   ] = await Promise.all([
     prisma.webVisitSession.count({ where: { startedAt: { gte: since24h } } }),
     prisma.webPageView.count({ where: { startedAt: { gte: since24h } } }),
+    prisma.webVisitSession.count({ where: { startedAt: { gte: previous24hStart, lt: since24h } } }),
+    prisma.webPageView.count({ where: { startedAt: { gte: previous24hStart, lt: since24h } } }),
     prisma.webVisitSession.count({ where: { startedAt: { gte: since7d } } }),
     prisma.webPageView.count({ where: { startedAt: { gte: since7d } } }),
     prisma.webPageView.aggregate({ where: { startedAt: { gte: since24h } }, _sum: { durationSeconds: true } }),
@@ -170,31 +322,95 @@ export default async function AdminWebAnalyticsPage() {
       take: 30,
       include: { pageViews: { orderBy: { startedAt: 'desc' }, take: 6 } },
     }),
+    loadSessions7d(since7d),
+    prisma.user.count({ where: { createdAt: { gte: since7d } } }),
+    prisma.user.count({ where: { ...addressVerifiedUserWhere, verifiedAt: { gte: since7d } } }),
+    prisma.vote.count({ where: { createdAt: { gte: since7d } } }),
+    prisma.mpNewsletterDelivery.count({ where: { sentAt: { gte: since7d }, status: 'SENT' } }),
   ]);
 
   const averageDuration = views24h > 0 ? Math.round((durationSum._sum.durationSeconds || 0) / views24h) : 0;
   const visitorTotal = visitorRows.reduce((sum, row) => sum + row._count._all, 0);
+  const botSessions7d = sessions7dFull.filter(session => session.deviceType === 'bot').length;
+  const suspiciousSessions7d = sessions7dFull.filter(session => session.pageViews.length >= 40 || session.deviceType === 'bot').length;
+  const humanSessions7d = Math.max(0, sessions7dFull.length - botSessions7d);
+  const mpOfficeSessions7d = sessions7dFull.filter(session => session.visitorType === 'MP' || session.visitorType === 'SENATOR').length;
+  const signupIntent7d = sessions7dFull.filter(session => session.pageViews.some(view => pathOnly(view.path) === '/login')).length;
+  const addressVerifyIntent7d = sessions7dFull.filter(session => session.pageViews.some(view => pathOnly(view.path) === '/account/verify')).length;
+  const mpDashboardSessions7d = sessions7dFull.filter(session => session.pageViews.some(view => pathOnly(view.path).startsWith('/mp-dashboard'))).length;
+
+  const campaignMap = new Map<string, { count: number; source: string; medium: string }>();
+  const channelMap = new Map<string, number>();
+  const categoryMap = new Map<string, number>();
+  const australiaMap = new Map<string, number>();
+  const billPageMap = new Map<string, number>();
+  const conversionSourceMap = new Map<string, number>();
+  const warmOfficeMap = new Map<string, number>();
+  const referrerGroupMap = new Map<string, number>();
+
+  for (const session of sessions7dFull) {
+    const campaign = campaignFor(session);
+    const key = campaign.label;
+    const current = campaignMap.get(key) || { count: 0, source: campaign.source, medium: campaign.medium };
+    campaignMap.set(key, { ...current, count: current.count + 1 });
+    addCount(channelMap, campaign.source);
+    addCount(referrerGroupMap, groupReferrer(referrerHost(session.referrer)));
+
+    if (session.countryCode === 'AU') {
+      addCount(australiaMap, [session.region, session.city].filter(Boolean).join(' / ') || 'Australia, unknown region');
+    }
+
+    if (session.visitorType === 'MP' || session.visitorType === 'SENATOR') {
+      addCount(warmOfficeMap, `${visitorLabel(session.visitorType)} · ${session.lastPath || session.firstPath || 'unknown path'}`);
+    }
+
+    for (let index = 0; index < session.pageViews.length; index += 1) {
+      const view = session.pageViews[index];
+      const cleanPath = pathOnly(view.path);
+      addCount(categoryMap, pageCategory(view.path));
+      if (cleanPath.startsWith('/bills/') && cleanPath !== '/bills') addCount(billPageMap, cleanPath);
+      if (cleanPath === '/login' || cleanPath === '/account/verify' || cleanPath.startsWith('/mp-dashboard')) {
+        const previous = session.pageViews[index - 1]?.path || session.firstPath || 'Direct';
+        addCount(conversionSourceMap, pathOnly(previous));
+      }
+    }
+  }
+
+  const campaignRows = [...campaignMap.entries()]
+    .map(([label, data]) => ({ label, ...data }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
+  const channelRows = topRows(channelMap, 8);
+  const categoryRows = topRows(categoryMap, 10);
+  const australiaRows = topRows(australiaMap, 10);
+  const billRows = topRows(billPageMap, 10);
+  const conversionRows = topRows(conversionSourceMap, 10);
+  const warmOfficeRows = topRows(warmOfficeMap, 10);
+  const referrerGroupRows = topRows(referrerGroupMap, 8);
+  const sessionDelta = sessions24h - prevSessions24h;
+  const viewDelta = views24h - prevViews24h;
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Web Analyzer</h1>
-        <p className="text-[#7E8AA3] text-sm mt-1">First-party page/session analytics collected by Crossbench. Country data comes from Cloudflare headers when present.</p>
+        <p className="text-[#7E8AA3] text-sm mt-1">First-party acquisition, funnel, content, geography, and traffic-quality analytics collected by Crossbench.</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
-        {[
-          { label: 'Sessions, 24h', value: sessions24h.toLocaleString(), tone: 'text-[#F5F7FB]' },
-          { label: 'Page views, 24h', value: views24h.toLocaleString(), tone: 'text-[#F5F7FB]' },
-          { label: 'Avg. time/page', value: fmtDuration(averageDuration), tone: 'text-[#D6A94A]' },
-          { label: '7d activity', value: `${sessions7d.toLocaleString()} / ${views7d.toLocaleString()}`, tone: 'text-[#B6C0D1]' },
-          { label: 'France, 24h', value: `${franceSessions} sessions / ${franceViews} views`, tone: franceSessions > 0 ? 'text-[#F2A7A0]' : 'text-green-300' },
-        ].map(item => (
-          <div key={item.label} className="bg-[#111A2E] border border-[#25324D] rounded-xl p-4">
-            <div className={`text-xl font-bold ${item.tone}`}>{item.value}</div>
-            <div className="text-xs text-[#7E8AA3] mt-1">{item.label}</div>
-          </div>
-        ))}
+        <MetricCard label="Sessions, 24h" value={sessions24h.toLocaleString()} sub={`${sessionDelta >= 0 ? '+' : ''}${sessionDelta} vs previous 24h`} />
+        <MetricCard label="Page views, 24h" value={views24h.toLocaleString()} sub={`${viewDelta >= 0 ? '+' : ''}${viewDelta} vs previous 24h`} />
+        <MetricCard label="Avg. time/page" value={fmtDuration(averageDuration)} tone="text-[#D6A94A]" />
+        <MetricCard label="7d activity" value={`${sessions7d.toLocaleString()} / ${views7d.toLocaleString()}`} sub="sessions / views" />
+        <MetricCard label="Traffic quality, 7d" value={`${pct(humanSessions7d, sessions7dFull.length)}% human`} sub={`${suspiciousSessions7d} bot/suspicious sessions`} tone={suspiciousSessions7d > 0 ? 'text-[#D6A94A]' : 'text-green-300'} />
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-5">
+        <MetricCard label="Signup intent, 7d" value={signupIntent7d.toLocaleString()} sub="sessions that reached sign-in" />
+        <MetricCard label="New users, 7d" value={newUsers7d.toLocaleString()} sub={`${pct(newUsers7d, Math.max(1, signupIntent7d))}% of signup-intent sessions`} />
+        <MetricCard label="Address verification, 7d" value={addressVerified7d.toLocaleString()} sub={`${addressVerifyIntent7d} sessions reached verification`} tone="text-[#2E8B57]" />
+        <MetricCard label="Votes, 7d" value={votes7d.toLocaleString()} sub="verified bill votes recorded" tone="text-[#D6A94A]" />
+        <MetricCard label="MP office warmth, 7d" value={mpOfficeSessions7d.toLocaleString()} sub={`${mpDashboardSessions7d} MP dashboard sessions`} tone="text-purple-300" />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
@@ -208,52 +424,77 @@ export default async function AdminWebAnalyticsPage() {
           </div>
         </section>
 
-        <section className="bg-[#111A2E] border border-[#25324D] rounded-xl overflow-hidden">
-          <div className="px-4 py-3 border-b border-[#25324D]">
-            <h2 className="font-bold">Audience type, 24h</h2>
-          </div>
-          <div className="p-4 space-y-3">
+        <Panel title="Audience type, 24h">
+          <div className="space-y-3">
             {['GUEST', 'REGISTERED', 'MP', 'SENATOR'].map(type => {
               const row = visitorRows.find(item => (item.visitorType || 'GUEST') === type);
               const count = row?._count._all ?? 0;
-              const pct = visitorTotal > 0 ? Math.round((count / visitorTotal) * 100) : 0;
-              return (
-                <div key={type}>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-[#B6C0D1]">{visitorLabel(type)}</span>
-                    <span className="text-[#F5F7FB] font-bold">{count.toLocaleString()} · {pct}%</span>
-                  </div>
-                  <div className="h-2 bg-[#16213A] rounded-full overflow-hidden">
-                    <div className={`h-full ${visitorTone(type)}`} style={{ width: `${count > 0 ? Math.max(4, pct) : 0}%` }} />
-                  </div>
-                </div>
-              );
+              return <BarRow key={type} label={visitorLabel(type)} count={count} total={visitorTotal} color={visitorTone(type)} detail={`${pct(count, visitorTotal)}%`} />;
             })}
             {visitorTotal === 0 && <p className="text-sm text-[#4E5A73]">No audience classification yet.</p>}
           </div>
-        </section>
+        </Panel>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
-        <section className="bg-[#111A2E] border border-[#25324D] rounded-xl overflow-hidden">
-          <div className="px-4 py-3 border-b border-[#25324D]">
-            <h2 className="font-bold">Countries, 24h</h2>
+        <Panel title="Acquisition channels, 7d" subtitle="Derived from UTM tags first, then referrer/source grouping.">
+          <div className="space-y-3">
+            {channelRows.map(row => <BarRow key={row.label} label={row.label} count={row.count} total={sessions7dFull.length} color="bg-[#4E8FD4]" />)}
+            {channelRows.length === 0 && <p className="text-sm text-[#4E5A73]">No acquisition data yet.</p>}
           </div>
-          <div className="p-4 space-y-3">
-            {countryRows.map(row => (
-              <div key={row.countryCode || 'unknown'}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-[#B6C0D1]">{countryName(row.countryCode)}</span>
-                  <span className="text-[#F5F7FB] font-bold">{row._count._all}</span>
+        </Panel>
+
+        <Panel title="Campaign attribution, 7d" subtitle="UTM campaign/source links appear here automatically.">
+          <div className="space-y-3">
+            {campaignRows.map(row => (
+              <div key={`${row.label}:${row.source}:${row.medium}`} className="flex justify-between gap-3 text-sm">
+                <div className="min-w-0">
+                  <div className="text-[#B6C0D1] truncate">{row.label}</div>
+                  <div className="text-[11px] text-[#4E5A73] truncate">{row.source} · {row.medium}</div>
                 </div>
-                <div className="h-2 bg-[#16213A] rounded-full overflow-hidden">
-                  <div className="h-full bg-[#2E8B57]" style={{ width: `${sessions24h > 0 ? Math.max(4, Math.round((row._count._all / sessions24h) * 100)) : 0}%` }} />
-                </div>
+                <span className="text-[#F5F7FB] font-bold">{row.count}</span>
               </div>
             ))}
+            {campaignRows.length === 0 && <p className="text-sm text-[#4E5A73]">No campaigns yet.</p>}
+          </div>
+        </Panel>
+
+        <Panel title="Referrer groups, 7d">
+          <div className="space-y-3">
+            {referrerGroupRows.map(row => <BarRow key={row.label} label={row.label} count={row.count} total={sessions7dFull.length} color="bg-[#D6A94A]" />)}
+          </div>
+        </Panel>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-3">
+        <Panel title="Funnel source pages, 7d" subtitle="Pages immediately before sign-in, verification, or MP dashboard entry.">
+          <div className="space-y-3">
+            {conversionRows.map(row => <BarRow key={row.label} label={row.label} count={row.count} total={sessions7dFull.length} color="bg-[#2E8B57]" />)}
+            {conversionRows.length === 0 && <p className="text-sm text-[#4E5A73]">No funnel transitions yet.</p>}
+          </div>
+        </Panel>
+
+        <Panel title="Content categories, 7d">
+          <div className="space-y-3">
+            {categoryRows.map(row => <BarRow key={row.label} label={row.label} count={row.count} total={views7d} color="bg-purple-500" />)}
+          </div>
+        </Panel>
+
+        <Panel title="Australian geography, 7d" subtitle="Cloudflare city/region headers when present.">
+          <div className="space-y-3">
+            {australiaRows.map(row => <BarRow key={row.label} label={row.label} count={row.count} total={sessions7dFull.filter(s => s.countryCode === 'AU').length} color="bg-[#2E8B57]" />)}
+            {australiaRows.length === 0 && <p className="text-sm text-[#4E5A73]">No Australian regional data yet.</p>}
+          </div>
+        </Panel>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-3">
+        <Panel title="Countries, 24h">
+          <div className="space-y-3">
+            {countryRows.map(row => <BarRow key={row.countryCode || 'unknown'} label={countryName(row.countryCode)} count={row._count._all} total={sessions24h} />)}
             {countryRows.length === 0 && <p className="text-sm text-[#4E5A73]">No session country data yet.</p>}
           </div>
-        </section>
+        </Panel>
 
         <section className="bg-[#111A2E] border border-[#25324D] rounded-xl overflow-hidden xl:col-span-2">
           <div className="px-4 py-3 border-b border-[#25324D]">
@@ -281,6 +522,31 @@ export default async function AdminWebAnalyticsPage() {
             </table>
           </div>
         </section>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-3">
+        <Panel title="Bill interest, 7d" subtitle="Bill detail pages by view volume.">
+          <div className="space-y-3">
+            {billRows.map(row => <BarRow key={row.label} label={row.label} count={row.count} total={views7d} color="bg-[#D6A94A]" />)}
+            {billRows.length === 0 && <p className="text-sm text-[#4E5A73]">No bill-detail traffic yet.</p>}
+          </div>
+        </Panel>
+
+        <Panel title="MP / office warm leads, 7d" subtitle="Authenticated APH/office sessions and last paths.">
+          <div className="space-y-3">
+            {warmOfficeRows.map(row => <BarRow key={row.label} label={row.label} count={row.count} total={Math.max(1, mpOfficeSessions7d)} color="bg-purple-500" />)}
+            {warmOfficeRows.length === 0 && <p className="text-sm text-[#4E5A73]">No MP office sessions yet.</p>}
+          </div>
+        </Panel>
+
+        <Panel title="Outreach follow-through, 7d">
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between gap-3"><span className="text-[#B6C0D1]">MP update emails sent</span><span className="font-bold">{mpNewsletterDeliveries7d.toLocaleString()}</span></div>
+            <div className="flex justify-between gap-3"><span className="text-[#B6C0D1]">MP/Senator web sessions</span><span className="font-bold">{mpOfficeSessions7d.toLocaleString()}</span></div>
+            <div className="flex justify-between gap-3"><span className="text-[#B6C0D1]">MP dashboard sessions</span><span className="font-bold">{mpDashboardSessions7d.toLocaleString()}</span></div>
+            <div className="flex justify-between gap-3"><span className="text-[#B6C0D1]">France anomaly, 24h</span><span className={franceSessions > 0 ? 'font-bold text-[#F2A7A0]' : 'font-bold text-green-300'}>{franceSessions} sessions / {franceViews} views</span></div>
+          </div>
+        </Panel>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
@@ -312,9 +578,11 @@ export default async function AdminWebAnalyticsPage() {
               <div key={session.id} className="p-4">
                 <div className="flex justify-between gap-3 text-sm">
                   <span className="text-[#F5F7FB] font-bold">{countryName(session.countryCode)}</span>
-                  <span className="text-[#4E5A73]">{new Date(session.lastSeenAt).toLocaleString('en-AU')}</span>
+                  <span className="text-[#4E5A73]">{safeDate(session.lastSeenAt)?.toLocaleString('en-AU')}</span>
                 </div>
-                <div className="text-xs text-[#7E8AA3] mt-1">{session.deviceType || 'unknown'} · {session.browser || 'unknown'} · first {session.firstPath || '—'}</div>
+                <div className="text-xs text-[#7E8AA3] mt-1">
+                  {visitorLabel(session.visitorType)} · {session.deviceType || 'unknown'} · {session.browser || 'unknown'} · first {session.firstPath || '—'}
+                </div>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {session.pageViews.map(view => (
                     <span key={view.id} className="text-[11px] text-[#B6C0D1] bg-[#16213A] rounded-full px-2 py-1">{view.path} · {fmtDuration(view.durationSeconds)}</span>
