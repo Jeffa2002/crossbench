@@ -5,6 +5,7 @@ rewriting bios or touching APH/member identity fields.
 
 Usage:
   DATABASE_URL=... python3 scripts/refresh-mp-news.py --limit 20
+  DATABASE_URL=... python3 scripts/refresh-mp-news.py --ids farrer,bullwinkel --apply
   DATABASE_URL=... python3 scripts/refresh-mp-news.py --apply --delay 1.5
 """
 
@@ -139,6 +140,7 @@ def google_news(mp_name, electorate_name, state):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--limit", type=int, default=0, help="Maximum profiles to refresh; 0 means all")
+    parser.add_argument("--ids", default="", help="Comma-separated electorate/profile IDs to refresh")
     parser.add_argument("--delay", type=float, default=1.0, help="Delay between news requests")
     parser.add_argument("--apply", action="store_true", help="Write updates to MpProfile; default is dry-run")
     args = parser.parse_args()
@@ -155,6 +157,9 @@ def main():
         ORDER BY e."mpChamber", e.state, e.name
     """)
     rows = cur.fetchall()
+    if args.ids:
+        wanted = {item.strip() for item in args.ids.split(",") if item.strip()}
+        rows = [row for row in rows if row[0] in wanted]
     if args.limit:
         rows = rows[:args.limit]
 
