@@ -5,7 +5,7 @@ rewriting bios or touching APH/member identity fields.
 
 Usage:
   DATABASE_URL=... python3 scripts/refresh-mp-news.py --limit 20
-  DATABASE_URL=... python3 scripts/refresh-mp-news.py --delay 1.5
+  DATABASE_URL=... python3 scripts/refresh-mp-news.py --apply --delay 1.5
 """
 
 import argparse
@@ -45,6 +45,40 @@ def headline_key(title):
     return re.sub(r"[^a-z0-9]+", " ", title.lower()).strip()[:80]
 
 
+def has_identity_match(title, mp_name, electorate_name):
+    clean_name = plain_name(mp_name)
+    if not clean_name:
+        return False
+
+    haystack = title.lower()
+    name_lower = clean_name.lower()
+    parts = name_lower.split()
+    first = parts[0] if parts else ""
+    last = parts[-1] if parts else ""
+    electorate = (electorate_name or "").lower()
+
+    if name_lower in haystack:
+        return True
+    if first and last and first in haystack and last in haystack:
+        return True
+
+    context_words = [
+        " mp",
+        "senator",
+        "minister",
+        "parliament",
+        "election",
+        "electorate",
+        "australia",
+        "australian",
+    ]
+    has_context = any(word in haystack for word in context_words)
+    if electorate and not electorate.startswith("senator ") and electorate in haystack:
+        has_context = True
+
+    return bool(last and last in haystack and has_context)
+
+
 def google_news(mp_name, electorate_name, state):
     clean_name = plain_name(mp_name)
     if not clean_name:
@@ -80,9 +114,7 @@ def google_news(mp_name, electorate_name, state):
         if not title or not link:
             continue
 
-        haystack = title.lower()
-        surname = clean_name.split()[-1].lower()
-        if surname not in haystack and clean_name.lower() not in haystack:
+        if not has_identity_match(title, mp_name, electorate_name):
             continue
 
         headlines.append({
@@ -108,6 +140,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--limit", type=int, default=0, help="Maximum profiles to refresh; 0 means all")
     parser.add_argument("--delay", type=float, default=1.0, help="Delay between news requests")
+    parser.add_argument("--apply", action="store_true", help="Write updates to MpProfile; default is dry-run")
     args = parser.parse_args()
 
     if not DB_URL:
@@ -130,19 +163,23 @@ def main():
     for index, (electorate_id, electorate_name, state, mp_name) in enumerate(rows, start=1):
         headlines = google_news(mp_name, electorate_name, state)
         if headlines:
-            cur.execute("""
-                UPDATE "MpProfile"
-                SET "newsHeadlines" = %s,
-                    "updatedAt" = NOW()
-                WHERE "electorateId" = %s
-            """, (json.dumps(headlines), electorate_id))
-            if cur.rowcount:
-                updated += 1
-                conn.commit()
-                print(f"[{index}/{len(rows)}] updated {electorate_id}: {len(headlines)}")
+            if args.apply:
+                cur.execute("""
+                    UPDATE "MpProfile"
+                    SET "newsHeadlines" = %s,
+                        "updatedAt" = NOW()
+                    WHERE "electorateId" = %s
+                """, (json.dumps(headlines), electorate_id))
+                if cur.rowcount:
+                    updated += 1
+                    conn.commit()
+                    print(f"[{index}/{len(rows)}] updated {electorate_id}: {len(headlines)}")
+                else:
+                    skipped += 1
+                    print(f"[{index}/{len(rows)}] no profile row {electorate_id}")
             else:
-                skipped += 1
-                print(f"[{index}/{len(rows)}] no profile row {electorate_id}")
+                updated += 1
+                print(f"[{index}/{len(rows)}] dry-run {electorate_id}: {len(headlines)}")
         else:
             skipped += 1
             print(f"[{index}/{len(rows)}] no news {electorate_id}")
