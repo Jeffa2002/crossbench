@@ -53,6 +53,12 @@ function hasText(value: unknown) {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
+function aphProfileUrl(mpId: unknown) {
+  return typeof mpId === 'string' && mpId.trim()
+    ? `https://www.aph.gov.au/Senators_and_Members/Parliamentarian?MPID=${encodeURIComponent(mpId.trim())}`
+    : null;
+}
+
 function SocialButton({ href, label, symbol }: { href: string; label: string; symbol: string }) {
   return (
     <a
@@ -98,6 +104,7 @@ export default async function ElectoratePage({ params }: { params: Promise<{ id:
   const committees = parseJsonArray<string>(profile?.committees);
   const newsHeadlines = parseJsonArray<any>(profile?.newsHeadlines).slice(0, 8);
   const socialLinks = parseJsonObject<{ twitter?: string; facebook?: string; youtube?: string; website?: string }>(profile?.socialLinks) || {};
+  const officialAphUrl = aphProfileUrl(electorate.mpId) || (hasText(profile?.aphBioUrl) ? profile.aphBioUrl : null);
   const registeredMpUser = electorate.mpEmail
     ? await prisma.user.findFirst({
         where: {
@@ -194,7 +201,7 @@ export default async function ElectoratePage({ params }: { params: Promise<{ id:
               </div>
 
               <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '18px' }}>
-                {profile?.aphBioUrl && <Link href={profile.aphBioUrl} target="_blank" style={{ color: '#4E8FD4', textDecoration: 'none', fontSize: '13px', fontWeight: 700 }}>Official APH Profile →</Link>}
+                {officialAphUrl && <Link href={officialAphUrl} target="_blank" style={{ color: '#4E8FD4', textDecoration: 'none', fontSize: '13px', fontWeight: 700 }}>Official APH Profile →</Link>}
                 {electorate.mpId && <Link href={`/mp/${electorate.mpId}`} style={{ color: '#4E8FD4', textDecoration: 'none', fontSize: '13px', fontWeight: 700 }}>Full MP profile →</Link>}
                 {electorate.mpEmail && <a href={`mailto:${electorate.mpEmail}`} style={{ color: '#7E8AA3', textDecoration: 'none', fontSize: '13px' }}>✉ {electorate.mpEmail}</a>}
               </div>
@@ -255,7 +262,7 @@ export default async function ElectoratePage({ params }: { params: Promise<{ id:
                   {socialLinks.facebook && <SocialButton href={socialLinks.facebook} label="Facebook" symbol="f" />}
                   {socialLinks.youtube && <SocialButton href={socialLinks.youtube} label="YouTube" symbol="▶" />}
                   {socialLinks.website && <SocialButton href={socialLinks.website} label="Website" symbol="↗" />}
-                  {profile?.aphBioUrl && <SocialButton href={profile.aphBioUrl} label="Official APH Profile" symbol="◎" />}
+                  {officialAphUrl && <SocialButton href={officialAphUrl} label="Official APH Profile" symbol="◎" />}
                 </div>
               </div>
             )}

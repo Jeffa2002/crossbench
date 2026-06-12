@@ -4,6 +4,26 @@ import { PrismaPg } from "@prisma/adapter-pg";
 
 const corrections = [
   {
+    electorateId: "brand",
+    mpName: "Hon Madeleine King MP",
+    mpId: "102376",
+  },
+  {
+    electorateId: "herbert",
+    mpName: "Mr Phillip Thompson OAM, MP",
+    mpId: "281826",
+  },
+  {
+    electorateId: "qld-sen-watt-murray",
+    mpName: "Senator Murray Watt",
+    mpId: "245759",
+  },
+  {
+    electorateId: "warringah",
+    mpName: "Ms Zali Steggall OAM, MP",
+    mpId: "175696",
+  },
+  {
     electorateId: "wide-bay",
     mpName: "Mr Llew O'Brien MP",
     mpId: "265991",
@@ -36,6 +56,13 @@ async function main() {
           mpPhotoUrl: true,
         },
       });
+
+      await prisma.$executeRaw`
+        UPDATE "MpProfile"
+        SET "aphBioUrl" = ${`https://www.aph.gov.au/Senators_and_Members/Parliamentarian?MPID=${correction.mpId}`},
+            "updatedAt" = NOW()
+        WHERE "electorateId" = ${correction.electorateId}
+      `;
 
       console.log(`${updated.id}: ${updated.mpName} -> ${updated.mpId}`);
     }
