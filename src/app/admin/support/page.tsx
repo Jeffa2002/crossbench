@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 type Reply = { id: string; authorEmail: string; isAdmin: boolean; isAi: boolean; message: string; resendId: string | null; emailSentAt: string | null; emailError: string | null; createdAt: string };
+type SupportAttachment = { id: string; emailId: string; filename: string; contentType: string; size: number };
 type Ticket = {
   id: string; email: string; name: string | null; subject: string; message: string;
   status: string; priority: string; aiSuggestedReply: string | null;
@@ -40,6 +41,74 @@ function latestPreview(ticket: Ticket) {
 
 function sortByLatestActivity(tickets: Ticket[]) {
   return [...tickets].sort((a, b) => new Date(latestActivityAt(b)).getTime() - new Date(latestActivityAt(a)).getTime());
+}
+
+function formatBytes(value: number) {
+  if (value >= 1024 * 1024) return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+  if (value >= 1024) return `${Math.round(value / 1024)} KB`;
+  return `${value} B`;
+}
+
+function attachmentUrl(ticketId: string, attachment: SupportAttachment) {
+  const params = new URLSearchParams({
+    ticketId,
+    emailId: attachment.emailId,
+    attachmentId: attachment.id,
+  });
+  return `/api/admin/support/attachments?${params.toString()}`;
+}
+
+function extractAttachments(message: string): SupportAttachment[] {
+  const emailId = message.match(/Resend inbound email ID: ([^\s]+)/)?.[1];
+  if (!emailId) return [];
+
+  return message.split('\n').flatMap((line) => {
+    const match = line.match(/^- (.+) \((.+), ([0-9]+) bytes, Resend attachment ID: ([^)]+)\)$/);
+    if (!match) return [];
+    return [{
+      filename: match[1],
+      contentType: match[2],
+      size: Number(match[3]),
+      id: match[4],
+      emailId,
+    }];
+  });
+}
+
+function ticketAttachmentCount(ticket: Ticket) {
+  return extractAttachments(ticket.message).length
+    + ticket.replies.reduce((total, reply) => total + extractAttachments(reply.message).length, 0);
+}
+
+function AttachmentLinks({ ticketId, message }: { ticketId: string; message: string }) {
+  const attachments = extractAttachments(message);
+  if (!attachments.length) return null;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '10px' }}>
+      <p style={{ color: '#D6A94A', fontSize: '11px', fontWeight: 700, margin: 0 }}>Attachments</p>
+      {attachments.map(attachment => (
+        <a
+          key={`${attachment.emailId}:${attachment.id}`}
+          href={attachmentUrl(ticketId, attachment)}
+          target="_blank"
+          rel="noreferrer"
+          style={{
+            alignSelf: 'flex-start',
+            color: '#F5F7FB',
+            backgroundColor: 'rgba(214,169,74,0.12)',
+            border: '1px solid rgba(214,169,74,0.35)',
+            borderRadius: '6px',
+            padding: '6px 9px',
+            fontSize: '12px',
+            textDecoration: 'none',
+          }}
+        >
+          {attachment.filename} · {formatBytes(attachment.size)}
+        </a>
+      ))}
+    </div>
+  );
 }
 
 export default function AdminSupportPage() {
@@ -123,6 +192,7 @@ export default function AdminSupportPage() {
             {tickets.length === 0 && <p style={{ color: '#4A5568', fontSize: '13px' }}>No tickets.</p>}
             {tickets.map(t => {
               const founderMarked = isFounderMarkedTicket(t);
+              const attachments = ticketAttachmentCount(t);
               return (
               <div key={t.id} className="support-ticket-card" onClick={() => setSelected(t)} style={{
                 backgroundColor: founderMarked ? (selected?.id === t.id ? '#2B2310' : '#1C1A12') : (selected?.id === t.id ? '#1A2540' : '#111A2E'),
@@ -135,6 +205,7 @@ export default function AdminSupportPage() {
                   <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
                     {founderMarked && <Badge label="JEFFREY E" color="#D6A94A" />}
                     <Badge label={t.status} color={STATUS_COLORS[t.status] || '#7E8AA3'} />
+                    {attachments > 0 && <Badge label={`${attachments} ATT`} color="#D6A94A" />}
                     {t.priority !== 'NORMAL' && <Badge label={t.priority} color={PRIORITY_COLORS[t.priority] || '#7E8AA3'} />}
                   </div>
                 </div>
@@ -203,6 +274,7 @@ export default function AdminSupportPage() {
                   {r.isAdmin ? '🛡 Admin' : '👤 User'} · {r.authorEmail} · {new Date(r.createdAt).toLocaleString('en-AU')}
                 </p>
                 <p style={{ fontSize: '14px', color: '#F5F7FB', margin: 0, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{r.message}</p>
+                <AttachmentLinks ticketId={selected.id} message={r.message} />
                 {r.isAdmin && (
                   <p style={{ fontSize: '11px', color: r.emailError ? '#D95C4B' : '#2E8B57', margin: '8px 0 0' }}>
                     {r.emailError ? `Email failed: ${r.emailError}` : r.emailSentAt ? `Email sent via Resend${r.resendId ? ` · ${r.resendId}` : ''}` : 'Email delivery not recorded'}
@@ -215,6 +287,7 @@ export default function AdminSupportPage() {
             <div style={{ backgroundColor: '#0E1628', borderRadius: '8px', padding: '14px' }}>
               <p style={{ fontSize: '11px', color: '#4A5568', margin: '0 0 8px' }}>Original message · {new Date(selected.createdAt).toLocaleString('en-AU')}</p>
               <p style={{ fontSize: '14px', color: '#F5F7FB', margin: 0, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{selected.message}</p>
+              <AttachmentLinks ticketId={selected.id} message={selected.message} />
             </div>
           </div>
 
