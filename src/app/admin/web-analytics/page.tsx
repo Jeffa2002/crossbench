@@ -40,7 +40,7 @@ const COUNTRY_POINTS: Record<string, [number, number]> = {
   NL: [5, 52], IE: [-8, 53], IT: [12, 43], ES: [-4, 40], SE: [15, 62], NO: [8, 61], FI: [26, 64],
 };
 
-type SessionWithViews = Awaited<ReturnType<typeof loadSessions7d>>[number];
+type SessionWithViews = Awaited<ReturnType<typeof loadSessionsRange>>[number];
 
 function countryName(code: string | null) {
   if (!code) return 'Unknown';
@@ -159,6 +159,95 @@ function topRows(map: Map<string, number>, limit = 10) {
     .slice(0, limit);
 }
 
+function firstParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function dateInputValue(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function parseDateInput(value: string | undefined, endOfDay = false) {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  if (Number.isNaN(date.getTime())) return null;
+  if (endOfDay) date.setUTCDate(date.getUTCDate() + 1);
+  return date;
+}
+
+async function resolveRange(searchParams: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined> | undefined) {
+  const params = await Promise.resolve(searchParams || {});
+  const now = new Date();
+  const selected = firstParam(params.range) || '7d';
+  const from = firstParam(params.from);
+  const to = firstParam(params.to);
+
+  if (selected === 'custom') {
+    const start = parseDateInput(from);
+    const end = parseDateInput(to, true);
+    if (start && end && start < end) {
+      const previousStart = new Date(start.getTime() - (end.getTime() - start.getTime()));
+      return {
+        key: 'custom',
+        label: `${dateInputValue(start)} to ${dateInputValue(new Date(end.getTime() - 1))}`,
+        shortLabel: 'custom range',
+        start,
+        end,
+        previousStart,
+        from: dateInputValue(start),
+        to: dateInputValue(new Date(end.getTime() - 1)),
+      };
+    }
+  }
+
+  const days = selected === '90d' ? 90 : selected === '30d' ? 30 : 7;
+  const start = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+  const previousStart = new Date(start.getTime() - days * 24 * 60 * 60 * 1000);
+  return {
+    key: `${days}d`,
+    label: `${days} days`,
+    shortLabel: `${days}d`,
+    start,
+    end: now,
+    previousStart,
+    from: dateInputValue(start),
+    to: dateInputValue(now),
+  };
+}
+
+function RangeSelector({ range }: { range: Awaited<ReturnType<typeof resolveRange>> }) {
+  const presets = [
+    { key: '7d', label: '7 days' },
+    { key: '30d', label: '30 days' },
+    { key: '90d', label: '90 days' },
+  ];
+
+  return (
+    <div className="mt-5 flex flex-wrap items-center gap-3">
+      <div className="flex gap-1 rounded-xl border border-[#25324D] bg-[#111A2E] p-1">
+        {presets.map(item => (
+          <a
+            key={item.key}
+            href={`/admin/web-analytics?range=${item.key}`}
+            className={`rounded-lg px-3 py-2 text-sm font-bold no-underline ${range.key === item.key ? 'bg-[#D6A94A] text-[#0B1220]' : 'text-[#7E8AA3]'}`}
+          >
+            {item.label}
+          </a>
+        ))}
+      </div>
+      <form action="/admin/web-analytics" className="flex flex-wrap items-center gap-2">
+        <input type="hidden" name="range" value="custom" />
+        <input name="from" type="date" defaultValue={range.from} className="rounded-lg border border-[#25324D] bg-[#111A2E] px-3 py-2 text-sm text-[#F5F7FB]" />
+        <span className="text-sm text-[#4E5A73]">to</span>
+        <input name="to" type="date" defaultValue={range.to} className="rounded-lg border border-[#25324D] bg-[#111A2E] px-3 py-2 text-sm text-[#F5F7FB]" />
+        <button type="submit" className={`rounded-lg border px-3 py-2 text-sm font-bold ${range.key === 'custom' ? 'border-[#D6A94A] bg-[#D6A94A] text-[#0B1220]' : 'border-[#25324D] bg-[#16213A] text-[#F5F7FB]'}`}>
+          Apply
+        </button>
+      </form>
+    </div>
+  );
+}
+
 function mapPoint(code: string | null) {
   if (!code || !COUNTRY_POINTS[code]) return null;
   const [lon, lat] = COUNTRY_POINTS[code];
@@ -168,9 +257,9 @@ function mapPoint(code: string | null) {
   };
 }
 
-async function loadSessions7d(since7d: Date) {
+async function loadSessionsRange(start: Date, end: Date) {
   return prisma.webVisitSession.findMany({
-    where: { startedAt: { gte: since7d } },
+    where: { startedAt: { gte: start, lt: end } },
     orderBy: { lastSeenAt: 'desc' },
     take: 1500,
     include: { pageViews: { orderBy: { startedAt: 'asc' }, take: 80 } },
@@ -243,13 +332,12 @@ function Panel({ title, children, subtitle }: { title: string; children: React.R
   );
 }
 
-export default async function AdminWebAnalyticsPage() {
-  const since24h = new Date();
-  since24h.setDate(since24h.getDate() - 1);
-  const previous24hStart = new Date(since24h);
-  previous24hStart.setDate(previous24hStart.getDate() - 1);
-  const since7d = new Date();
-  since7d.setDate(since7d.getDate() - 7);
+export default async function AdminWebAnalyticsPage({ searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined> }) {
+  const range = await resolveRange(searchParams);
+  const since24h = range.start;
+  const previous24hStart = range.previousStart;
+  const since7d = range.start;
+  const rangeEnd = range.end;
 
   const [
     sessions24h,
@@ -273,23 +361,23 @@ export default async function AdminWebAnalyticsPage() {
     votes7d,
     mpNewsletterDeliveries7d,
   ] = await Promise.all([
-    prisma.webVisitSession.count({ where: { startedAt: { gte: since24h } } }),
-    prisma.webPageView.count({ where: { startedAt: { gte: since24h } } }),
+    prisma.webVisitSession.count({ where: { startedAt: { gte: since24h, lt: rangeEnd } } }),
+    prisma.webPageView.count({ where: { startedAt: { gte: since24h, lt: rangeEnd } } }),
     prisma.webVisitSession.count({ where: { startedAt: { gte: previous24hStart, lt: since24h } } }),
     prisma.webPageView.count({ where: { startedAt: { gte: previous24hStart, lt: since24h } } }),
-    prisma.webVisitSession.count({ where: { startedAt: { gte: since7d } } }),
-    prisma.webPageView.count({ where: { startedAt: { gte: since7d } } }),
-    prisma.webPageView.aggregate({ where: { startedAt: { gte: since24h } }, _sum: { durationSeconds: true } }),
+    prisma.webVisitSession.count({ where: { startedAt: { gte: since7d, lt: rangeEnd } } }),
+    prisma.webPageView.count({ where: { startedAt: { gte: since7d, lt: rangeEnd } } }),
+    prisma.webPageView.aggregate({ where: { startedAt: { gte: since24h, lt: rangeEnd } }, _sum: { durationSeconds: true } }),
     prisma.webVisitSession.groupBy({
       by: ['countryCode'],
-      where: { startedAt: { gte: since24h } },
+      where: { startedAt: { gte: since24h, lt: rangeEnd } },
       _count: { _all: true, countryCode: true },
       orderBy: { _count: { countryCode: 'desc' } },
       take: 12,
     }),
     prisma.webPageView.groupBy({
       by: ['path'],
-      where: { startedAt: { gte: since24h } },
+      where: { startedAt: { gte: since24h, lt: rangeEnd } },
       _count: { path: true },
       _sum: { durationSeconds: true },
       orderBy: { _count: { path: 'desc' } },
@@ -297,36 +385,37 @@ export default async function AdminWebAnalyticsPage() {
     }),
     prisma.webPageView.groupBy({
       by: ['referrer'],
-      where: { startedAt: { gte: since24h }, referrer: { not: null } },
+      where: { startedAt: { gte: since24h, lt: rangeEnd }, referrer: { not: null } },
       _count: { referrer: true },
       orderBy: { _count: { referrer: 'desc' } },
       take: 12,
     }),
     prisma.webVisitSession.groupBy({
       by: ['visitorType'],
-      where: { startedAt: { gte: since24h } },
+      where: { startedAt: { gte: since24h, lt: rangeEnd } },
       _count: { _all: true },
       orderBy: { _count: { visitorType: 'desc' } },
     }),
     prisma.webVisitSession.groupBy({
       by: ['countryCode'],
-      where: { startedAt: { gte: since7d }, countryCode: { not: null } },
+      where: { startedAt: { gte: since7d, lt: rangeEnd }, countryCode: { not: null } },
       _count: { _all: true, countryCode: true },
       orderBy: { _count: { countryCode: 'desc' } },
       take: 40,
     }),
-    prisma.webVisitSession.count({ where: { startedAt: { gte: since24h }, countryCode: 'FR' } }),
-    prisma.webPageView.count({ where: { startedAt: { gte: since24h }, session: { countryCode: 'FR' } } }),
+    prisma.webVisitSession.count({ where: { startedAt: { gte: since24h, lt: rangeEnd }, countryCode: 'FR' } }),
+    prisma.webPageView.count({ where: { startedAt: { gte: since24h, lt: rangeEnd }, session: { countryCode: 'FR' } } }),
     prisma.webVisitSession.findMany({
+      where: { startedAt: { gte: since7d, lt: rangeEnd } },
       orderBy: { lastSeenAt: 'desc' },
       take: 30,
       include: { pageViews: { orderBy: { startedAt: 'desc' }, take: 6 } },
     }),
-    loadSessions7d(since7d),
-    prisma.user.count({ where: { createdAt: { gte: since7d } } }),
-    prisma.user.count({ where: { ...addressVerifiedUserWhere, verifiedAt: { gte: since7d } } }),
-    prisma.vote.count({ where: { createdAt: { gte: since7d } } }),
-    prisma.mpNewsletterDelivery.count({ where: { sentAt: { gte: since7d }, status: 'SENT' } }),
+    loadSessionsRange(since7d, rangeEnd),
+    prisma.user.count({ where: { createdAt: { gte: since7d, lt: rangeEnd } } }),
+    prisma.user.count({ where: { ...addressVerifiedUserWhere, verifiedAt: { gte: since7d, lt: rangeEnd } } }),
+    prisma.vote.count({ where: { createdAt: { gte: since7d, lt: rangeEnd } } }),
+    prisma.mpNewsletterDelivery.count({ where: { sentAt: { gte: since7d, lt: rangeEnd }, status: 'SENT' } }),
   ]);
 
   const averageDuration = views24h > 0 ? Math.round((durationSum._sum.durationSeconds || 0) / views24h) : 0;
@@ -395,28 +484,29 @@ export default async function AdminWebAnalyticsPage() {
       <div>
         <h1 className="text-2xl font-bold">Web Analyzer</h1>
         <p className="text-[#7E8AA3] text-sm mt-1">First-party acquisition, funnel, content, geography, and traffic-quality analytics collected by Crossbench.</p>
+        <RangeSelector range={range} />
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
-        <MetricCard label="Sessions, 24h" value={sessions24h.toLocaleString()} sub={`${sessionDelta >= 0 ? '+' : ''}${sessionDelta} vs previous 24h`} />
-        <MetricCard label="Page views, 24h" value={views24h.toLocaleString()} sub={`${viewDelta >= 0 ? '+' : ''}${viewDelta} vs previous 24h`} />
+        <MetricCard label={`Sessions, ${range.label}`} value={sessions24h.toLocaleString()} sub={`${sessionDelta >= 0 ? '+' : ''}${sessionDelta} vs previous range`} />
+        <MetricCard label={`Page views, ${range.label}`} value={views24h.toLocaleString()} sub={`${viewDelta >= 0 ? '+' : ''}${viewDelta} vs previous range`} />
         <MetricCard label="Avg. time/page" value={fmtDuration(averageDuration)} tone="text-[#D6A94A]" />
-        <MetricCard label="7d activity" value={`${sessions7d.toLocaleString()} / ${views7d.toLocaleString()}`} sub="sessions / views" />
-        <MetricCard label="Traffic quality, 7d" value={`${pct(humanSessions7d, sessions7dFull.length)}% human`} sub={`${suspiciousSessions7d} bot/suspicious sessions`} tone={suspiciousSessions7d > 0 ? 'text-[#D6A94A]' : 'text-green-300'} />
+        <MetricCard label={`Range activity, ${range.shortLabel}`} value={`${sessions7d.toLocaleString()} / ${views7d.toLocaleString()}`} sub="sessions / views" />
+        <MetricCard label={`Traffic quality, ${range.shortLabel}`} value={`${pct(humanSessions7d, sessions7dFull.length)}% human`} sub={`${suspiciousSessions7d} bot/suspicious sessions`} tone={suspiciousSessions7d > 0 ? 'text-[#D6A94A]' : 'text-green-300'} />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-5">
-        <MetricCard label="Signup intent, 7d" value={signupIntent7d.toLocaleString()} sub="sessions that reached sign-in" />
-        <MetricCard label="New users, 7d" value={newUsers7d.toLocaleString()} sub={`${pct(newUsers7d, Math.max(1, signupIntent7d))}% of signup-intent sessions`} />
-        <MetricCard label="Address verification, 7d" value={addressVerified7d.toLocaleString()} sub={`${addressVerifyIntent7d} sessions reached verification`} tone="text-[#2E8B57]" />
-        <MetricCard label="Votes, 7d" value={votes7d.toLocaleString()} sub="verified bill votes recorded" tone="text-[#D6A94A]" />
-        <MetricCard label="MP office warmth, 7d" value={mpOfficeSessions7d.toLocaleString()} sub={`${mpDashboardSessions7d} MP dashboard sessions`} tone="text-purple-300" />
+        <MetricCard label={`Signup intent, ${range.shortLabel}`} value={signupIntent7d.toLocaleString()} sub="sessions that reached sign-in" />
+        <MetricCard label={`New users, ${range.shortLabel}`} value={newUsers7d.toLocaleString()} sub={`${pct(newUsers7d, Math.max(1, signupIntent7d))}% of signup-intent sessions`} />
+        <MetricCard label={`Address verification, ${range.shortLabel}`} value={addressVerified7d.toLocaleString()} sub={`${addressVerifyIntent7d} sessions reached verification`} tone="text-[#2E8B57]" />
+        <MetricCard label={`Votes, ${range.shortLabel}`} value={votes7d.toLocaleString()} sub="verified bill votes recorded" tone="text-[#D6A94A]" />
+        <MetricCard label={`MP office warmth, ${range.shortLabel}`} value={mpOfficeSessions7d.toLocaleString()} sub={`${mpDashboardSessions7d} MP dashboard sessions`} tone="text-purple-300" />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
         <section className="bg-[#111A2E] border border-[#25324D] rounded-xl overflow-hidden xl:col-span-2">
           <div className="px-4 py-3 border-b border-[#25324D] flex items-center justify-between gap-3">
-            <h2 className="font-bold">World traffic strength, 7d</h2>
+            <h2 className="font-bold">World traffic strength, {range.shortLabel}</h2>
             <span className="text-xs text-[#7E8AA3]">Darker gold means more sessions</span>
           </div>
           <div className="p-4">
@@ -424,7 +514,7 @@ export default async function AdminWebAnalyticsPage() {
           </div>
         </section>
 
-        <Panel title="Audience type, 24h">
+        <Panel title={`Audience type, ${range.shortLabel}`}>
           <div className="space-y-3">
             {['GUEST', 'REGISTERED', 'MP', 'SENATOR'].map(type => {
               const row = visitorRows.find(item => (item.visitorType || 'GUEST') === type);
@@ -437,14 +527,14 @@ export default async function AdminWebAnalyticsPage() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
-        <Panel title="Acquisition channels, 7d" subtitle="Derived from UTM tags first, then referrer/source grouping.">
+        <Panel title={`Acquisition channels, ${range.shortLabel}`} subtitle="Derived from UTM tags first, then referrer/source grouping.">
           <div className="space-y-3">
             {channelRows.map(row => <BarRow key={row.label} label={row.label} count={row.count} total={sessions7dFull.length} color="bg-[#4E8FD4]" />)}
             {channelRows.length === 0 && <p className="text-sm text-[#4E5A73]">No acquisition data yet.</p>}
           </div>
         </Panel>
 
-        <Panel title="Campaign attribution, 7d" subtitle="UTM campaign/source links appear here automatically.">
+        <Panel title={`Campaign attribution, ${range.shortLabel}`} subtitle="UTM campaign/source links appear here automatically.">
           <div className="space-y-3">
             {campaignRows.map(row => (
               <div key={`${row.label}:${row.source}:${row.medium}`} className="flex justify-between gap-3 text-sm">
@@ -459,7 +549,7 @@ export default async function AdminWebAnalyticsPage() {
           </div>
         </Panel>
 
-        <Panel title="Referrer groups, 7d">
+        <Panel title={`Referrer groups, ${range.shortLabel}`}>
           <div className="space-y-3">
             {referrerGroupRows.map(row => <BarRow key={row.label} label={row.label} count={row.count} total={sessions7dFull.length} color="bg-[#D6A94A]" />)}
           </div>
@@ -467,20 +557,20 @@ export default async function AdminWebAnalyticsPage() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
-        <Panel title="Funnel source pages, 7d" subtitle="Pages immediately before sign-in, verification, or MP dashboard entry.">
+        <Panel title={`Funnel source pages, ${range.shortLabel}`} subtitle="Pages immediately before sign-in, verification, or MP dashboard entry.">
           <div className="space-y-3">
             {conversionRows.map(row => <BarRow key={row.label} label={row.label} count={row.count} total={sessions7dFull.length} color="bg-[#2E8B57]" />)}
             {conversionRows.length === 0 && <p className="text-sm text-[#4E5A73]">No funnel transitions yet.</p>}
           </div>
         </Panel>
 
-        <Panel title="Content categories, 7d">
+        <Panel title={`Content categories, ${range.shortLabel}`}>
           <div className="space-y-3">
             {categoryRows.map(row => <BarRow key={row.label} label={row.label} count={row.count} total={views7d} color="bg-purple-500" />)}
           </div>
         </Panel>
 
-        <Panel title="Australian geography, 7d" subtitle="Cloudflare city/region headers when present.">
+        <Panel title={`Australian geography, ${range.shortLabel}`} subtitle="Cloudflare city/region headers when present.">
           <div className="space-y-3">
             {australiaRows.map(row => <BarRow key={row.label} label={row.label} count={row.count} total={sessions7dFull.filter(s => s.countryCode === 'AU').length} color="bg-[#2E8B57]" />)}
             {australiaRows.length === 0 && <p className="text-sm text-[#4E5A73]">No Australian regional data yet.</p>}
@@ -489,7 +579,7 @@ export default async function AdminWebAnalyticsPage() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
-        <Panel title="Countries, 24h">
+        <Panel title={`Countries, ${range.shortLabel}`}>
           <div className="space-y-3">
             {countryRows.map(row => <BarRow key={row.countryCode || 'unknown'} label={countryName(row.countryCode)} count={row._count._all} total={sessions24h} />)}
             {countryRows.length === 0 && <p className="text-sm text-[#4E5A73]">No session country data yet.</p>}
@@ -498,7 +588,7 @@ export default async function AdminWebAnalyticsPage() {
 
         <section className="bg-[#111A2E] border border-[#25324D] rounded-xl overflow-hidden xl:col-span-2">
           <div className="px-4 py-3 border-b border-[#25324D]">
-            <h2 className="font-bold">Top pages, 24h</h2>
+            <h2 className="font-bold">Top pages, {range.shortLabel}</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -525,26 +615,26 @@ export default async function AdminWebAnalyticsPage() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
-        <Panel title="Bill interest, 7d" subtitle="Bill detail pages by view volume.">
+        <Panel title={`Bill interest, ${range.shortLabel}`} subtitle="Bill detail pages by view volume.">
           <div className="space-y-3">
             {billRows.map(row => <BarRow key={row.label} label={row.label} count={row.count} total={views7d} color="bg-[#D6A94A]" />)}
             {billRows.length === 0 && <p className="text-sm text-[#4E5A73]">No bill-detail traffic yet.</p>}
           </div>
         </Panel>
 
-        <Panel title="MP / office warm leads, 7d" subtitle="Authenticated APH/office sessions and last paths.">
+        <Panel title={`MP / office warm leads, ${range.shortLabel}`} subtitle="Authenticated APH/office sessions and last paths.">
           <div className="space-y-3">
             {warmOfficeRows.map(row => <BarRow key={row.label} label={row.label} count={row.count} total={Math.max(1, mpOfficeSessions7d)} color="bg-purple-500" />)}
             {warmOfficeRows.length === 0 && <p className="text-sm text-[#4E5A73]">No MP office sessions yet.</p>}
           </div>
         </Panel>
 
-        <Panel title="Outreach follow-through, 7d">
+        <Panel title={`Outreach follow-through, ${range.shortLabel}`}>
           <div className="space-y-3 text-sm">
             <div className="flex justify-between gap-3"><span className="text-[#B6C0D1]">MP update emails sent</span><span className="font-bold">{mpNewsletterDeliveries7d.toLocaleString()}</span></div>
             <div className="flex justify-between gap-3"><span className="text-[#B6C0D1]">MP/Senator web sessions</span><span className="font-bold">{mpOfficeSessions7d.toLocaleString()}</span></div>
             <div className="flex justify-between gap-3"><span className="text-[#B6C0D1]">MP dashboard sessions</span><span className="font-bold">{mpDashboardSessions7d.toLocaleString()}</span></div>
-            <div className="flex justify-between gap-3"><span className="text-[#B6C0D1]">France anomaly, 24h</span><span className={franceSessions > 0 ? 'font-bold text-[#F2A7A0]' : 'font-bold text-green-300'}>{franceSessions} sessions / {franceViews} views</span></div>
+            <div className="flex justify-between gap-3"><span className="text-[#B6C0D1]">France anomaly</span><span className={franceSessions > 0 ? 'font-bold text-[#F2A7A0]' : 'font-bold text-green-300'}>{franceSessions} sessions / {franceViews} views</span></div>
           </div>
         </Panel>
       </div>
@@ -552,7 +642,7 @@ export default async function AdminWebAnalyticsPage() {
       <div className="grid gap-4 xl:grid-cols-2">
         <section className="bg-[#111A2E] border border-[#25324D] rounded-xl overflow-hidden">
           <div className="px-4 py-3 border-b border-[#25324D]">
-            <h2 className="font-bold">Top referrers, 24h</h2>
+            <h2 className="font-bold">Top referrers, {range.shortLabel}</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
