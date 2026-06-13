@@ -12,6 +12,12 @@ function generateNonce(): string {
   return btoa(String.fromCharCode(...array))
 }
 
+const BLOCKED_FILE_PATTERNS = [
+  /^\/\.(?:env|git|svn|hg)(?:\/|$)/i,
+  /(?:^|\/)(?:\.env|\.env\.[^/]+|docker-compose\.ya?ml|composer\.(?:json|lock)|package-lock\.json|pnpm-lock\.yaml|yarn\.lock)$/i,
+  /(?:^|\/).*\.(?:bak|backup|old|orig|sql|sqlite|sqlite3|dump|tar|tgz|gz|zip)$/i,
+]
+
 function decodeBase64Url(value: string): string {
   const padded = value.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(value.length / 4) * 4, '=')
   return atob(padded)
@@ -85,6 +91,12 @@ export async function proxy(request: NextRequest) {
     // Force HTTPS for all mixed content
     `upgrade-insecure-requests`,
   ].join('; ')
+
+  if (BLOCKED_FILE_PATTERNS.some(pattern => pattern.test(request.nextUrl.pathname))) {
+    const response = new NextResponse(null, { status: 404 })
+    response.headers.set('Content-Security-Policy', cspHeader)
+    return response
+  }
 
   if (request.nextUrl.pathname === '/admin' || request.nextUrl.pathname.startsWith('/admin/')) {
     if (!await hasAdminSession(request)) {

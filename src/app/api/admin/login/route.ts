@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { timingSafeEqual } from 'crypto';
 import { makeAdminToken } from '@/lib/admin-auth';
 import { checkRateLimit, rateLimitKey } from '@/lib/rate-limit';
+import { verifyRecaptcha } from '@/lib/recaptcha';
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? '';
 
@@ -14,7 +15,20 @@ function safePasswordEquals(candidate: unknown): boolean {
 }
 
 export async function POST(req: NextRequest) {
-  const { password } = await req.json().catch(() => ({}));
+  const { password, recaptchaToken } = await req.json().catch(() => ({}));
+  if (process.env.RECAPTCHA_SECRET_KEY) {
+    if (!recaptchaToken) {
+      return NextResponse.json({ error: 'Missing reCAPTCHA token' }, { status: 400 });
+    }
+    const captcha = await verifyRecaptcha(recaptchaToken, 0.5, { expectedAction: 'admin_login' });
+    if (!captcha.ok) {
+      console.warn(`[reCAPTCHA] Blocked admin login attempt: score=${captcha.score}, error=${captcha.error}`);
+      return NextResponse.json(
+        { error: 'Automated activity detected. Please try again.' },
+        { status: 429 }
+      );
+    }
+  }
   if (!safePasswordEquals(password)) {
     const limited = checkRateLimit(rateLimitKey(req, 'admin-login'), 5, 15 * 60 * 1000);
     if (!limited.ok) {

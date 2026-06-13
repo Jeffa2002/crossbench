@@ -1,20 +1,66 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+
+declare global {
+  interface Window {
+    grecaptcha: any;
+    onAdminRecaptchaLoad: () => void;
+  }
+}
 
 export default function AdminLoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [recaptchaReady, setRecaptchaReady] = useState(false);
+
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = '.grecaptcha-badge { visibility: hidden !important; }';
+    document.head.appendChild(style);
+    return () => { document.head.removeChild(style); };
+  }, []);
+
+  useEffect(() => {
+    const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+    if (!siteKey) {
+      setRecaptchaReady(true);
+      return;
+    }
+
+    if (window.grecaptcha) {
+      setRecaptchaReady(true);
+      return;
+    }
+
+    window.onAdminRecaptchaLoad = () => setRecaptchaReady(true);
+    const existing = document.getElementById('recaptcha-script') as HTMLScriptElement | null;
+    if (existing) {
+      existing.addEventListener('load', window.onAdminRecaptchaLoad, { once: true });
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.id = 'recaptcha-script';
+    script.src = `https://www.google.com/recaptcha/api.js?render=${siteKey}&onload=onAdminRecaptchaLoad`;
+    script.async = true;
+    document.head.appendChild(script);
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError('');
+    let recaptchaToken = '';
+    const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+    if (siteKey && recaptchaReady && window.grecaptcha) {
+      recaptchaToken = await window.grecaptcha.execute(siteKey, { action: 'admin_login' });
+    }
     const res = await fetch('/api/admin/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'same-origin',
-      body: JSON.stringify({ password }),
+      body: JSON.stringify({ password, recaptchaToken }),
     });
     setLoading(false);
     if (res.ok) {
@@ -45,12 +91,18 @@ export default function AdminLoginPage() {
           {error && <div className="text-red-400 text-sm">{error}</div>}
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !recaptchaReady}
             className="w-full bg-[#2E8B57] text-white py-3 rounded-lg font-medium hover:bg-[#25724A] disabled:opacity-50"
           >
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
+        <p className="text-[10px] text-[#4E5A73] mt-4 text-center leading-relaxed">
+          Protected by reCAPTCHA —{' '}
+          <a href="https://policies.google.com/privacy" target="_blank" rel="noopener" className="hover:underline">Privacy</a>{' '}
+          &amp;{' '}
+          <a href="https://policies.google.com/terms" target="_blank" rel="noopener" className="hover:underline">Terms</a>
+        </p>
       </div>
     </main>
   );
