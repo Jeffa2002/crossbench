@@ -478,13 +478,41 @@ export default async function AdminWebAnalyticsPage({ searchParams }: { searchPa
   const referrerGroupRows = topRows(referrerGroupMap, 8);
   const sessionDelta = sessions24h - prevSessions24h;
   const viewDelta = views24h - prevViews24h;
+  const exportHref = `/admin/web-analytics/export?range=${range.key}&from=${range.from}&to=${range.to}`;
+  const goalRows = [
+    { label: 'Signup intent', count: signupIntent7d, total: sessions7dFull.length, color: 'bg-[#D6A94A]' },
+    { label: 'Address verification', count: addressVerified7d, total: Math.max(1, signupIntent7d), color: 'bg-[#2E8B57]' },
+    { label: 'Votes recorded', count: votes7d, total: Math.max(1, addressVerified7d), color: 'bg-purple-500' },
+    { label: 'MP/Senator sessions', count: mpOfficeSessions7d, total: sessions7dFull.length, color: 'bg-blue-400' },
+    { label: 'MP dashboard sessions', count: mpDashboardSessions7d, total: Math.max(1, mpOfficeSessions7d), color: 'bg-purple-500' },
+  ];
+  const botRate = pct(botSessions7d, sessions7dFull.length);
+  const alertRows = [
+    ...(sessionDelta <= -5 ? [`Sessions are down ${Math.abs(sessionDelta).toLocaleString()} versus the previous equal range.`] : []),
+    ...(viewDelta >= 20 ? [`Page views are up ${viewDelta.toLocaleString()} versus the previous equal range.`] : []),
+    ...(botRate >= 20 ? [`Bot traffic is high at ${botRate}% of sessions.`] : []),
+    ...(franceSessions >= 5 ? [`France traffic is elevated with ${franceSessions.toLocaleString()} sessions.`] : []),
+    ...(signupIntent7d > 0 && newUsers7d === 0 ? ['Signup intent exists, but no new users were created in this range.'] : []),
+  ];
+  const segmentRows = [
+    { label: 'Humans only', count: humanSessions7d, total: sessions7dFull.length, color: 'bg-[#2E8B57]' },
+    { label: 'Australia', count: sessions7dFull.filter(session => session.countryCode === 'AU').length, total: sessions7dFull.length, color: 'bg-[#2E8B57]' },
+    { label: 'MP/Senator office traffic', count: mpOfficeSessions7d, total: sessions7dFull.length, color: 'bg-purple-500' },
+    { label: 'Campaign traffic', count: sessions7dFull.filter(session => campaignFor(session).medium !== 'direct' && campaignFor(session).source !== 'Bot').length, total: sessions7dFull.length, color: 'bg-[#D6A94A]' },
+    { label: 'Bots/suspicious', count: suspiciousSessions7d, total: sessions7dFull.length, color: 'bg-[#F2A7A0]' },
+  ];
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Web Analyzer</h1>
         <p className="text-[#7E8AA3] text-sm mt-1">First-party acquisition, funnel, content, geography, and traffic-quality analytics collected by Crossbench.</p>
-        <RangeSelector range={range} />
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <RangeSelector range={range} />
+          <a href={exportHref} className="rounded-lg border border-[#25324D] bg-[#16213A] px-3 py-2 text-sm font-bold text-[#F5F7FB] no-underline">
+            Export CSV
+          </a>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
@@ -501,6 +529,35 @@ export default async function AdminWebAnalyticsPage({ searchParams }: { searchPa
         <MetricCard label={`Address verification, ${range.shortLabel}`} value={addressVerified7d.toLocaleString()} sub={`${addressVerifyIntent7d} sessions reached verification`} tone="text-[#2E8B57]" />
         <MetricCard label={`Votes, ${range.shortLabel}`} value={votes7d.toLocaleString()} sub="verified bill votes recorded" tone="text-[#D6A94A]" />
         <MetricCard label={`MP office warmth, ${range.shortLabel}`} value={mpOfficeSessions7d.toLocaleString()} sub={`${mpDashboardSessions7d} MP dashboard sessions`} tone="text-purple-300" />
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-3">
+        <Panel title={`Goal tracking, ${range.shortLabel}`} subtitle="Crossbench signup, verification, voting, and MP-office goals.">
+          <div className="space-y-3">
+            {goalRows.map(row => <BarRow key={row.label} label={row.label} count={row.count} total={row.total} color={row.color} detail={`${pct(row.count, row.total)}%`} />)}
+          </div>
+        </Panel>
+
+        <Panel title="Saved segments" subtitle="Fast-read segments for the selected range.">
+          <div className="space-y-3">
+            {segmentRows.map(row => <BarRow key={row.label} label={row.label} count={row.count} total={row.total} color={row.color} detail={`${pct(row.count, row.total)}%`} />)}
+          </div>
+        </Panel>
+
+        <Panel title="Bot and junk traffic" subtitle="Sessions that look automated or unusually noisy.">
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between gap-3"><span className="text-[#B6C0D1]">Bot sessions</span><span className="font-bold">{botSessions7d.toLocaleString()} · {botRate}%</span></div>
+            <div className="flex justify-between gap-3"><span className="text-[#B6C0D1]">Suspicious sessions</span><span className="font-bold">{suspiciousSessions7d.toLocaleString()}</span></div>
+            <div className="flex justify-between gap-3"><span className="text-[#B6C0D1]">Human sessions</span><span className="font-bold">{humanSessions7d.toLocaleString()}</span></div>
+          </div>
+        </Panel>
+
+        <Panel title="Alerts" subtitle="Automatic checks for the selected range.">
+          <div className="space-y-2 text-sm">
+            {alertRows.map(alert => <div key={alert} className="rounded-lg border border-[#5A4516] bg-[#2A220F] p-3 text-[#FDE68A]">{alert}</div>)}
+            {alertRows.length === 0 && <p className="text-sm text-[#4E5A73]">No obvious anomalies in this range.</p>}
+          </div>
+        </Panel>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
