@@ -35,8 +35,8 @@ export async function POST(req: NextRequest) {
   const finalName = typeof name === 'string' && name.trim() ? name.trim().slice(0, 120) : session?.user?.name || null;
   const finalSubject = subject.trim().slice(0, 160);
   const finalMessage = message.trim().slice(0, 4000);
-  const ipLimit = checkRateLimit(rateLimitKey(req, 'support-ticket'), 3, 10 * 60_000);
-  const emailLimit = checkRateLimit(`support-ticket-email:${finalEmail.toLowerCase()}`, 5, 60 * 60_000);
+  const ipLimit = await checkRateLimit(rateLimitKey(req, 'support-ticket'), 3, 10 * 60_000);
+  const emailLimit = await checkRateLimit(`support-ticket-email:${finalEmail.toLowerCase()}`, 5, 60 * 60_000);
   if (!ipLimit.ok || !emailLimit.ok) {
     return NextResponse.json(
       { error: 'Too many support tickets. Please wait and try again.' },

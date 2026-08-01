@@ -48,7 +48,7 @@ function parseMessages(value: unknown): SupportChatMessage[] | null {
 }
 
 export async function POST(req: NextRequest) {
-  const limited = checkRateLimit(rateLimitKey(req, 'support-chat'), 8, 60_000);
+  const limited = await checkRateLimit(rateLimitKey(req, 'support-chat'), 8, 60_000);
   if (!limited.ok) {
     return NextResponse.json(
       { error: 'Too many chat requests. Please wait a minute and try again.' },

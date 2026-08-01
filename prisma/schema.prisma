@@ -536,3 +536,27 @@ model WebPageView {
   @@index([startedAt])
   @@index([durationSeconds])
 }
+
+// C-02: Shared, DB-backed rate-limit state (replaces in-process Map).
+model RateLimitBucket {
+  id      String   @id
+  key     String
+  count   Int      @default(0)
+  resetAt DateTime
+
+  @@index([resetAt])
+}
+
+// C-04: Per-admin identities with password + TOTP MFA (replaces shared ADMIN_PASSWORD).
+model AdminUser {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  totpSecret   String?
+  active       Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([active])
+}

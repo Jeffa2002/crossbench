@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth';
 import { getActiveOfficeMembership } from '@/lib/mp-office';
 import { prisma } from '@/lib/prisma';
 import { checkRateLimit, rateLimitKey } from '@/lib/rate-limit';
+import { signPageView } from '@/lib/analytics-token';
 
 const SENSITIVE_QUERY_KEYS = /token|secret|code|email|password|callback|redirect|session|state/i;
 
@@ -77,7 +78,7 @@ async function visitorIdentity() {
 }
 
 export async function POST(req: NextRequest) {
-  const limited = checkRateLimit(rateLimitKey(req, 'analytics-pageview'), 120, 60 * 1000);
+  const limited = await checkRateLimit(rateLimitKey(req, 'analytics-pageview'), 120, 60 * 1000);
   if (!limited.ok) return NextResponse.json({ error: 'Rate limited' }, { status: 429 });
 
   const body = await req.json().catch(() => ({}));
@@ -129,5 +130,8 @@ export async function POST(req: NextRequest) {
     select: { id: true },
   });
 
-  return NextResponse.json({ ok: true, pageViewId: view.id });
+  // C-01: return an opaque server-signed token instead of the raw id, so the
+  // /end endpoint can verify the client is closing a pageView the server
+  // actually issued for this session (prevents forged/guessed-ID poisoning).
+  return NextResponse.json({ ok: true, pageViewToken: signPageView(view.id, sessionId) });
 }

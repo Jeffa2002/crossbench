@@ -9,7 +9,9 @@ declare global {
 }
 
 export default function AdminLoginPage() {
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [totp, setTotp] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [recaptchaReady, setRecaptchaReady] = useState(false);
@@ -60,7 +62,7 @@ export default function AdminLoginPage() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'same-origin',
-      body: JSON.stringify({ password, recaptchaToken }),
+      body: JSON.stringify({ email, password, totp, recaptchaToken }),
     });
     setLoading(false);
     if (res.ok) {
@@ -80,12 +82,32 @@ export default function AdminLoginPage() {
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            placeholder="Email"
+            autoComplete="username"
+            autoFocus
+            className="w-full bg-[#16213A] border border-[#25324D] rounded-lg px-4 py-3 text-sm text-[#F5F7FB] focus:outline-none focus:ring-2 focus:ring-[#2E8B57]"
+          />
+          <input
             type="password"
             value={password}
             onChange={e => setPassword(e.target.value)}
             placeholder="Password"
             required
-            autoFocus
+            autoComplete="current-password"
+            className="w-full bg-[#16213A] border border-[#25324D] rounded-lg px-4 py-3 text-sm text-[#F5F7FB] focus:outline-none focus:ring-2 focus:ring-[#2E8B57]"
+          />
+          <input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={6}
+            value={totp}
+            onChange={e => setTotp(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
+            placeholder="Authenticator code (if enabled)"
+            autoComplete="one-time-code"
             className="w-full bg-[#16213A] border border-[#25324D] rounded-lg px-4 py-3 text-sm text-[#F5F7FB] focus:outline-none focus:ring-2 focus:ring-[#2E8B57]"
           />
           {error && <div className="text-red-400 text-sm">{error}</div>}

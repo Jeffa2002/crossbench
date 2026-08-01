@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const limited = checkRateLimit(rateLimitKey(req, 'electorate-lookup', (session.user as any).id), 10, 10 * 60 * 1000);
+  const limited = await checkRateLimit(rateLimitKey(req, 'electorate-lookup', (session.user as any).id), 10, 10 * 60 * 1000);
   if (!limited.ok) {
     return NextResponse.json(
       { error: 'Too many address lookups. Please wait and try again.' },
