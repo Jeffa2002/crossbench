@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { supportMailboxSourcesFromMessage } from '@/lib/support-inbound';
 
 type Reply = { id: string; authorEmail: string; isAdmin: boolean; isAi: boolean; message: string; resendId: string | null; emailSentAt: string | null; emailError: string | null; createdAt: string };
 type SupportAttachment = { id: string; emailId: string; filename: string; contentType: string; size: number };
@@ -78,6 +79,13 @@ function extractAttachments(message: string): SupportAttachment[] {
 function ticketAttachmentCount(ticket: Ticket) {
   return extractAttachments(ticket.message).length
     + ticket.replies.reduce((total, reply) => total + extractAttachments(reply.message).length, 0);
+}
+
+function ticketMailboxSources(ticket: Ticket) {
+  return [...new Set([
+    ...supportMailboxSourcesFromMessage(ticket.message),
+    ...ticket.replies.flatMap(reply => supportMailboxSourcesFromMessage(reply.message)),
+  ])];
 }
 
 function AttachmentLinks({ ticketId, message }: { ticketId: string; message: string }) {
@@ -193,6 +201,7 @@ export default function AdminSupportPage() {
             {tickets.map(t => {
               const founderMarked = isFounderMarkedTicket(t);
               const attachments = ticketAttachmentCount(t);
+              const mailboxSources = ticketMailboxSources(t);
               return (
               <div key={t.id} className="support-ticket-card" onClick={() => setSelected(t)} style={{
                 backgroundColor: founderMarked ? (selected?.id === t.id ? '#2B2310' : '#1C1A12') : (selected?.id === t.id ? '#1A2540' : '#111A2E'),
@@ -203,6 +212,7 @@ export default function AdminSupportPage() {
                 <div className="support-ticket-card-heading" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '6px' }}>
                   <span style={{ fontWeight: 600, fontSize: '14px', color: '#F5F7FB', flex: 1, minWidth: 0 }}>{t.subject}</span>
                   <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
+                    {mailboxSources.map(source => <Badge key={source} label={source.toUpperCase()} color="#9B7EDB" />)}
                     {founderMarked && <Badge label="JEFFREY E" color="#D6A94A" />}
                     <Badge label={t.status} color={STATUS_COLORS[t.status] || '#7E8AA3'} />
                     {attachments > 0 && <Badge label={`${attachments} ATT`} color="#D6A94A" />}
@@ -226,6 +236,11 @@ export default function AdminSupportPage() {
             <button className="support-mobile-back" onClick={() => setSelected(null)}>← Tickets</button>
             <div className="support-detail-heading" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
               <div style={{ minWidth: 0 }}>
+                {ticketMailboxSources(selected).map(source => (
+                  <div key={source} style={{ marginBottom: '8px' }}>
+                    <Badge label={`Source: ${source}`} color="#9B7EDB" />
+                  </div>
+                ))}
                 {isFounderMarkedTicket(selected) && (
                   <div style={{ marginBottom: '8px' }}>
                     <Badge label={`Marked to ${FOUNDER_EMAIL}`} color="#D6A94A" />

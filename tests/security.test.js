@@ -7,6 +7,7 @@ require('ts-node/register');
 const { safeRelativeRedirect } = require('../src/lib/app-url.ts');
 const { hasMpEntitlement } = require('../src/lib/mp-entitlement.ts');
 const { isClearlyAutomaticSupportReply } = require('../src/lib/support-auto-reply.ts');
+const { supportMailboxSources, supportMailboxSourcesFromMessage } = require('../src/lib/support-inbound.ts');
 const { createVerificationToken, readVerificationToken } = require('../src/lib/verification-token.ts');
 
 function signedVerificationToken(payload, secret) {
@@ -68,4 +69,19 @@ test('support inbound detection closes only clear automatic replies', () => {
     subject: 'Re: Crossbench introduction',
     body: 'Thanks for getting in touch. Could you send through a few times for a call?',
   }), false);
+});
+
+test('support inbound email preserves privacy and security mailbox sources', () => {
+  assert.deepEqual(supportMailboxSources([
+    'Crossbench Privacy <PRIVACY@crossbench.io>',
+    'security@crossbench.io',
+    'support@crossbench.io',
+    'privacy@crossbench.io',
+  ]), ['Privacy Email', 'Security Email']);
+
+  assert.deepEqual(
+    supportMailboxSourcesFromMessage('Inbound email reply received by Crossbench.\n\nSource mailbox: Privacy Email\nFrom: user@example.com'),
+    ['Privacy Email'],
+  );
+  assert.deepEqual(supportMailboxSourcesFromMessage('Web support form submission'), []);
 });

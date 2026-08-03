@@ -3,6 +3,7 @@ import { Resend } from 'resend';
 import { prisma } from '@/lib/prisma';
 import { generateSupportAiReply } from '@/lib/support-ai';
 import { isClearlyAutomaticSupportReply } from '@/lib/support-auto-reply';
+import { supportMailboxSources } from '@/lib/support-inbound';
 
 function cleanEmailAddress(value: string) {
   const match = value.match(/<([^>]+)>/);
@@ -119,9 +120,15 @@ export async function POST(req: NextRequest) {
     ...(email.cc || []),
     ...(email.bcc || []),
   ]);
+  const mailboxSources = supportMailboxSources([
+    ...(email.to || []),
+    ...(email.cc || []),
+    ...(email.bcc || []),
+  ]);
   const message = [
     `Inbound email reply received by Crossbench.`,
     ``,
+    mailboxSources.length ? `Source mailbox: ${mailboxSources.join(', ')}` : '',
     `From: ${email.from}`,
     `To: ${email.to.join(', ')}`,
     email.cc?.length ? `Cc: ${email.cc.join(', ')}` : '',

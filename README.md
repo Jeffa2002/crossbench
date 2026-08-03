@@ -132,6 +132,10 @@ NEXT_PUBLIC_APP_URL="http://localhost:3000"
 # Email (Resend — magic-link auth)
 RESEND_API_KEY="re_xxxxxxxxxxxx"
 
+# Inbound support email (Resend Receiving)
+RESEND_RECEIVING_API_KEY="re_xxxxxxxxxxxx"
+RESEND_WEBHOOK_SECRET="whsec_xxxxxxxxxxxx"
+
 # AI (Anthropic — bill summaries + support chat)
 ANTHROPIC_API_KEY="sk-ant-xxxxxxxxxxxx"
 
@@ -360,6 +364,12 @@ Register `https://crossbench.io/api/stripe/webhook` in the Stripe dashboard. Eve
 - `customer.subscription.deleted`
 - `invoice.payment_failed`
 
+### Inbound Support Email
+
+In Resend, enable Receiving for `crossbench.io` and publish the MX record(s) Resend provides for the domain. Configure both `privacy@crossbench.io` and `security@crossbench.io` as receiving addresses, then add an `email.received` webhook pointing to `https://crossbench.io/api/resend/inbound`. Set `RESEND_WEBHOOK_SECRET` to that webhook's signing secret and `RESEND_RECEIVING_API_KEY` to an API key with Receiving access. Messages to these addresses enter the support queue with a `Privacy Email` or `Security Email` source marker.
+
+If another provider owns the domain's MX records, configure provider-side routes for both addresses into the Resend receiving domain/address instead of replacing MX records. Confirm that forwarding preserves the original address in the Resend `to`, `cc`, or `bcc` fields; the source marker intentionally relies on the original recipient.
+
 ---
 
 ## Environment Variables Reference
@@ -372,6 +382,8 @@ Register `https://crossbench.io/api/stripe/webhook` in the Stripe dashboard. Eve
 | `AUTH_TRUST_HOST` | ✅ | Set to `true` behind a proxy/PM2 |
 | `NEXT_PUBLIC_APP_URL` | ✅ | Public-facing app URL |
 | `RESEND_API_KEY` | ✅ | Resend API key for magic-link emails |
+| `RESEND_RECEIVING_API_KEY` | Inbound email | Resend API key with Receiving access; falls back to `RESEND_API_KEY` when omitted |
+| `RESEND_WEBHOOK_SECRET` | Inbound email | Signing secret for the Resend `email.received` webhook |
 | `ANTHROPIC_API_KEY` | ✅ | Anthropic key for Claude bill summaries + chat |
 | `STRIPE_SECRET_KEY` | ✅ | Stripe secret key |
 | `STRIPE_WEBHOOK_SECRET` | ✅ | Stripe webhook signing secret |
