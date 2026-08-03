@@ -312,6 +312,7 @@ model SupportReply {
   resendId    String?
   emailSentAt DateTime?
   emailError  String?
+  attachmentNames String?
   createdAt   DateTime      @default(now())
   ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 

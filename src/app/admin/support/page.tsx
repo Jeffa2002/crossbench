@@ -1,9 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { supportMailboxSourcesFromMessage } from '@/lib/support-inbound';
 
-type Reply = { id: string; authorEmail: string; isAdmin: boolean; isAi: boolean; message: string; resendId: string | null; emailSentAt: string | null; emailError: string | null; createdAt: string };
+type Reply = { id: string; authorEmail: string; isAdmin: boolean; isAi: boolean; message: string; resendId: string | null; emailSentAt: string | null; emailError: string | null; attachmentNames: string | null; createdAt: string };
 type SupportAttachment = { id: string; emailId: string; filename: string; contentType: string; size: number };
 type Ticket = {
   id: string; email: string; name: string | null; subject: string; message: string;
@@ -127,6 +128,9 @@ export default function AdminSupportPage() {
   const [replyText, setReplyText] = useState('');
   const [replying, setReplying] = useState(false);
   const [replyError, setReplyError] = useState('');
+  const [replyAttachments, setReplyAttachments] = useState<File[]>([]);
+  const replyInput = useRef<HTMLTextAreaElement>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/admin/support${statusFilter ? `?status=${statusFilter}` : ''}`);
@@ -149,13 +153,18 @@ export default function AdminSupportPage() {
     if (!replyText.trim()) return;
     setReplying(true);
     setReplyError('');
-    const res = await fetch(`/api/admin/support/${ticketId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: replyText }) });
+    const form = new FormData();
+    form.set('message', replyText);
+    replyAttachments.forEach(file => form.append('attachments', file));
+    const res = await fetch(`/api/admin/support/${ticketId}`, { method: 'PATCH', body: form });
     const data = await res.json().catch(() => null);
     if (res.ok) {
       const updated = data.ticket ?? data;
       setTickets(current => sortByLatestActivity(current.map(t => t.id === updated.id ? updated : t)));
       setSelected(updated);
       setReplyText('');
+      setReplyAttachments([]);
+      if (fileInput.current) fileInput.current.value = '';
     } else {
       setReplyError(data?.email?.error || data?.error || 'Reply saved, but email delivery failed.');
       if (data?.ticket) {
@@ -168,6 +177,25 @@ export default function AdminSupportPage() {
 
   function useAiSuggestion() {
     if (selected?.aiSuggestedReply) setReplyText(selected.aiSuggestedReply);
+  }
+
+  function wrapSelection(before: string, after = before, placeholder = 'text') {
+    const input = replyInput.current;
+    if (!input) return;
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const selectedText = replyText.slice(start, end) || placeholder;
+    const next = `${replyText.slice(0, start)}${before}${selectedText}${after}${replyText.slice(end)}`;
+    setReplyText(next);
+    requestAnimationFrame(() => {
+      input.focus();
+      input.setSelectionRange(start + before.length, start + before.length + selectedText.length);
+    });
+  }
+
+  function attachmentNames(value: string | null) {
+    if (!value) return [];
+    try { return JSON.parse(value) as string[]; } catch { return []; }
   }
 
   const counts = { OPEN: tickets.filter(t => t.status === 'OPEN').length, IN_PROGRESS: tickets.filter(t => t.status === 'IN_PROGRESS').length, RESOLVED: tickets.filter(t => t.status === 'RESOLVED').length };
@@ -288,8 +316,15 @@ export default function AdminSupportPage() {
                 <p style={{ fontSize: '11px', color: r.isAdmin ? '#2E8B57' : '#4A5568', margin: '0 0 6px', fontWeight: 600 }}>
                   {r.isAdmin ? '🛡 Admin' : '👤 User'} · {r.authorEmail} · {new Date(r.createdAt).toLocaleString('en-AU')}
                 </p>
-                <p style={{ fontSize: '14px', color: '#F5F7FB', margin: 0, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{r.message}</p>
+                {r.isAdmin ? (
+                  <div className="support-markdown" style={{ fontSize: '14px', color: '#F5F7FB', lineHeight: 1.5 }}><ReactMarkdown>{r.message}</ReactMarkdown></div>
+                ) : (
+                  <p style={{ fontSize: '14px', color: '#F5F7FB', margin: 0, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{r.message}</p>
+                )}
                 <AttachmentLinks ticketId={selected.id} message={r.message} />
+                {attachmentNames(r.attachmentNames).length > 0 && (
+                  <p style={{ fontSize: '12px', color: '#D6A94A', margin: '8px 0 0' }}>📎 {attachmentNames(r.attachmentNames).join(' · ')}</p>
+                )}
                 {r.isAdmin && (
                   <p style={{ fontSize: '11px', color: r.emailError ? '#D95C4B' : '#2E8B57', margin: '8px 0 0' }}>
                     {r.emailError ? `Email failed: ${r.emailError}` : r.emailSentAt ? `Email sent via Resend${r.resendId ? ` · ${r.resendId}` : ''}` : 'Email delivery not recorded'}
@@ -308,13 +343,26 @@ export default function AdminSupportPage() {
 
           {/* Reply box */}
           <div className="support-reply-box" style={{ padding: '14px 20px', borderTop: '1px solid #25324D' }}>
+            <div style={{ display: 'flex', gap: '6px', marginBottom: '7px', flexWrap: 'wrap' }}>
+              <button type="button" onClick={() => wrapSelection('**')} title="Bold" style={{ background: '#16213A', border: '1px solid #25324D', color: '#F5F7FB', borderRadius: '5px', padding: '4px 9px', fontWeight: 700 }}>B</button>
+              <button type="button" onClick={() => wrapSelection('_')} title="Italic" style={{ background: '#16213A', border: '1px solid #25324D', color: '#F5F7FB', borderRadius: '5px', padding: '4px 9px', fontStyle: 'italic' }}>I</button>
+              <button type="button" onClick={() => wrapSelection('- ', '', 'list item')} title="Bulleted list" style={{ background: '#16213A', border: '1px solid #25324D', color: '#F5F7FB', borderRadius: '5px', padding: '4px 9px' }}>• List</button>
+              <button type="button" onClick={() => wrapSelection('[', '](https://)', 'link text')} title="Link" style={{ background: '#16213A', border: '1px solid #25324D', color: '#F5F7FB', borderRadius: '5px', padding: '4px 9px' }}>Link</button>
+            </div>
             <textarea
+              ref={replyInput}
               value={replyText}
               onChange={e => setReplyText(e.target.value)}
               placeholder="Write a reply…"
               rows={3}
               style={{ width: '100%', backgroundColor: '#16213A', border: '1px solid #25324D', borderRadius: '8px', padding: '10px 14px', fontSize: '14px', color: '#F5F7FB', outline: 'none', resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box' }}
             />
+            <div style={{ marginTop: '8px' }}>
+              <input ref={fileInput} type="file" multiple onChange={event => setReplyAttachments(Array.from(event.target.files || []))} style={{ display: 'none' }} />
+              <button type="button" onClick={() => fileInput.current?.click()} style={{ fontSize: '12px', color: '#D6A94A', background: 'none', border: '1px solid rgba(214,169,74,0.35)', borderRadius: '6px', padding: '5px 10px', cursor: 'pointer' }}>📎 Add attachments</button>
+              {replyAttachments.length > 0 && <span style={{ fontSize: '12px', color: '#B6C0D1', marginLeft: '8px' }}>{replyAttachments.map(file => file.name).join(' · ')}</span>}
+              <span style={{ display: 'block', fontSize: '11px', color: '#4E5A73', marginTop: '4px' }}>Up to 6 files, 20MB total. Formatting uses Markdown.</span>
+            </div>
             <div className="support-reply-actions" style={{ display: 'flex', gap: '8px', marginTop: '8px', justifyContent: 'flex-end' }}>
               {replyError && <span style={{ fontSize: '12px', color: '#D95C4B', marginRight: 'auto', alignSelf: 'center' }}>{replyError}</span>}
               <button onClick={useAiSuggestion} disabled={!selected.aiSuggestedReply} style={{ fontSize: '13px', color: '#2E8B57', background: 'none', border: '1px solid rgba(46,139,87,0.3)', borderRadius: '6px', padding: '6px 12px', cursor: 'pointer', opacity: selected.aiSuggestedReply ? 1 : 0.3 }}>✨ Use AI suggestion</button>

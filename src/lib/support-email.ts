@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { supportMarkdownToHtml, supportMarkdownToText } from '@/lib/support-format';
 
 type TicketForReply = {
   id: string;
@@ -25,7 +26,13 @@ export function ticketReplyAddress(ticketId: string) {
   return `support+ticket-${ticketId}@crossbench.io`;
 }
 
-export async function sendSupportTicketReply(ticket: TicketForReply, message: string, authorEmail: string) {
+type SupportReplyAttachment = {
+  filename: string;
+  content: Buffer;
+  contentType?: string;
+};
+
+export async function sendSupportTicketReply(ticket: TicketForReply, message: string, authorEmail: string, attachments: SupportReplyAttachment[] = []) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) throw new Error('RESEND_API_KEY is not configured');
 
@@ -34,7 +41,7 @@ export async function sendSupportTicketReply(ticket: TicketForReply, message: st
   const replyTo = ticketReplyAddress(ticket.id);
   const subject = normalizeSubject(ticket.subject);
   const text = [
-    message.trim(),
+    supportMarkdownToText(message),
     '',
     '--',
     'Crossbench Support',
@@ -43,7 +50,7 @@ export async function sendSupportTicketReply(ticket: TicketForReply, message: st
   ].join('\n');
   const html = `
     <div style="font-family: Arial, sans-serif; color: #111827; line-height: 1.55; font-size: 15px;">
-      ${message.trim().split(/\n{2,}/).map((paragraph) => `<p>${escapeHtml(paragraph).replace(/\n/g, '<br>')}</p>`).join('')}
+      ${supportMarkdownToHtml(message)}
       <p style="margin-top: 24px; color: #4b5563;">--<br>Crossbench Support</p>
       <p style="font-size: 12px; color: #6b7280;">Ticket: ${escapeHtml(ticket.id)}</p>
     </div>
@@ -56,6 +63,7 @@ export async function sendSupportTicketReply(ticket: TicketForReply, message: st
     subject,
     text,
     html,
+    attachments: attachments.length ? attachments : undefined,
     headers: {
       'X-Crossbench-Ticket-ID': ticket.id,
       'X-Crossbench-Support-Author': authorEmail,
