@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { supportMailboxSourcesFromMessage } from '@/lib/support-inbound';
+import { SUPPORT_MESSAGE_MAX_LENGTH } from '@/lib/support-limits';
 
 type Reply = { id: string; authorEmail: string; isAdmin: boolean; isAi: boolean; message: string; resendId: string | null; emailSentAt: string | null; emailError: string | null; attachmentNames: string | null; createdAt: string };
 type SupportAttachment = { id: string; emailId: string; filename: string; contentType: string; size: number };
@@ -353,10 +354,14 @@ export default function AdminSupportPage() {
               ref={replyInput}
               value={replyText}
               onChange={e => setReplyText(e.target.value)}
+              maxLength={SUPPORT_MESSAGE_MAX_LENGTH}
               placeholder="Write a reply…"
               rows={3}
               style={{ width: '100%', backgroundColor: '#16213A', border: '1px solid #25324D', borderRadius: '8px', padding: '10px 14px', fontSize: '14px', color: '#F5F7FB', outline: 'none', resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box' }}
             />
+            <p style={{ margin: '4px 0 0', textAlign: 'right', fontSize: '11px', color: replyText.length >= SUPPORT_MESSAGE_MAX_LENGTH ? '#D95C4B' : '#4E5A73' }}>
+              {replyText.length.toLocaleString()} / {SUPPORT_MESSAGE_MAX_LENGTH.toLocaleString()}
+            </p>
             <div style={{ marginTop: '8px' }}>
               <input ref={fileInput} type="file" multiple onChange={event => setReplyAttachments(Array.from(event.target.files || []))} style={{ display: 'none' }} />
               <button type="button" onClick={() => fileInput.current?.click()} style={{ fontSize: '12px', color: '#D6A94A', background: 'none', border: '1px solid rgba(214,169,74,0.35)', borderRadius: '6px', padding: '5px 10px', cursor: 'pointer' }}>📎 Add attachments</button>

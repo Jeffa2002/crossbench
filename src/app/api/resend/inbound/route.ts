@@ -3,6 +3,7 @@ import { Resend } from 'resend';
 import { prisma } from '@/lib/prisma';
 import { generateSupportAiReply } from '@/lib/support-ai';
 import { isClearlyAutomaticSupportReply } from '@/lib/support-auto-reply';
+import { SUPPORT_MESSAGE_MAX_LENGTH } from '@/lib/support-limits';
 import { supportMailboxSources } from '@/lib/support-inbound';
 
 function cleanEmailAddress(value: string) {
@@ -138,7 +139,7 @@ export async function POST(req: NextRequest) {
     ``,
     body || '(No message body supplied by Resend.)',
     attachmentSummary,
-  ].filter(Boolean).join('\n').slice(0, 4000);
+  ].filter(Boolean).join('\n').slice(0, SUPPORT_MESSAGE_MAX_LENGTH);
 
   if (threadTicketId) {
     const existingTicket = await prisma.supportTicket.findUnique({ where: { id: threadTicketId } });

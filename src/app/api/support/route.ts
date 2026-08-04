@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { checkRateLimit, rateLimitKey } from '@/lib/rate-limit';
 import { generateSupportAiReply } from '@/lib/support-ai';
+import { SUPPORT_MESSAGE_MAX_LENGTH } from '@/lib/support-limits';
 
 async function sendTelegramNotification(ticket: { id: string; email: string; name: string | null; subject: string; message: string }) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -34,7 +35,13 @@ export async function POST(req: NextRequest) {
   const finalEmail = (email || session?.user?.email || '').trim().slice(0, 254);
   const finalName = typeof name === 'string' && name.trim() ? name.trim().slice(0, 120) : session?.user?.name || null;
   const finalSubject = subject.trim().slice(0, 160);
-  const finalMessage = message.trim().slice(0, 4000);
+  const finalMessage = message.trim();
+  if (finalMessage.length > SUPPORT_MESSAGE_MAX_LENGTH) {
+    return NextResponse.json(
+      { error: `Message must be ${SUPPORT_MESSAGE_MAX_LENGTH.toLocaleString()} characters or fewer.` },
+      { status: 400 }
+    );
+  }
   const ipLimit = await checkRateLimit(rateLimitKey(req, 'support-ticket'), 3, 10 * 60_000);
   const emailLimit = await checkRateLimit(`support-ticket-email:${finalEmail.toLowerCase()}`, 5, 60 * 60_000);
   if (!ipLimit.ok || !emailLimit.ok) {

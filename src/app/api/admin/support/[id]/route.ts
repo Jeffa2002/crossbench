@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { requireAdminAccess } from '@/lib/admin-auth';
 import { sendSupportTicketReply } from '@/lib/support-email';
 import { Buffer } from 'buffer';
+import { SUPPORT_MESSAGE_MAX_LENGTH } from '@/lib/support-limits';
 
 const MAX_ATTACHMENT_BYTES = 20 * 1024 * 1024;
 const MAX_ATTACHMENT_COUNT = 6;
@@ -60,8 +61,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   // Add admin reply
   if (body.message) {
-    const message = String(body.message).trim().slice(0, 4000);
+    const message = String(body.message).trim();
     if (!message) return NextResponse.json({ error: 'Reply message is required' }, { status: 400 });
+    if (message.length > SUPPORT_MESSAGE_MAX_LENGTH) {
+      return NextResponse.json({ error: `Reply must be ${SUPPORT_MESSAGE_MAX_LENGTH.toLocaleString()} characters or fewer.` }, { status: 400 });
+    }
 
     const ticketBeforeReply = await prisma.supportTicket.findUnique({ where: { id } });
     if (!ticketBeforeReply) return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });

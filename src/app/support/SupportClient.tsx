@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { SUPPORT_MESSAGE_MAX_LENGTH } from '@/lib/support-limits';
 
 type ChatMessage = { role: 'user' | 'assistant'; content: string };
 type View = 'chat' | 'ticket' | 'done';
@@ -158,8 +159,11 @@ export default function SupportClient() {
             </div>
             <div>
               <label style={{ fontSize: '12px', color: '#7E8AA3', display: 'block', marginBottom: '6px' }}>Message *</label>
-              <textarea required value={message} onChange={e => setMessage(e.target.value)} placeholder="Describe your issue in as much detail as possible…" rows={5}
+              <textarea required value={message} onChange={e => setMessage(e.target.value)} maxLength={SUPPORT_MESSAGE_MAX_LENGTH} placeholder="Describe your issue in as much detail as possible…" rows={5}
                 style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit' }} />
+              <p style={{ margin: '4px 0 0', textAlign: 'right', fontSize: '12px', color: message.length >= SUPPORT_MESSAGE_MAX_LENGTH ? '#D95C4B' : '#6B7280' }}>
+                {message.length.toLocaleString()} / {SUPPORT_MESSAGE_MAX_LENGTH.toLocaleString()}
+              </p>
             </div>
             {error && <p style={{ color: '#D95C4B', fontSize: '13px', margin: 0 }}>{error}</p>}
             <button type="submit" disabled={submitting} style={{
