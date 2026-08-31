@@ -47,7 +47,15 @@ jobs:
 
           echo "=== Refreshing static sitemap ==="
           mkdir -p /var/www/static/crossbench
-          curl -fsSL http://127.0.0.1:3006/sitemap.xml > /var/www/static/crossbench/sitemap.xml
+          for attempt in {1..20}; do
+            if curl -fsSL http://127.0.0.1:3006/sitemap.xml > /var/www/static/crossbench/sitemap.xml; then
+              break
+            fi
+            if [ "$attempt" = "20" ]; then
+              exit 1
+            fi
+            sleep 1
+          done
 
           echo "=== Done ==="
           pm2 show crossbench | grep -E "status|uptime|restart"
