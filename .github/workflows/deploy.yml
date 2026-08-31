@@ -45,5 +45,9 @@ jobs:
           pm2 restart crossbench || pm2 start npm --name crossbench -- start -- -p 3006
           pm2 save
 
+          echo "=== Refreshing static sitemap ==="
+          mkdir -p /var/www/static/crossbench
+          curl -fsSL http://127.0.0.1:3006/sitemap.xml > /var/www/static/crossbench/sitemap.xml
+
           echo "=== Done ==="
           pm2 show crossbench | grep -E "status|uptime|restart"
