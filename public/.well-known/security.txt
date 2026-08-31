@@ -1,0 +1,4 @@
+Contact: mailto:security@crossbench.io
+Preferred-Languages: en
+Canonical: https://crossbench.io/.well-known/security.txt
+Policy: https://crossbench.io/privacy

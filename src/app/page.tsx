@@ -26,28 +26,28 @@ export default async function HomePage() {
 
       {/* Hero — two-sided */}
       <section style={{ borderBottom: '1px solid #25324D', padding: 'clamp(48px, 8vw, 96px) 0' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px', alignItems: 'center' }}>
+        <div className="home-hero-grid" style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 20px' }}>
           <div>
             <p style={{ color: '#2E8B57', fontSize: '13px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '20px' }}>Australian civic tech</p>
             <h1 style={{ fontSize: 'clamp(34px, 5vw, 54px)', fontWeight: 700, lineHeight: 1.1, marginBottom: '20px' }}>
-              The gap between Parliament and the people — closed.
+              Vote on bills before Parliament. Show your MP where verified constituents stand.
             </h1>
             <p style={{ fontSize: '17px', color: '#B6C0D1', lineHeight: 1.7, marginBottom: '32px' }}>
-              Crossbench lets Australians vote on real federal bills. MPs see live constituent sentiment data from their own electorate. Democracy, in real time.
+              Crossbench lets Australians vote on current federal bills. MPs see a live aggregate signal from participating verified users in their own electorate.
             </p>
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '20px' }}>
               <Link href="/login" style={{ backgroundColor: '#2E8B57', color: '#fff', padding: '13px 28px', borderRadius: '8px', fontWeight: 700, fontSize: '15px', textDecoration: 'none' }}>
-                Start voting →
+                Create free account →
               </Link>
               <Link href="/for-mps" style={{ backgroundColor: 'rgba(46,139,87,0.1)', color: '#2E8B57', padding: '13px 24px', borderRadius: '8px', fontWeight: 600, fontSize: '15px', textDecoration: 'none', border: '1px solid rgba(46,139,87,0.3)' }}>
-                I'm an MP →
+                Get MP access →
               </Link>
             </div>
-            <p style={{ color: '#4A5568', fontSize: '13px' }}>Free to use · Verified addresses only · Nonpartisan</p>
+            <p style={{ color: '#7E8AA3', fontSize: '13px' }}>Free to use · Verified once · Shown only in aggregate · Nonpartisan</p>
           </div>
           {/* Dashboard preview */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid #25324D', boxShadow: '0 24px 60px rgba(0,0,0,0.4)' }}>
+          <div className="home-hero-preview" style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: 0 }}>
+            <div className="dashboard-shot" style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid #25324D', boxShadow: '0 24px 60px rgba(0,0,0,0.4)' }}>
               <Image src="/mp-dashboard-mock.png" alt="MP electorate dashboard" width={600} height={400} style={{ width: '100%', height: 'auto', display: 'block' }} />
             </div>
             <p style={{ color: '#4A5568', fontSize: '11px', textAlign: 'center', margin: 0 }}>Live MP electorate dashboard — <Link href="/for-mps" style={{ color: '#4E8FD4', textDecoration: 'none' }}>learn more →</Link></p>
@@ -61,13 +61,37 @@ export default async function HomePage() {
           {[
             { value: billCount, label: 'Bills before parliament' },
             { value: allBillCount.toLocaleString(), label: 'Bills tracked' },
-            { value: electorateCount, label: 'Electorates covered' },
+            { value: electorateCount, label: 'Federal divisions and Senate seats covered' },
           ].map(({ value, label }) => (
             <div key={label} style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 'clamp(28px, 5vw, 38px)', fontWeight: 700, color: '#F5F7FB' }}>{value}</div>
               <div style={{ color: '#7E8AA3', fontSize: '13px', marginTop: '4px' }}>{label}</div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Trust proof */}
+      <section style={{ borderBottom: '1px solid #25324D', padding: 'clamp(36px, 5vw, 56px) 0', backgroundColor: '#0A1020' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 20px' }}>
+          <div style={{ maxWidth: '700px', marginBottom: '22px' }}>
+            <p style={{ color: '#2E8B57', fontSize: '12px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 8px' }}>How to read Crossbench results</p>
+            <h2 style={{ fontSize: '24px', fontWeight: 700, margin: 0 }}>A live verified signal, not a formal poll or mandate.</h2>
+          </div>
+          <div className="trust-grid">
+            {[
+              { title: 'Participating users only', desc: 'Results reflect verified Crossbench users who chose to vote on a bill.' },
+              { title: 'Aggregate by electorate', desc: 'MPs see totals and percentages, not names, emails, or readable addresses.' },
+              { title: 'Independent and nonpartisan', desc: 'Crossbench is not a party, government body, lobby group, or data broker.' },
+              { title: 'Methodology is public', desc: 'Bill sources, verification, vote counting, and limits are explained openly.' },
+            ].map(({ title, desc }) => (
+              <div key={title} style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '8px', padding: '18px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: 700, margin: '0 0 6px' }}>{title}</h3>
+                <p style={{ color: '#7E8AA3', fontSize: '13px', lineHeight: 1.6, margin: 0 }}>{desc}</p>
+              </div>
+            ))}
+          </div>
+          <Link href="/methodology" style={{ color: '#4E8FD4', display: 'inline-block', fontSize: '13px', fontWeight: 700, marginTop: '18px', textDecoration: 'none' }}>Read the methodology →</Link>
         </div>
       </section>
 
@@ -81,10 +105,10 @@ export default async function HomePage() {
             Australia has compulsory voting — but a ballot every three years is a blunt instrument. Between elections, Australians have almost no way to signal to their MP what they actually think about specific policy.
           </p>
           <p style={{ fontSize: '17px', color: '#B6C0D1', lineHeight: 1.8, marginBottom: '32px' }}>
-            Crossbench fills that gap. Citizens vote on real bills. MPs see the result, electorate by electorate, in real time. Not a poll. Not a petition. Verified constituent sentiment.
+            Crossbench fills that gap. Citizens vote on real bills. MPs see participating verified users&apos; results, electorate by electorate, in real time. Not a poll. Not a petition. Verified constituent sentiment.
           </p>
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            {['Nonpartisan by design', 'Verified addresses', 'Privacy-first', 'Independent — not government-run'].map(item => (
+            {['Nonpartisan by design', 'Verified addresses', 'Aggregate results only', 'Independent — not government-run'].map(item => (
               <span key={item} style={{ color: '#7E8AA3', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ color: '#2E8B57', fontWeight: 700 }}>✓</span>{item}
               </span>
@@ -97,14 +121,14 @@ export default async function HomePage() {
       <section style={{ borderBottom: '1px solid #25324D', padding: 'clamp(48px, 6vw, 80px) 0' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 20px' }}>
           <h2 style={{ fontSize: '28px', fontWeight: 700, textAlign: 'center', marginBottom: '40px' }}>Built for two sides of democracy</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+          <div className="home-card-grid">
             {/* Citizens */}
             <div style={{ backgroundColor: '#111A2E', border: '1px solid #25324D', borderRadius: '16px', padding: '32px' }}>
               <div style={{ fontSize: '32px', marginBottom: '16px' }}>🗳️</div>
               <h3 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '12px' }}>For citizens</h3>
               <p style={{ color: '#7E8AA3', fontSize: '15px', lineHeight: 1.7, marginBottom: '24px' }}>Verify your address, browse bills in plain English, and vote. See how your electorate and the rest of Australia are voting on the same bill.</p>
               <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {['Free to use — always', 'Plain-English bill summaries', 'See your electorate vs national result', 'Verified, not anonymous'].map(f => (
+                {['Free to use — always', 'Plain-English bill summaries', 'See your electorate vs national result', 'Verified once, shown only in aggregate'].map(f => (
                   <li key={f} style={{ color: '#B6C0D1', fontSize: '14px', display: 'flex', gap: '8px' }}>
                     <span style={{ color: '#2E8B57', fontWeight: 700, flexShrink: 0 }}>✓</span>{f}
                   </li>
@@ -119,9 +143,9 @@ export default async function HomePage() {
               <div style={{ position: 'absolute', top: '20px', right: '20px', backgroundColor: 'rgba(46,139,87,0.2)', color: '#2E8B57', border: '1px solid rgba(46,139,87,0.4)', padding: '4px 12px', borderRadius: '999px', fontSize: '11px', fontWeight: 700 }}>Free early access</div>
               <div style={{ fontSize: '32px', marginBottom: '16px' }}>🏛️</div>
               <h3 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '12px' }}>For MPs & Senators</h3>
-              <p style={{ color: '#7E8AA3', fontSize: '15px', lineHeight: 1.7, marginBottom: '24px' }}>A live electorate dashboard showing bill-by-bill constituent sentiment. Sign up with your @aph.gov.au email and access starts immediately.</p>
+              <p style={{ color: '#7E8AA3', fontSize: '15px', lineHeight: 1.7, marginBottom: '24px' }}>A live electorate dashboard showing bill-by-bill sentiment from participating verified Crossbench users. Sign up with your @aph.gov.au email and access starts immediately.</p>
               <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {['Live electorate dashboard', 'Verified, address-linked data', 'All current bills tracked', 'Free during early access'].map(f => (
+                {['Live electorate dashboard', 'Aggregate vote breakdowns', 'All current bills tracked', 'Free during early access'].map(f => (
                   <li key={f} style={{ color: '#B6C0D1', fontSize: '14px', display: 'flex', gap: '8px' }}>
                     <span style={{ color: '#2E8B57', fontWeight: 700, flexShrink: 0 }}>✓</span>{f}
                   </li>
@@ -181,7 +205,7 @@ export default async function HomePage() {
                         <BillBadge key={tag.label} tag={tag} />
                       ))}
                     </div>
-                    <p style={{ color: '#F5F7FB', fontWeight: 500, fontSize: '15px', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{bill.title}</p>
+                    <p className="bill-list-title" style={{ color: '#F5F7FB', fontWeight: 500, fontSize: '15px', margin: 0 }}>{bill.title}</p>
                   </div>
                   <div style={{ color: '#4E8FD4', fontSize: '20px', flexShrink: 0 }}>→</div>
                 </Link>

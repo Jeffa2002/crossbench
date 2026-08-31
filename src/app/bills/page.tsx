@@ -144,6 +144,7 @@ export default async function BillsPage({
         >
           <input type="hidden" name="status" value={activeStatus} />
           <input
+            className="search-input"
             name="q"
             defaultValue={q}
             placeholder="Search bills..."
@@ -214,7 +215,7 @@ export default async function BillsPage({
                 <Link
                   key={bill.id}
                   href={`/bills/${bill.id}`}
-                  className="cb-card"
+                  className="cb-card bill-list-card"
                   style={{
                     backgroundColor: "#111A2E",
                     border: `1px solid ${isClosed ? "rgba(37,50,77,0.6)" : "#25324D"}`,
@@ -242,14 +243,12 @@ export default async function BillsPage({
                       ))}
                     </div>
                     <p
+                      className="bill-list-title"
                       style={{
                         color: "#F5F7FB",
                         fontWeight: 500,
                         margin: 0,
                         fontSize: "14px",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
                       }}
                     >
                       {bill.title}

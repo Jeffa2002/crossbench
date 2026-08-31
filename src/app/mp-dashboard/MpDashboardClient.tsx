@@ -7,15 +7,16 @@ type DashboardData = {
   electorate: { id: string; name: string; state: string; mpName: string; mpParty: string; mpPhotoUrl: string | null };
   officeMembership: { role: string; canManageStaff: boolean };
   subscription: { status: string; tier: string; trialEndsAt: string | null; trialDaysLeft: number | null };
+  resultPolicy: { minimumLocalSampleSize: number; note: string };
   overview: {
     totalVotes: number; supportPct: number; opposePct: number; abstainPct: number;
     verified: { totalVotes: number; supportPct: number; opposePct: number; abstainPct: number };
   };
   bills: Array<{
     id: string; title: string; status: string;
-    local: { total: number; supportPct: number; opposePct: number; abstainPct: number };
-    localVerified: { total: number; supportPct: number; opposePct: number; abstainPct: number };
-    national: { total: number; supportPct: number; opposePct: number; abstainPct: number };
+    local: { total: number; supportPct: number; opposePct: number; abstainPct: number; suppressed?: boolean; minimumSampleSize?: number };
+    localVerified: { total: number; supportPct: number; opposePct: number; abstainPct: number; suppressed?: boolean; minimumSampleSize?: number };
+    national: { total: number; supportPct: number; opposePct: number; abstainPct: number; suppressed?: boolean; minimumSampleSize?: number };
   }>;
 };
 
@@ -127,10 +128,13 @@ export default function MpDashboardClient() {
             <span style={{ color: '#2E8B57', fontWeight: 700, fontSize: '14px' }}>
               Free early access is enabled
             </span>
-            <p style={{ color: '#7E8AA3', fontSize: '13px', margin: '2px 0 0' }}>
-              MP dashboards are free while Crossbench builds enough constituent signal to reach critical mass.
-            </p>
-          </div>
+              <p style={{ color: '#7E8AA3', fontSize: '13px', margin: '2px 0 0' }}>
+                MP dashboards are free while Crossbench builds enough constituent signal to reach critical mass.
+              </p>
+              <p style={{ color: '#7E8AA3', fontSize: '12px', margin: '8px 0 0' }}>
+                Bill-level local positions are hidden until at least {data.resultPolicy.minimumLocalSampleSize} local votes exist, reducing re-identification risk in small samples.
+              </p>
+            </div>
 
           <div style={{
             backgroundColor: '#111A2E',
@@ -263,6 +267,7 @@ export default function MpDashboardClient() {
                   </h2>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {data.bills.map(bill => {
+                      const localSuppressed = Boolean(bill.local.suppressed);
                       const localDom = bill.local.supportPct >= bill.local.opposePct ? { label: 'Support', pct: bill.local.supportPct, color: '#2E8B57' }
                         : bill.local.opposePct >= bill.local.abstainPct ? { label: 'Oppose', pct: bill.local.opposePct, color: '#D95C4B' }
                         : { label: 'Abstain', pct: bill.local.abstainPct, color: '#6F7D95' };
@@ -284,15 +289,15 @@ export default function MpDashboardClient() {
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', flexShrink: 0 }}>
                               <span style={{
                                 fontSize: '11px', fontWeight: 700, padding: '3px 10px', borderRadius: '20px',
-                                backgroundColor: aligned ? 'rgba(46,139,87,0.15)' : 'rgba(217,92,75,0.15)',
-                                color: aligned ? '#2E8B57' : '#D95C4B',
-                                border: `1px solid ${aligned ? 'rgba(46,139,87,0.3)' : 'rgba(217,92,75,0.3)'}`
+                                backgroundColor: localSuppressed ? 'rgba(214,169,74,0.12)' : aligned ? 'rgba(46,139,87,0.15)' : 'rgba(217,92,75,0.15)',
+                                color: localSuppressed ? '#D6A94A' : aligned ? '#2E8B57' : '#D95C4B',
+                                border: `1px solid ${localSuppressed ? 'rgba(214,169,74,0.3)' : aligned ? 'rgba(46,139,87,0.3)' : 'rgba(217,92,75,0.3)'}`
                               }}>
-                                {aligned ? '≈ With nation' : '≠ Against trend'}
+                                {localSuppressed ? 'Low sample' : aligned ? '≈ With nation' : '≠ Against trend'}
                               </span>
-                              <span style={{ fontSize: '11px', color: localDom.color, fontWeight: 700 }}>
+                              {!localSuppressed && <span style={{ fontSize: '11px', color: localDom.color, fontWeight: 700 }}>
                                 {localDom.pct}% {localDom.label}
-                              </span>
+                              </span>}
                             </div>
                           </div>
 
@@ -304,21 +309,28 @@ export default function MpDashboardClient() {
                             ].map(({ label, d }) => (
                               <div key={label}>
                                 <p style={{ fontSize: '10px', color: '#3A4A6A', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
-                                {[
-                                  { pos: 'Support', pct: d.supportPct, color: '#2E8B57' },
-                                  { pos: 'Oppose', pct: d.opposePct, color: '#D95C4B' },
-                                  { pos: 'Abstain', pct: d.abstainPct, color: '#6F7D95' },
-                                ].map(({ pos, pct, color }) => (
-                                  <div key={pos} style={{ marginBottom: '5px' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
-                                      <span style={{ fontSize: '11px', color: '#7E8AA3' }}>{pos}</span>
-                                      <span style={{ fontSize: '11px', color, fontWeight: 600 }}>{pct}%</span>
-                                    </div>
-                                    <div style={{ height: '4px', backgroundColor: '#16213A', borderRadius: '2px', overflow: 'hidden' }}>
-                                      <div style={{ height: '100%', width: `${pct}%`, backgroundColor: color, borderRadius: '2px' }} />
-                                    </div>
+                                {d.suppressed ? (
+                                  <div style={{ backgroundColor: 'rgba(214,169,74,0.08)', border: '1px solid rgba(214,169,74,0.24)', borderRadius: '8px', padding: '10px' }}>
+                                    <p style={{ color: '#D6A94A', fontSize: '12px', fontWeight: 700, margin: '0 0 4px' }}>Hidden until {d.minimumSampleSize} votes</p>
+                                    <p style={{ color: '#7E8AA3', fontSize: '11px', lineHeight: 1.5, margin: 0 }}>Local position breakdown is withheld for small samples.</p>
                                   </div>
-                                ))}
+                                ) : (
+                                  [
+                                    { pos: 'Support', pct: d.supportPct, color: '#2E8B57' },
+                                    { pos: 'Oppose', pct: d.opposePct, color: '#D95C4B' },
+                                    { pos: 'Abstain', pct: d.abstainPct, color: '#6F7D95' },
+                                  ].map(({ pos, pct, color }) => (
+                                    <div key={pos} style={{ marginBottom: '5px' }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                                        <span style={{ fontSize: '11px', color: '#7E8AA3' }}>{pos}</span>
+                                        <span style={{ fontSize: '11px', color, fontWeight: 600 }}>{pct}%</span>
+                                      </div>
+                                      <div style={{ height: '4px', backgroundColor: '#16213A', borderRadius: '2px', overflow: 'hidden' }}>
+                                        <div style={{ height: '100%', width: `${pct}%`, backgroundColor: color, borderRadius: '2px' }} />
+                                      </div>
+                                    </div>
+                                  ))
+                                )}
                               </div>
                             ))}
                           </div>

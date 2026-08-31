@@ -67,7 +67,7 @@ export default function PrivacyPage() {
             Collection Notice (APP 5 Summary)
           </p>
           <p style={{ color: '#B6C0D1', fontSize: '14px', lineHeight: '1.65', margin: 0 }}>
-            Crossbench collects your <strong style={{ color: '#F5F7FB' }}>email address</strong> and uses your <strong style={{ color: '#F5F7FB' }}>address</strong> to verify your electorate and record your votes on parliamentary bills. Address lookup uses OpenStreetMap Nominatim geocoding. We store a <strong style={{ color: '#F5F7FB' }}>one-way hash</strong> of your address — never the raw address. Your votes are linked to your electorate and shown to MPs as <strong style={{ color: '#F5F7FB' }}>aggregated, anonymised data</strong> — your name is never attached to your vote. We use session cookies only. Contact us at{' '}
+            Crossbench collects your <strong style={{ color: '#F5F7FB' }}>email address</strong> and uses your <strong style={{ color: '#F5F7FB' }}>address</strong> to verify your electorate and record your votes on parliamentary bills. Address lookup uses OpenStreetMap Nominatim geocoding. We store a <strong style={{ color: '#F5F7FB' }}>one-way hash</strong> of your address — never the raw address. Your votes are linked to your electorate and shown to MPs as <strong style={{ color: '#F5F7FB' }}>aggregated, anonymised data</strong> — your name is never attached to your vote. We use session cookies, privacy-focused analytics, Google reCAPTCHA on protected forms, and basic first-party event analytics to keep the service reliable and improve the product. Contact us at{' '}
             <a href="mailto:privacy@crossbench.io" style={{ color: '#2E8B57', textDecoration: 'none' }}>privacy@crossbench.io</a>.
           </p>
         </div>
@@ -87,7 +87,7 @@ export default function PrivacyPage() {
               ['Electorate assignment', 'Which federal electorate you belong to'],
               ['Voting history', 'Your Support, Oppose, or Abstain choices on bills'],
               ['Session information', 'Cookies used to keep you signed in'],
-              ['Basic technical data', 'Browser, device, and log data for security and reliability'],
+              ['Basic technical and analytics data', 'Browser, device, pageview, event, and log data for security, reliability, and product improvement'],
             ].map(([label, desc]) => (
               <li key={label} style={{ color: '#B6C0D1' }}>
                 <strong style={{ color: '#F5F7FB' }}>{label}</strong> — {desc}
@@ -104,7 +104,8 @@ export default function PrivacyPage() {
               'Verify the electorate you belong to',
               'Record your votes on bills',
               'Show aggregate and anonymised electorate opinion to MPs and the public',
-              'Keep the platform secure and reliable',
+              'Keep the platform secure and reliable, including spam and abuse prevention',
+              'Understand aggregate product usage with privacy-focused analytics',
               'Meet legal and operational requirements',
             ].map(item => <li key={item}>{item}</li>)}
           </ul>
@@ -129,12 +130,13 @@ export default function PrivacyPage() {
             <li>Aggregated vote results (e.g. "64% of Grayndler supports this bill")</li>
             <li>Anonymised electorate-level opinion data</li>
           </ul>
-          <P>We may share information with trusted service providers (hosting, database) who help us run Crossbench. We may also share or commercialise <strong style={{ color: '#F5F7FB' }}>aggregated, anonymised vote and electorate data</strong> — for example, how an electorate voted on a bill. We will <strong style={{ color: '#F5F7FB' }}>never sell personal information</strong> such as your name, email address, or address hash.</P>
+          <P>We may share information with trusted service providers who help us run Crossbench, including hosting, database, email, analytics, address lookup, and anti-abuse providers. We may also share or commercialise <strong style={{ color: '#F5F7FB' }}>aggregated, anonymised vote and electorate data</strong> — for example, how an electorate voted on a bill. We will <strong style={{ color: '#F5F7FB' }}>never sell personal information</strong> such as your name, email address, or address hash.</P>
         </Section>
 
-        <Section title="7. Cookies">
-          <P>Crossbench uses <strong style={{ color: '#F5F7FB' }}>session cookies only</strong>, including cookies used by our authentication system to keep you signed in.</P>
-          <P>We do <strong style={{ color: '#F5F7FB' }}>not</strong> use advertising cookies or tracking cookies.</P>
+        <Section title="7. Cookies and analytics">
+          <P>Crossbench uses <strong style={{ color: '#F5F7FB' }}>session cookies</strong>, including cookies used by our authentication system to keep you signed in.</P>
+          <P>We do <strong style={{ color: '#F5F7FB' }}>not</strong> use advertising cookies. We use privacy-focused Plausible analytics and first-party analytics events to understand aggregate usage, improve onboarding, and monitor reliability.</P>
+          <P>Some protected forms may use Google reCAPTCHA to reduce spam and abuse.</P>
         </Section>
 
         <Section title="8. Data retention">

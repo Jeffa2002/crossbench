@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma';
 import { hasMpEntitlement } from '@/lib/mp-entitlement';
 import { ensurePrincipalOfficeMembership, getActiveOfficeMembership } from '@/lib/mp-office';
 
+const MIN_LOCAL_SAMPLE_SIZE = 5;
+
 export async function GET() {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -93,6 +95,20 @@ export async function GET() {
   function getPositions(billId: string, source: { billId: string; position: string; _count: number }[]) {
     const rows = source.filter(r => r.billId === billId);
     const total = rows.reduce((s, r) => s + r._count, 0);
+    const suppressed = total > 0 && total < MIN_LOCAL_SAMPLE_SIZE;
+    if (suppressed) {
+      return {
+        total,
+        support: null,
+        oppose: null,
+        abstain: null,
+        supportPct: 0,
+        opposePct: 0,
+        abstainPct: 0,
+        suppressed: true,
+        minimumSampleSize: MIN_LOCAL_SAMPLE_SIZE,
+      };
+    }
     const get = (pos: string) => rows.find(r => r.position === pos)?._count || 0;
     const pct = (pos: string) => total > 0 ? Math.round((get(pos) / total) * 100) : 0;
     return {
@@ -103,6 +119,8 @@ export async function GET() {
       supportPct: pct('SUPPORT'),
       opposePct: pct('OPPOSE'),
       abstainPct: pct('ABSTAIN'),
+      suppressed: false,
+      minimumSampleSize: MIN_LOCAL_SAMPLE_SIZE,
     };
   }
 
@@ -137,6 +155,10 @@ export async function GET() {
       tier: (user as any).subscriptionTier,
       trialEndsAt: (user as any).trialEndsAt?.toISOString() ?? null,
       trialDaysLeft,
+    },
+    resultPolicy: {
+      minimumLocalSampleSize: MIN_LOCAL_SAMPLE_SIZE,
+      note: 'Bill-level local positions are hidden until enough local votes exist to reduce re-identification risk.',
     },
     overview: {
       // All votes (including unverified self-declared)

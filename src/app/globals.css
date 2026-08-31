@@ -28,6 +28,11 @@ html, body {
   background-color: var(--bg);
   color: var(--text-primary);
   min-height: 100vh;
+  overflow-x: hidden;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
@@ -377,12 +382,82 @@ body {
   min-width: 0;
 }
 
+.custom-select-root {
+  position: relative;
+  min-width: 160px;
+}
+
 @media (max-width: 540px) {
   .search-form {
     flex-direction: column;
   }
-  .search-input {
+  .search-input,
+  .search-form input,
+  .search-form button,
+  .custom-select-root {
     width: 100%;
+  }
+}
+
+/* ── Public marketing pages ───────────────────────────────── */
+.home-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 48px;
+  align-items: center;
+}
+
+.home-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 20px;
+}
+
+.trust-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 12px;
+}
+
+.bill-list-card {
+  min-width: 0;
+}
+
+.bill-list-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-shot {
+  max-width: 100%;
+}
+
+@media (max-width: 760px) {
+  .home-hero-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .home-hero-preview {
+    order: -1;
+  }
+}
+
+@media (max-width: 540px) {
+  .bill-list-card {
+    align-items: flex-start !important;
+    padding: 16px !important;
+  }
+
+  .bill-list-title {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.45;
+  }
+
+  .dashboard-shot {
+    border-radius: 10px !important;
   }
 }
 

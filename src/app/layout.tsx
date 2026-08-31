@@ -10,9 +10,24 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Crossbench — Your voice in parliament",
-  description: "Vote on Australian federal legislation. Make your MP listen.",
+  title: "Crossbench — Verified constituent sentiment on federal bills",
+  description: "Vote on current Australian federal bills and see the verified electorate signal MPs can read in aggregate.",
   metadataBase: new URL("https://crossbench.io"),
+  openGraph: {
+    title: "Crossbench",
+    description: "Verified constituent sentiment on Australian federal bills, shown safely in aggregate by electorate.",
+    url: "https://crossbench.io",
+    siteName: "Crossbench",
+    images: [{ url: "/mp-dashboard-mock.png", width: 1200, height: 800, alt: "Crossbench MP electorate dashboard" }],
+    locale: "en_AU",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Crossbench",
+    description: "Verified constituent sentiment on Australian federal bills, shown safely in aggregate by electorate.",
+    images: ["/mp-dashboard-mock.png"],
+  },
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

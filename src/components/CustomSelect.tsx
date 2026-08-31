@@ -30,7 +30,7 @@ export default function CustomSelect({ name, options, defaultValue = '', ariaLab
   }, []);
 
   return (
-    <div ref={rootRef} style={{ position: 'relative', minWidth: '160px' }}>
+    <div ref={rootRef} className="custom-select-root">
       <input type="hidden" name={name} value={value} />
       <button
         type="button"
