@@ -78,6 +78,9 @@ export default function AboutPage() {
                   Crossbench was founded by Jeffrey Eaton and is built and operated in Australia by a small independent civic technology team. We are not a government service, political party, campaign group, lobby group, or data broker.
                 </p>
                 <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.85, marginBottom: '20px' }}>
+                  You can contact Jeffrey directly at <a href="mailto:jeffrey.e@crossbench.io" style={{ color: '#2E8B57', textDecoration: 'none' }}>jeffrey.e@crossbench.io</a>.
+                </p>
+                <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.85, marginBottom: '20px' }}>
                   The platform exists because representative democracy needs better tools between elections: something practical, neutral, and close enough to the parliamentary process to be useful.
                 </p>
                 <p style={{ fontSize: '16px', color: '#B6C0D1', lineHeight: 1.85, marginBottom: '20px' }}>
@@ -160,7 +163,7 @@ export default function AboutPage() {
               { q: 'Is my vote anonymous?', a: 'Your vote is counted as part of your electorate\'s total and is not shown by name. MPs see aggregated numbers, not individual voter identities.' },
               { q: 'Can I vote on every bill?', a: 'Bills currently before the 48th Parliament are on Crossbench. You can vote on as many as you like, once per bill.' },
               { q: 'Can MPs really see this?', a: 'Yes. MPs with an @aph.gov.au address get a live electorate dashboard. They see bill-by-bill constituent sentiment from verified addresses only.' },
-              { q: 'Who built this?', a: 'Crossbench was founded by Jeffrey Eaton and is operated by a small Australian civic technology team, not a government service, party, campaign group, or lobby group.' },
+              { q: 'Who built this?', a: 'Crossbench was founded by Jeffrey Eaton and is operated by a small Australian civic technology team, not a government service, party, campaign group, or lobby group. You can contact Jeffrey at jeffrey.e@crossbench.io.' },
               { q: 'Where is the data stored?', a: 'The core Crossbench database is hosted on Australian infrastructure. We handle personal information under Australian privacy law and design around responsible information sharing principles.' },
             ].map(({ q, a }, i, arr) => (
               <div key={q} style={{ padding: '24px 0', borderBottom: i < arr.length - 1 ? '1px solid #1C2940' : 'none' }}>
