@@ -77,7 +77,7 @@ So, first: we apologise for not making Crossbench free for MPs and Senators up f
 
 Our reasoning is straightforward. Crossbench needs elected representatives on the platform before it can properly serve voters. When voters can see their MP or Senator is participating, it gives them a clearer reason to join, follow issues, ask questions, and engage constructively. For offices, it creates a new channel to understand public sentiment, communicate directly, and build trust outside the noise of traditional social media.
 
-We also want to apologise for not properly introducing the founder behind Crossbench earlier. Trust matters, especially when a platform is asking elected representatives and their teams to try something new. My name is Jeffrey E, and if you would like to understand who is behind the product, why it was built, and how it can support your office, I would be very happy to arrange a short introductory call.
+We also want to apologise for not properly introducing the founder behind Crossbench earlier. Trust matters, especially when a platform is asking elected representatives and their teams to try something new. My name is Jeffrey Eaton, and if you would like to understand who is behind the product, why it was built, and how it can support your office, I would be very happy to arrange a short introductory call.
 
 Crossbench is designed to become a practical engagement tool for Parliamentarians, staff, and the public. It gives voters a better way to follow federal issues and gives elected offices a structured, transparent way to be seen as present, listening, and engaged.
 
@@ -99,7 +99,7 @@ https://www.crossbench.io/for-mps
 If anything on your profile needs correcting, or if your office wants a walkthrough or founder introduction, just reply to this email and it will go into the Crossbench support queue.
 
 Regards,
-Jeffrey E
+Jeffrey Eaton
 Founder, Crossbench
 jeffrey.e@crossbench.io
 https://www.crossbench.io`;
@@ -110,7 +110,7 @@ https://www.crossbench.io`;
 <p>In hindsight, we should have recognised that more clearly from day one.</p>
 <p>So, first: we apologise for not making Crossbench free for MPs and Senators up front, and for a far longer period. We are correcting that now. <strong>Crossbench will be available free for all federal MPs and Senators for a minimum of 12 months.</strong></p>
 <p>Our reasoning is straightforward. Crossbench needs elected representatives on the platform before it can properly serve voters. When voters can see their MP or Senator is participating, it gives them a clearer reason to join, follow issues, ask questions, and engage constructively. For offices, it creates a new channel to understand public sentiment, communicate directly, and build trust outside the noise of traditional social media.</p>
-<p>We also want to apologise for not properly introducing the founder behind Crossbench earlier. Trust matters, especially when a platform is asking elected representatives and their teams to try something new. My name is <strong>Jeffrey E</strong>, and if you would like to understand who is behind the product, why it was built, and how it can support your office, I would be very happy to arrange a short introductory call.</p>
+<p>We also want to apologise for not properly introducing the founder behind Crossbench earlier. Trust matters, especially when a platform is asking elected representatives and their teams to try something new. My name is <strong>Jeffrey Eaton</strong>, and if you would like to understand who is behind the product, why it was built, and how it can support your office, I would be very happy to arrange a short introductory call.</p>
 <p>Crossbench is designed to become a practical engagement tool for Parliamentarians, staff, and the public. It gives voters a better way to follow federal issues and gives elected offices a structured, transparent way to be seen as present, listening, and engaged.</p>
 <p><strong>What your office can use now:</strong></p>
 <ul>
@@ -123,7 +123,7 @@ https://www.crossbench.io`;
 <p>You can view the public profile for ${electorateLabel} here:<br><a href="${dashboardPath(recipient)}">${dashboardPath(recipient)}</a></p>
 <p>MP and Senator offices can sign in with an @aph.gov.au email to access the member dashboard:<br><a href="https://www.crossbench.io/for-mps">https://www.crossbench.io/for-mps</a></p>
 <p>If anything on your profile needs correcting, or if your office wants a walkthrough or founder introduction, just reply to this email and it will go into the Crossbench support queue.</p>
-<p>Regards,<br>Jeffrey E<br>Founder, Crossbench<br><a href="mailto:jeffrey.e@crossbench.io">jeffrey.e@crossbench.io</a><br><a href="https://www.crossbench.io">https://www.crossbench.io</a></p>`;
+<p>Regards,<br>Jeffrey Eaton<br>Founder, Crossbench<br><a href="mailto:jeffrey.e@crossbench.io">jeffrey.e@crossbench.io</a><br><a href="https://www.crossbench.io">https://www.crossbench.io</a></p>`;
 
   return { subject, plain, html };
 }
