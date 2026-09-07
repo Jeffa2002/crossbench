@@ -146,6 +146,7 @@ export default async function BillsPage({
           <input
             className="search-input"
             name="q"
+            aria-label="Search bills"
             defaultValue={q}
             placeholder="Search bills..."
             style={{ flex: 1, minWidth: 0, backgroundColor: "#16213A", border: "1px solid #25324D", borderRadius: "6px", padding: "10px 14px", color: "#F5F7FB", fontSize: "14px" }}
@@ -253,12 +254,13 @@ export default async function BillsPage({
                     >
                       {bill.title}
                     </p>
+                    {bill.aphDescription && <p style={{ color: '#A8B4CA', fontSize: 13, lineHeight: 1.5, margin: '8px 0 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{bill.aphDescription}</p>}
                     {bill.sponsorName && (
                       <p style={{ color: "#7E8AA3", fontSize: "12px", margin: "5px 0 0" }}>
                         {bill.sponsorName}
                       </p>
                     )}
-                    <p style={{ color: "#4A5568", fontSize: "12px", margin: bill.sponsorName ? "3px 0 0" : "5px 0 0" }}>
+                    <p style={{ color: "#A8B4CA", fontSize: "12px", margin: bill.sponsorName ? "3px 0 0" : "5px 0 0" }}>
                       Introduced {fmtDate(bill.introducedAt)}
                     </p>
                   </div>

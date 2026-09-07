@@ -5,9 +5,11 @@ import ReactMarkdown from 'react-markdown';
 interface MarkdownRendererProps {
   content: string;
   className?: string;
+  omitHeading?: string;
 }
 
-export default function MarkdownRenderer({ content, className }: MarkdownRendererProps) {
+export default function MarkdownRenderer({ content, className, omitHeading }: MarkdownRendererProps) {
+  const displayContent = omitHeading ? content.replace(/^\s*#{1,6}[ \t]+([^\n]+)\n*/, (heading, title: string) => title.trim() === omitHeading.trim() ? '' : heading) : content;
   return (
     <div className={className}>
       <ReactMarkdown
@@ -67,7 +69,7 @@ export default function MarkdownRenderer({ content, className }: MarkdownRendere
         ),
         }}
       >
-        {content}
+        {displayContent}
       </ReactMarkdown>
     </div>
   );

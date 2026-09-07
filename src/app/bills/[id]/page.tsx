@@ -268,7 +268,7 @@ export default async function BillPage({ params }: { params: Promise<{ id: strin
               <p style={{ fontSize: '12px', fontWeight: 700, color: '#2E8B57', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
                 Plain-English summary
               </p>
-              <MarkdownRenderer content={b.aiSummary} />
+              <MarkdownRenderer content={b.aiSummary} omitHeading={bill.title} />
             </div>
           )}
 

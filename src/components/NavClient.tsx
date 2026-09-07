@@ -61,6 +61,7 @@ export default function NavClient({ isLoggedIn }: NavClientProps) {
           aria-label={open ? 'Close menu' : 'Open menu'}
           className="nav-hamburger"
           style={{
+            minWidth: 44, minHeight: 44,
             display: 'none', // shown via CSS on mobile
             flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
             gap: '5px', background: 'none', border: 'none', cursor: 'pointer',
