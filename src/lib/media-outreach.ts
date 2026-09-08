@@ -1,9 +1,11 @@
+import research from './media-research.json';
+
 export type MediaContact = {
   id: string;
   name: string;
   outlet: string;
   role: string;
-  priority: 'Tier 1' | 'Tier 2';
+  priority: 'Tier 1' | 'Tier 2' | 'Tier 3';
   beat: string;
   email?: string;
   contactRoute: string;
@@ -11,9 +13,11 @@ export type MediaContact = {
   sourceLabel: string;
   pitchAngle: string;
   notes: string;
+  routeType?: string;
+  emailEvidence?: { email: string; checkedAt: string; sourceUrl: string };
 };
 
-export const MEDIA_CONTACTS: MediaContact[] = [
+const ORIGINAL_CONTACTS: MediaContact[] = [
   {
     id: 'david-speers',
     name: 'David Speers',
@@ -360,61 +364,113 @@ export const MEDIA_CONTACTS: MediaContact[] = [
   },
 ];
 
-function firstName(name: string) {
-  return name.split(/\s+/)[0] || name;
+export const MEDIA_SENDING_ENABLED = false;
+
+const refreshedAngles: Record<string, string> = {
+  'david-speers': 'A sitting-week demonstration of how readers can follow a bill, with the limits of participant sentiment made explicit.',
+  'patricia-karvelas': 'An interview or explainer about understanding social-policy legislation between elections.',
+  'laura-tingle': 'Scrutiny of whether civic technology helps people understand institutions without overstating what its data represents.',
+  'jane-norman': 'A practical federal-politics demonstration tied to the progress of a current bill.',
+  'jacob-greber': 'A policy-focused walkthrough contrasting official legislative facts with self-selected public responses.',
+  'casey-briggs': 'A data-journalism discussion of sampling bias, participation counts and why these figures are not representative polling.',
+  'tom-mcilroy': 'How parliamentary reporters could use official bill links alongside clearly qualified participation data.',
+  'josh-butler': 'How the platform explains social-policy bills and avoids presenting self-selected responses as public opinion polling.',
+  'andrew-clennell': 'A brief demonstration of a current federal bill and the difference between parliamentary votes and platform responses.',
+  'tom-connell': 'An interview-ready explanation of how citizens can follow legislation outside election periods.',
+  'kieran-gilbert': 'A concise parliamentary briefing with clear visuals and transparent methodology.',
+  'mark-riley': 'A TV-friendly walkthrough of a current bill using official documents and clearly labelled platform participation.',
+  'andrew-probyn': 'A national-affairs discussion about participation in legislation between elections.',
+  'charles-croucher': 'A short visual briefing that separates bill progress from self-selected participant sentiment.',
+  'james-massola': 'A federal-politics discussion about legislative transparency and the limits of civic-platform data.',
+  'katina-curtis': 'A WA-focused federal bill example with no claims of representative electorate opinion.',
+  'anna-henderson': 'An accessible explanation of federal legislation and participation without assuming multilingual features.',
+  'claudia-long': 'A public-interest demonstration of how users can check official legislation and its progress.',
+  'jasmin-teurlings': 'A localised, visual federal-bill explanation that makes the participation caveat clear.',
+  'dennis-shanahan': 'A legislative-accountability briefing grounded in official bill information rather than polling claims.',
+};
+
+function evidenceFrom(row: typeof research[number]) {
+  return { email: row.email, checkedAt: row.verified_date, sourceUrl: row.source_url };
+}
+
+const existingEmails = new Set(ORIGINAL_CONTACTS.flatMap(contact => contact.email ? [contact.email.toLowerCase()] : []));
+
+export const MEDIA_CONTACTS: MediaContact[] = [
+  ...ORIGINAL_CONTACTS.map(contact => {
+    const row = research.find(entry => entry.email.toLowerCase() === contact.email?.toLowerCase());
+    return {
+      ...contact,
+      routeType: row?.route_type ?? 'Named journalist (route unconfirmed)',
+      pitchAngle: row?.pitch_angle ?? refreshedAngles[contact.id] ?? contact.pitchAngle,
+      notes: row?.caution ?? `${contact.notes} Current role and contact route need reconfirmation.`,
+      emailEvidence: row ? evidenceFrom(row) : undefined,
+    };
+  }),
+  ...research.filter(row => !existingEmails.has(row.email.toLowerCase())).map((row): MediaContact => ({
+    id: `research-${row.email.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`,
+    name: row.contact,
+    outlet: row.outlet,
+    role: row.route_type,
+    priority: row.priority === '1' ? 'Tier 1' : row.priority === '2' ? 'Tier 2' : 'Tier 3',
+    beat: row.pitch_angle,
+    email: row.email,
+    contactRoute: row.route_type,
+    sourceUrl: row.source_url,
+    sourceLabel: 'Public contact source',
+    pitchAngle: row.pitch_angle,
+    notes: row.caution,
+    routeType: row.route_type,
+    emailEvidence: evidenceFrom(row),
+  })),
+];
+
+export type MediaEmailStatus = 'No email researched' | 'Needs source verification' | 'Source review overdue' | 'Publicly listed';
+
+export function mediaEmailStatus(contact: MediaContact, asOf = new Date()): MediaEmailStatus {
+  if (!contact.email) return 'No email researched';
+  const evidence = contact.emailEvidence;
+  if (!evidence || evidence.email.toLowerCase() !== contact.email.toLowerCase()) return 'Needs source verification';
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(evidence.checkedAt)) return 'Needs source verification';
+  const checkedAt = new Date(`${evidence.checkedAt}T00:00:00Z`);
+  if (!Number.isFinite(checkedAt.getTime()) || checkedAt.toISOString().slice(0, 10) !== evidence.checkedAt) return 'Needs source verification';
+  if (!Number.isFinite(asOf.getTime()) || checkedAt > asOf) return 'Needs source verification';
+  try {
+    if (new URL(evidence.sourceUrl).protocol !== 'https:') return 'Needs source verification';
+  } catch {
+    return 'Needs source verification';
+  }
+  return asOf.getTime() - checkedAt.getTime() > 90 * 86_400_000 ? 'Source review overdue' : 'Publicly listed';
+}
+
+export function escapeMediaHtml(value: string) {
+  return value.replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]!));
+}
+
+export function mediaContactsCsv(contacts: MediaContact[], asOf: Date) {
+  const rows = [
+    ['Name', 'Outlet', 'Email', 'Route type', 'Email source status', 'Checked date', 'Source URL', 'Pitch angle', 'Caution', 'Outreach status'],
+    ...contacts.map(contact => [contact.name, contact.outlet, contact.email ?? '', contact.routeType ?? '', mediaEmailStatus(contact, asOf), contact.emailEvidence?.checkedAt ?? '', contact.emailEvidence?.sourceUrl ?? contact.sourceUrl, contact.pitchAngle, contact.notes, 'Sending disabled; not approved']),
+  ];
+  return rows.map(row => row.map(value => {
+    const safeValue = /^[\s]*[=+@-]|^[\t\r\n]/.test(value) ? `'${value}` : value;
+    return `"${safeValue.replace(/"/g, '""')}"`;
+  }).join(',')).join('\r\n');
 }
 
 export function buildMediaOutreachEmail(contact: MediaContact) {
-  const subject = 'Crossbench: a new source for electorate-level bill sentiment';
-  const greeting = contact.id === 'federal-press-gallery' ? 'Hello' : `Hi ${firstName(contact.name)}`;
-  const plain = `${greeting},
-
-I am writing to introduce Crossbench, a new independent civic platform that helps Australians understand federal bills and record whether they support, oppose, or abstain on legislation before Parliament.
-
-For journalists, the useful part is the public-interest signal around bills: plain-English summaries, official bill text, electorate and national participation, public Crossbench voting, Politics Pulse, and member/party sentiment views. Crossbench is not a scientific population poll and not party-affiliated; it is a structured participation layer showing how verified users on the platform are engaging with real federal legislation.
-
-We are inviting MPs and Senators to sign in before the wider public launch so offices can review their profiles and be ready as constituents start using the service. For the press gallery and political journalists, we can provide a short walkthrough, issue-specific data notes, or visual examples tied to current bills.
-
-Useful starting points:
-
-- Bills: https://crossbench.io/bills
-- Politics Pulse: https://crossbench.io/sentiment
-- Parliament view: https://crossbench.io/parliament
-- Methodology: https://crossbench.io/methodology
-
-Why this may be useful for your coverage:
-
-- Spot which bills are attracting support, opposition, or confusion among participating users.
-- Compare public Crossbench responses across electorates and nationally.
-- See where member or party sentiment is shifting.
-- Use plain-English summaries and official bill text links when covering legislation.
-
-If you would like a walkthrough or a short data note on a current bill, just reply to this email and it will go into the Crossbench support queue.
-
-Regards,
-Crossbench
-https://crossbench.io`;
-
-  const html = `<p>${greeting},</p>
-<p>I am writing to introduce <strong>Crossbench</strong>, a new independent civic platform that helps Australians understand federal bills and record whether they support, oppose, or abstain on legislation before Parliament.</p>
-<p>For journalists, the useful part is the public-interest signal around bills: plain-English summaries, official bill text, electorate and national participation, public Crossbench voting, Politics Pulse, and member/party sentiment views. Crossbench is not a scientific population poll and not party-affiliated; it is a structured participation layer showing how verified users on the platform are engaging with real federal legislation.</p>
-<p>We are inviting MPs and Senators to sign in before the wider public launch so offices can review their profiles and be ready as constituents start using the service. For the press gallery and political journalists, we can provide a short walkthrough, issue-specific data notes, or visual examples tied to current bills.</p>
-<p><strong>Useful starting points:</strong></p>
-<ul>
-  <li><a href="https://crossbench.io/bills">Bills</a></li>
-  <li><a href="https://crossbench.io/sentiment">Politics Pulse</a></li>
-  <li><a href="https://crossbench.io/parliament">Parliament view</a></li>
-  <li><a href="https://crossbench.io/methodology">Methodology</a></li>
-</ul>
-<p><strong>Why this may be useful for your coverage:</strong></p>
-<ul>
-  <li>Spot which bills are attracting support, opposition, or confusion among participating users.</li>
-  <li>Compare public Crossbench responses across electorates and nationally.</li>
-  <li>See where member or party sentiment is shifting.</li>
-  <li>Use plain-English summaries and official bill text links when covering legislation.</li>
-</ul>
-<p>If you would like a walkthrough or a short data note on a current bill, just reply to this email and it will go into the Crossbench support queue.</p>
-<p>Regards,<br>Crossbench<br><a href="https://crossbench.io">https://crossbench.io</a></p>`;
-
+  const named = contact.routeType?.startsWith('Named') ?? false;
+  const greeting = named ? `Hi ${contact.name.split(/\s+/)[0]},` : `Hello ${contact.outlet} team,`;
+  const subject = `Crossbench briefing for ${contact.outlet}: following federal legislation`.replace(/[\r\n]/g, ' ');
+  const paragraphs = [
+    greeting,
+    'I am writing to introduce Crossbench, a civic platform that helps Australians follow federal bills through official bill links, plain-English summaries and responses from participating users.',
+    `The angle I would like to explore with you: ${contact.pitchAngle}`,
+    'Crossbench participation is self-selected, not representative polling. Platform responses must not be presented as the views of every voter in an electorate or as parliamentary votes.',
+    'Would a short walkthrough and methodology note be useful for your coverage? We can discuss what the platform can show and where its limitations need to be made explicit.',
+    'Useful starting points:\nBills: https://crossbench.io/bills\nMethodology: https://crossbench.io/methodology\nParliament: https://crossbench.io/parliament',
+    'Regards,\nCrossbench\nhttps://crossbench.io',
+  ];
+  const plain = paragraphs.join('\n\n');
+  const html = paragraphs.map(paragraph => `<p>${escapeMediaHtml(paragraph).replace(/\n/g, '<br>')}</p>`).join('\n');
   return { subject, plain, html };
 }
