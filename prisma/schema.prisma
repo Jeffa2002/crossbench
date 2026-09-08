@@ -327,6 +327,8 @@ model OutreachEmailLog {
   recipientName  String?
   recipientEmail String
   subject        String
+  textBody       String?
+  sentBy         String?
   status         OutreachEmailStatus @default(PENDING)
   resendId       String?
   error          String?
