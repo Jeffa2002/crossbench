@@ -24,86 +24,80 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 
 const MP_DATA = {
   personas: [
-    { name: "Emma Chen", age: 42, role: "Chief of Staff, marginal-seat Labor MP, suburban Sydney", motivation: "Wants to show the member is listening; needs quick briefing material before meetings.", painPoint: "Flooded with constituent emails and anecdotes but no clean read on how the seat feels about a bill.", pitch: "Crossbench turns constituent noise into a live bill-by-bill dashboard, so the MP can walk into caucus and media with evidence from their own electorate." },
-    { name: "Tom Riley", age: 55, role: "Nationals MP, regional seat", motivation: "Needs to prove he understands local concerns on energy, agriculture, and health.", painPoint: "Hearings give national talking points, but not a simple picture of what locals actually think.", pitch: "See how your electorate breaks on federal bills, then turn that into sharper local advocacy and radio-ready lines." },
-    { name: "Ayesha Malik", age: 33, role: "Senator's digital & comms adviser", motivation: "Wants a modern product that saves staff time and creates shareable insights.", painPoint: "Existing tools are generic press-clipping systems or static voting records — not real-time constituent sentiment.", pitch: "A continuous constituency signal and ready-made graphics for newsletters, social, and issue briefings." },
-    { name: "David Morgan", age: 49, role: "Independent MP or Senator", motivation: "Needs differentiated, evidence-led representation — a story that he listens better than major parties.", painPoint: "Strong qualitative feedback but no credible, repeatable way to quantify it.", pitch: "Prove the independent model, show responsiveness, and publish a transparent local mandate." },
+    { name: "Parliamentary adviser", age: 42, role: "Federal electorate or Senate office", motivation: "Needs reliable, neutral source material before a sitting week.", painPoint: "Official bills can be difficult to explain quickly without oversimplifying them.", pitch: "Crossbench is an early-stage public tool for following bills and recording a simple participant vote — not an electorate survey." },
+    { name: "Civic-sector researcher", age: 38, role: "Democracy, integrity or public-policy organisation", motivation: "Wants to test whether the product's safeguards and claims are clear.", painPoint: "Civic technology often overstates participation data or obscures its limits.", pitch: "Scrutinise the methodology, language and user experience before Crossbench reaches a broader audience." },
+    { name: "Political journalist", age: 35, role: "Parliamentary or public-interest reporter", motivation: "Looks for useful, factual ways to make legislation understandable.", painPoint: "New apps are rarely a story without a tangible public-interest angle.", pitch: "A founder-led, very early pilot: plain-English bill information and explicitly self-selected votes, with no polling claim." },
   ],
   channels: [
-    { channel: "Warm outbound email to MPs, chiefs of staff & electorate offices", priority: "high", tactic: "3-step sequence: 1) localised screenshot with the member's electorate, 2) 2-line value prop, 3) 10-min walkthrough offer + free early access. Reference one live bill relevant to the seat.", cost: "Low", expectedROI: "Highest near-term conversion — product is immediately legible to political staffers" },
-    { channel: "LinkedIn founder-led posting", priority: "high", tactic: "Post seat-specific dashboards, screenshots, and short takes on sitting-week bills. Tag MPs only when the content is genuinely useful, not promotional.", cost: "Low", expectedROI: "High for credibility and inbound from staffers, researchers, and political operators" },
-    { channel: "Warm intros through policy & comms networks", priority: "high", tactic: "Leverage former staff, lobbyists, advisers, and journalists for warm intros to offices.", cost: "Low", expectedROI: "Very high — trust is the purchase barrier" },
-    { channel: "Parliament-adjacent events in Canberra", priority: "medium", tactic: "Attend Australia Institute / Grattan / CIS panels, ACTU-style policy events, committee briefings, and Canberra networking drinks.", cost: "Medium", expectedROI: "Moderate but strong for legitimacy and deal acceleration" },
-    { channel: "PR and trade media", priority: "medium", tactic: "Pitch as a new transparency layer for democracy, especially when a bill is controversial or narrowly decided.", cost: "Low–Medium", expectedROI: "Good for awareness, slower for conversions" },
-    { channel: "Targeted paid LinkedIn ads", priority: "low", tactic: "Only retarget visitors and run office-holder audience tests around Canberra, inner-Melbourne, Sydney, and Perth.", cost: "Medium", expectedROI: "Lower than outbound, useful for retargeting and credibility reinforcement" },
+    { channel: "Founder-led, one-to-one outreach", priority: "high", tactic: "Use the reviewed routes in /admin/media one at a time. Introduce the early pilot, state the self-selection limit, and ask for feedback rather than coverage or endorsement.", cost: "Low", expectedROI: "Best route to useful qualitative feedback and early trust" },
+    { channel: "User interviews and usability sessions", priority: "high", tactic: "Recruit 10–15 people through personal and relevant civic networks. Watch them find a bill, understand it and record a vote; log where wording fails.", cost: "Low", expectedROI: "Direct evidence for product and message changes" },
+    { channel: "Methodology and trust page", priority: "high", tactic: "Publish what a vote means, that users cannot comment, how results are aggregated, and why they are not representative polling.", cost: "Low", expectedROI: "Essential precondition for credible outreach" },
+    { channel: "Neutral bill explainers", priority: "medium", tactic: "Publish only when there is a clear official source. Explain the bill, link the source, invite a vote and avoid predicting public opinion.", cost: "Low", expectedROI: "Builds a useful public record before paid promotion" },
+    { channel: "Earned media and civic partners", priority: "medium", tactic: "Offer a brief founder conversation or product walkthrough after the methodology and a real bill example are ready. Keep every claim independently checkable.", cost: "Low", expectedROI: "Useful validation, not a launch target" },
+    { channel: "Paid social", priority: "low", tactic: "Defer spending until interviews show comprehension, the landing page converts, and a small organic test establishes a useful message.", cost: "Deferred", expectedROI: "No spend until there is evidence it will help" },
   ],
   contentCalendar: [
-    { trigger: "48h before each sitting week", content: "'What your electorate is likely to care about this sitting week' — 3 bills, 1 local angle, dashboard screenshots.", channel: "LinkedIn, email" },
-    { trigger: "Day 1 of sitting week", content: "Short video from founder: 3 bills to watch, who is under pressure, what staff should track.", channel: "LinkedIn, X, email" },
-    { trigger: "Any notable division or vote", content: "Seat-specific result graphic sent privately to target offices, then a public summary next morning.", channel: "Email, LinkedIn" },
-    { trigger: "Question Time / major media cycle", content: "'What constituents actually think' thread — one chart, one sentence of interpretation.", channel: "LinkedIn, X" },
-    { trigger: "Committee inquiry relevant to a target seat", content: "One-page issue briefing showing seat-level sentiment and likely local pressure points.", channel: "Email PDF" },
-    { trigger: "End of sitting fortnight", content: "'Your electorate's top 5 bill positions this fortnight' digest with CTA to upgrade to Pro/Team.", channel: "Email" },
-    { trigger: "Budget week / MYEFO", content: "Special report on the seats most affected by measures, plus a media-ready chart.", channel: "LinkedIn, email, press" },
+    { trigger: "Before a sitting week", content: "Choose one current bill and publish a plain-English explainer with an official source link and a clear invitation to vote.", channel: "Website, LinkedIn, email" },
+    { trigger: "During a bill's progress", content: "Update the explainer with confirmed parliamentary changes. State what is known, what is unresolved and what Crossbench does not measure.", channel: "Website, LinkedIn" },
+    { trigger: "After a small user-feedback session", content: "Publish a short change note: what users found confusing and what was changed. Do not publish personal feedback or imply a public mandate.", channel: "Website, email" },
+    { trigger: "When participation is displayed", content: "Label it as aggregated, self-selected platform participation and show the count and date. Never call it electorate sentiment or polling.", channel: "Website, social" },
+    { trigger: "Monthly", content: "Refresh the methodology, accessibility and privacy notes; invite correction from journalists, civic groups and users.", channel: "Website, founder outreach" },
   ],
   messages: {
-    "LinkedIn": ["Your electorate has a live opinion on this bill. Crossbench turns that into a dashboard your office can actually use.", "If you are still relying on random emails and call notes to judge constituent sentiment, you are missing the pattern.", "New on Crossbench: electorate-level views on current federal bills, updated as Australians vote."],
-    "Email subject lines": ["See how your electorate is splitting on [Bill Name]", "A better way to brief your member before sitting week", "Free early access for [electorate name] dashboard"],
-    "In person": ["We help you answer one simple question staff never get a clean answer to — what do my constituents think about this bill right now?", "Think of it as a live constituency pulse, not another generic analytics tool.", "If your office wants a tailored electorate demo, we can build it in minutes."],
+    "LinkedIn": ["Crossbench is an early-stage way to follow federal bills in plain English and record a simple vote.", "Participant votes are self-selected, not representative polling. That limit is part of the product story, not fine print.", "We are looking for feedback on whether the experience makes a current bill easier to understand."],
+    "Email subject lines": ["A quick look at an early Crossbench pilot?", "Feedback on a new way to follow federal bills", "Could you pressure-test this civic-tech idea?"],
+    "In person": ["We are testing whether people can better understand a live federal bill with a short, neutral explanation.", "Users can support, oppose or abstain. They cannot comment, and the results are not polling.", "We are looking for criticism and practical feedback before any broader marketing."],
   },
   competitive: [
-    { name: "They Vote For You", what: "Public record of how MPs vote on divisions — transparency and accountability frame.", weakness: "Explains what MPs did, not what constituents think. Retrospective, not live or seat-specific.", positioning: "Crossbench is the constituent-sentiment layer above the vote record, built for staffers who need action, not just history." },
+    { name: "They Vote For You", what: "Public record of how MPs vote on divisions — transparency and accountability frame.", weakness: "Focused on representatives' recorded votes rather than a user action alongside bill explainers.", positioning: "Crossbench should complement this work with clear current-bill explanations and participant voting, never with polling claims." },
     { name: "GetUp", what: "Mass advocacy and petition platform with strong campaign mobilisation.", weakness: "Designed to mobilise around issues, not provide per-electorate bipartisan sentiment intelligence to MPs.", positioning: "Crossbench is neutral infrastructure, useful to any office regardless of party." },
-    { name: "Change.org", what: "Petition and public campaign platform.", weakness: "Broad issue petitions are noisy, unverified, and not electorate-representative.", positioning: "Crossbench is verified electorate signal, not petition noise." },
+    { name: "Change.org", what: "Petition and public campaign platform.", weakness: "Issue petitions are a different interaction from reading a bill and recording a structured position.", positioning: "Crossbench is a neutral bill-following and participation product, not a campaign or a claim about electorate opinion." },
     { name: "AustralianPolitics.com", what: "Political reference and election information site.", weakness: "Broad reference utility, not a real-time engagement tool for offices.", positioning: "Crossbench is a working dashboard, not a political encyclopedia." },
-    { name: "Parliament of Australia / Hansard", what: "Official parliamentary source material.", weakness: "Official but hard to interpret; not transformed into voter-facing or staff-ready insight.", positioning: "Crossbench translates official parliamentary activity into usable local insight." },
+    { name: "Parliament of Australia / Hansard", what: "Official parliamentary source material.", weakness: "Authoritative material can be difficult for a casual reader to navigate quickly.", positioning: "Crossbench should link back to official sources and make the legislative journey easier to follow, without replacing them." },
   ],
   influencers: [
-    { name: "Patricia Karvelas", platform: "ABC Radio National / The Party Room", why: "Major political interviewer with strong Canberra credibility halo.", approach: "Pitch as a new data source for how Australians react to bills, especially on close or high-salience votes." },
-    { name: "David Speers", platform: "ABC Insiders / 7.30", why: "Sets the frame for federal political debate, likes clear political data stories.", approach: "Offer a short, visual, non-partisan briefing on one controversial bill and electorate splits." },
-    { name: "Tom McIlroy", platform: "Australian Financial Review", why: "Reads Canberra policy and staffer audiences well.", approach: "Send a concise data-led tip whenever a bill has a constituency angle or internal party tension." },
-    { name: "Paul Karp", platform: "The Guardian Australia", why: "Strong on parliamentary detail, process, and accountability.", approach: "Frame Crossbench as a transparency tool revealing the gap between chamber votes and electorate sentiment." },
-    { name: "Democracy Sausage podcast", platform: "Podcast", why: "Civic/political audience that already likes election and parliament nerdery.", approach: "Pitch as a new way to measure local democratic sentiment between elections." },
+    { name: "Political journalists and editors", platform: "Media", why: "Can pressure-test the public-interest angle and explain what is genuinely newsworthy.", approach: "Use /admin/media for individually reviewed, source-linked routes; ask for feedback first and do not pitch self-selected votes as polling." },
+    { name: "Transparency International Australia", platform: "Civic integrity organisation", why: "Relevant perspective on transparency, trust and public-interest claims.", approach: "Ask for methodology feedback only; do not imply endorsement or a partnership." },
+    { name: "Australian Democracy Network", platform: "Civic democracy organisation", why: "Relevant perspective on participation and democratic safeguards.", approach: "Ask for early critique of language, safeguards and accessibility; do not seek an endorsement." },
+    { name: "Democracy Sausage podcast", platform: "Podcast", why: "Civic and political audience that values evidence and parliamentary context.", approach: "Approach only after a tested bill explainer and methodology page are ready; offer a candid early-stage conversation." },
     { name: "The Party Room", platform: "Podcast / ABC", why: "Reach politically engaged listeners and staffers.", approach: "Short sponsor-read or guest segment focused on a live bill heatmap." },
     { name: "The Squiz Today", platform: "Newsletter / podcast", why: "Mass reach to busy professionals who like digestible politics.", approach: "Offer a simple explainer graphic and one-line insight for their politics newsletter." },
   ],
   kpis: {
-    "3 months": ["20–30 office contacts in CRM, at least 8 warm intros", "5–10 product demos delivered", "2–3 active early-access offices", "1 clear testimonial from a staffer or adviser", "Email open rates above 40% on personalised office outreach"],
-    "6 months": ["10–15 active offices using free early access", "1–2 Canberra media or podcast mentions", "50–100 verified voter signups/week from organic channels", "3+ repeat offices using the product across multiple sitting weeks", "Outreach → demo conversion rate above 20%"],
-    "12 months": ["30–50 active offices and clear premium-feature demand", "Meaningful presence in Canberra political discourse", "Repeatable pipeline with monthly inbound from staffers and MPs", "5,000+ verified voters across multiple electorates", "Seat-level dashboard content consistently reused by offices"],
+    "First 8 weeks": ["10–15 observed user interviews or usability sessions", "One methodology/trust page reviewed by at least three external readers", "10 individually reviewed feedback or media approaches, with no bulk sending", "A measured time-to-understand and time-to-vote baseline", "A written list of product and wording changes from feedback"],
+    "3 months": ["25+ people invited to give feedback, with source and outcome recorded", "At least one current-bill explainer validated against its official source", "A small organic acquisition test with clear conversion and comprehension data", "No public claim that platform participation represents an electorate or Australia"],
+    "6 months": ["Evidence of repeat use across several bills", "A stable, publicly explainable methodology", "Earned attention only where a factual bill story exists", "A decision, based on data, on whether paid promotion is justified"],
   },
   budget: [
-    { category: "Founder-led sales & outreach", monthlyAud: 1200, rationale: "List building, personalisation, demos, follow-up, CRM. Highest leverage activity." },
-    { category: "Canberra travel & events", monthlyAud: 800, rationale: "Needed for trust, proximity, and serendipitous staffer meetings." },
-    { category: "LinkedIn & retargeting ads", monthlyAud: 900, rationale: "Retarget site visitors, reinforce awareness, test office-holder audiences." },
-    { category: "PR / freelance pitching", monthlyAud: 700, rationale: "Media lift around sitting weeks, budgets, or headline bills." },
-    { category: "Design (charts, screenshots, one-pagers)", monthlyAud: 700, rationale: "Political buyers are visual — good data graphics improve trust and shareability." },
-    { category: "Data enrichment & contact tooling", monthlyAud: 400, rationale: "CRM, lists, and small software tools to manage targeted outreach." },
-    { category: "Content production", monthlyAud: 300, rationale: "Short video edits, thumbnails, issue-specific landing pages." },
+    { category: "User research and accessibility", monthlyAud: 300, rationale: "Participant thank-yous, transcription and practical usability testing." },
+    { category: "Methodology and public-interest material", monthlyAud: 250, rationale: "Clear explainers, source links and a fact sheet that can be checked." },
+    { category: "Founder-led outreach", monthlyAud: 200, rationale: "Individual, carefully researched approaches and follow-up — not bulk marketing." },
+    { category: "Design and content experiments", monthlyAud: 250, rationale: "Small improvements to bill explainers and landing-page comprehension." },
+    { category: "Contingency", monthlyAud: 250, rationale: "Keep initial spend capped while the product and message are tested." },
+    { category: "Paid promotion", monthlyAud: 0, rationale: "Deferred until the research and organic tests prove a clear, responsible use case." },
   ],
   risks: [
     { risk: "Perception of partisanship", likelihood: "high", mitigation: "Keep language neutral, show all electorates, avoid advocacy framing in B2B pitch." },
-    { risk: "MP offices ignore cold outreach", likelihood: "high", mitigation: "Use warm intros, localised examples, one clear ask." },
-    { risk: "Product ambiguity between civic platform and B2B dashboard", likelihood: "medium", mitigation: "Separate voter acquisition from office sales on site, messaging, and landing pages." },
-    { risk: "Media interest peaks but office conversions lag", likelihood: "medium", mitigation: "Capture every media spike with office-targeted follow-up and demos." },
-    { risk: "Privacy or representativeness concerns", likelihood: "medium", mitigation: "Be explicit about verification, aggregation, and how electorate boundaries are used." },
-    { risk: "Too much content, too little proof", likelihood: "medium", mitigation: "Lead with one excellent seat-level demo, not broad generic campaigns." },
+    { risk: "People mistake participation figures for polling", likelihood: "high", mitigation: "Use self-selected/not-representative labels in the UI, outreach and every published result." },
+    { risk: "Early outreach is read as a request for endorsement", likelihood: "medium", mitigation: "Ask for criticism and feedback; label civic routes separately from journalists and do not imply partnerships." },
+    { risk: "Privacy or representativeness concerns", likelihood: "medium", mitigation: "Be explicit about aggregation, verification and sample limits before publishing any result." },
+    { risk: "Too much promotion before product evidence", likelihood: "medium", mitigation: "Defer paid promotion and scale only after observed user research and a transparent methodology." },
   ],
 };
 
 const VOTER_DATA = {
   personas: [
-    { name: "Sarah Nguyen", age: 28, role: "Inner-city renter, Melbourne", motivation: "Wants to feel politically effective without joining a party. Likes seeing how her seat compares to the country.", painPoint: "Politics feels noisy, tribal, and disconnected from her real life.", pitch: "Vote on the bills that shape your life, then see how your electorate stacks up against Australia." },
-    { name: "Ben Carter", age: 36, role: "Tradesperson, regional Queensland", motivation: "Cares about cost of living, energy, fuel, and jobs. Wants practical politics, not culture-war theatre.", painPoint: "Most political content feels like inner-city argument theatre.", pitch: "Get a straight read on what federal bills mean for your area, then see how people around you vote." },
-    { name: "Mia Thompson", age: 19, role: "First-time voter, uni student, Adelaide", motivation: "Wants low-friction ways to learn politics and take part without being lectured.", painPoint: "Politics is overwhelming and full of jargon.", pitch: "Swipe through real bills, vote in minutes, and see what your community thinks." },
+    { name: "Sarah Nguyen", age: 28, role: "Inner-city renter, Melbourne", motivation: "Wants to feel politically effective without joining a party.", painPoint: "Politics feels noisy, tribal, and disconnected from her real life.", pitch: "Follow the bills that shape your life and record a simple vote — without having to join a debate or write a comment." },
+    { name: "Ben Carter", age: 36, role: "Tradesperson, regional Queensland", motivation: "Cares about cost of living, energy, fuel, and jobs. Wants practical politics, not culture-war theatre.", painPoint: "Most political content feels like inner-city argument theatre.", pitch: "Get a straight read on what federal bills mean and record your position without a public comment thread." },
+    { name: "Mia Thompson", age: 19, role: "First-time voter, uni student, Adelaide", motivation: "Wants low-friction ways to learn politics and take part without being lectured.", painPoint: "Politics is overwhelming and full of jargon.", pitch: "Read a short explanation of a real bill and vote in minutes; Crossbench does not host comments." },
     { name: "Leila Haddad", age: 41, role: "Busy parent & public sector worker, western Sydney", motivation: "Wants to stay informed but only has short windows of attention.", painPoint: "Can't keep up with every bill, but still wants to contribute meaningfully.", pitch: "Quick bill summaries and a vote in under a minute." },
-    { name: "Gavin O'Connor", age: 63, role: "Retiree, community volunteer & news junkie, Perth", motivation: "Loves politics and wants a better sense of how his electorate is shifting on major issues.", painPoint: "National polls flatten local nuance.", pitch: "See how your electorate votes bill by bill, then compare it with the rest of the country." },
+    { name: "Gavin O'Connor", age: 63, role: "Retiree, community volunteer & news junkie, Perth", motivation: "Loves politics and wants an accessible way to keep track of major bills.", painPoint: "National coverage can make legislative detail hard to follow.", pitch: "Follow a bill from its official source to a plain-English summary and record your own vote." },
   ],
   channels: [
     { channel: "TikTok & Instagram Reels", priority: "high", tactic: "Short bill explainers — one chart per video, one local hook, one CTA to vote. Use native captions and low-production founder voiceovers.", cost: "Low–Medium", expectedROI: "High for awareness and top-of-funnel signups, especially under 35" },
     { channel: "Reddit & community forums", priority: "high", tactic: "Post useful explainers in r/australia, r/AustralianPolitics, city/local subreddits — only when genuinely informative, never spammy.", cost: "Low", expectedROI: "Strong for credibility and organic traffic" },
     { channel: "Email newsletter", priority: "high", tactic: "Weekly 'Bills that matter this week' digest — 3 summaries, one local stat, one big question.", cost: "Low", expectedROI: "Very high for retention and repeat participation" },
-    { channel: "PR & earned media", priority: "high", tactic: "Pitch stories around surprising electorate splits, youth engagement, or local issue heat maps.", cost: "Low", expectedROI: "High when tied to a current bill or election news cycle" },
+    { channel: "PR & earned media", priority: "high", tactic: "Pitch a factual early-stage story only when there is a current bill, a tested explainer and a transparent methodology to show.", cost: "Low", expectedROI: "Useful for validation when the public-interest angle is real" },
     { channel: "Partner newsletters & podcasts", priority: "medium", tactic: "Guest posts, swaps, and short explainers with civic and politics creators.", cost: "Low–Medium", expectedROI: "Good for trust and steady signups" },
     { channel: "Paid social", priority: "medium", tactic: "Boost best-performing explainers; geo-targeted ads in key electorates and capital cities.", cost: "Medium", expectedROI: "Moderate, useful when paired with strong landing pages" },
   ],
@@ -118,8 +112,8 @@ const VOTER_DATA = {
   messages: {
     "TikTok / Reels": ["One bill. One minute. See how Australia voted.", "Your MP voted yes. Your electorate said no. Here's the gap.", "Politics, but make it local."],
     "Reddit": ["We built a tool to vote on real federal bills and see how your electorate compares. Here's how [specific bill] is landing across Australia.", "Data from Crossbench: here's how different electorates are splitting on this week's housing bill."],
-    "Email": ["Subject: Your electorate's view on this bill", "Subject: This week in Parliament, in plain English", "Subject: See what your electorate thinks (new bill results live)"],
-    "Press": ["Crossbench lets Australians vote on real federal bills and see how their electorate lines up with the national result.", "It is a public-interest civic platform designed to make Parliament more understandable and more local.", "We are not another petition site — we are a living electorate sentiment layer."],
+    "Email": ["Subject: This week in Parliament, in plain English", "Subject: A current bill, explained", "Subject: Record your vote on a federal bill"],
+    "Press": ["Crossbench lets Australians follow real federal bills and record a simple support, oppose or abstain vote.", "It is a public-interest civic platform designed to make Parliament more understandable.", "Participant votes are self-selected and are not representative polling."],
   },
   competitive: [
     { name: "GetUp", what: "Issue-driven mobilisation, petitions, and campaign campaigning.", weakness: "Activist framing, less neutral, not a bill-by-bill civic participation product.", positioning: "Crossbench is for participation and insight, not campaign mobilisation." },
@@ -133,7 +127,7 @@ const VOTER_DATA = {
     { name: "7am podcast", platform: "Podcast / newsletter", why: "Engaged audience that likes clean explanatory politics.", approach: "Pitch a story about how one bill is landing in different electorates." },
     { name: "Democracy Sausage", platform: "Podcast", why: "Direct fit for civic-tech and politics nerd audiences.", approach: "Guest segment or sponsor-style mention about voting on bills between elections." },
     { name: "The Australia Institute", platform: "Org / media / podcasts", why: "Large public-facing policy audience, strong issue focus.", approach: "Collaborate on a public explainer or co-branded data story when a bill matches their research." },
-    { name: "Betoota Advocate", platform: "Satire / social", why: "Massive reach with 18–40s; if they run a 'data story' angle it goes viral.", approach: "Pitch genuinely funny electorate splits or surprising result graphics." },
+    { name: "Australian political creators", platform: "Social / newsletter", why: "Can make a well-sourced bill explainer approachable to new audiences.", approach: "Approach only with a useful explainer and clear methodology; avoid claims about local opinion or electoral mandate." },
     { name: "Australian political TikTok creators", platform: "TikTok", why: "Short-form political explainer creators drive signups fast.", approach: "Seed one simple explainer per creator with a local angle and a clear CTA." },
   ],
   kpis: {
@@ -171,7 +165,7 @@ const SUBTABS: { id: SubTab; label: string }[] = [
 ];
 
 const TODO_ITEMS = [
-  { id: 1, category: 'LinkedIn', priority: 'high', task: 'Create Crossbench LinkedIn company page', notes: 'Company name: Crossbench · Industry: Technology · Tagline: "Real-time constituent sentiment for Australian MPs" · Admin: Jeffa · Parent: EquiM8 Group ABN' },
+  { id: 1, category: 'LinkedIn', priority: 'high', task: 'Create Crossbench LinkedIn company page', notes: 'Company name: Crossbench · Industry: Technology · Tagline: "Follow federal bills in plain English" · Admin: Jeffa · Parent: EquiM8 Group ABN' },
   { id: 2, category: 'LinkedIn', priority: 'high', task: 'Write company description for LinkedIn page', notes: '2-3 paragraph about section covering the product, mission, and MP value prop. Also draft first announcement post.' },
   { id: 3, category: 'LinkedIn', priority: 'medium', task: 'Generate LinkedIn banner image (1128×191px)', notes: 'Dark background matching brand, logo on left, tagline on right. Can use AI image generation.' },
   { id: 4, category: 'LinkedIn', priority: 'medium', task: 'Post launch announcement on LinkedIn', notes: 'Short founder post: what Crossbench is, why it exists, link to crossbench.io' },
@@ -179,8 +173,8 @@ const TODO_ITEMS = [
   { id: 6, category: 'Email', priority: 'medium', task: 'Verify crossbench.io domain in Resend', notes: 'Currently sending from noreply@crossbench.io — need domain verified for reliable delivery' },
   { id: 7, category: 'Support', priority: 'high', task: 'Build internal support ticket system', notes: 'Users submit tickets → appear in /admin/support · Telegram notification to Jeffa · AI assistant can help users in-thread' },
   { id: 8, category: 'Product', priority: 'medium', task: 'Search/filter on bills page', notes: 'Filter by status, portfolio, chamber, keyword search' },
-  { id: 9, category: 'Product', priority: 'medium', task: 'Share-your-vote social card', notes: 'After voting on a bill, user can share a card showing their position + how their electorate voted' },
-  { id: 10, category: 'Product', priority: 'medium', task: 'Approval rating widget on MP dashboard', notes: 'Show % positive from own electorate vs nationally using MpSentiment data' },
+  { id: 9, category: 'Product', priority: 'medium', task: 'Share-your-vote social card', notes: 'After voting on a bill, users can share their own position and the official bill source — no claims about electorate opinion.' },
+  { id: 10, category: 'Product', priority: 'high', task: 'Publish methodology and participation limits', notes: 'Explain self-selected voting, aggregation, privacy and that Crossbench does not provide comments, polling or an electorate mandate.' },
 ];
 
 const CATEGORIES = ['All', 'LinkedIn', 'Email', 'Support', 'Product'];
@@ -256,12 +250,12 @@ export default function MarketingPage() {
     <div className="space-y-6 pb-12">
       <div>
         <h1 className="text-2xl font-bold">Marketing Strategy</h1>
-        <p className="text-[#7E8AA3] text-sm mt-1">Go-to-market plan · Updated 13 Apr 2026</p>
+        <p className="text-[#7E8AA3] text-sm mt-1">Validation-first plan · Updated 8 Sep 2026</p>
       </div>
 
       {/* Main tabs */}
       <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid #25324D' }}>
-        {([['mps', '🏛️ MPs & Senators'], ['voters', '🗳️ Voters / End Users'], ['todo', '✅ Tasks & To-Do']] as [Tab, string][]).map(([t, label]) => (
+        {([['mps', '🏛️ Political & Civic Feedback'], ['voters', '🗳️ Public Participation'], ['todo', '✅ Tasks & To-Do']] as [Tab, string][]).map(([t, label]) => (
           <button key={t} onClick={() => { setTab(t); setSub('overview'); }} style={{ padding: '10px 20px', fontWeight: 700, fontSize: '14px', background: 'none', border: 'none', cursor: 'pointer', borderBottom: tab === t ? '2px solid #4E8FD4' : '2px solid transparent', color: tab === t ? '#4E8FD4' : '#7E8AA3', marginBottom: '-1px' }}>
             {label}
           </button>
@@ -281,6 +275,12 @@ export default function MarketingPage() {
 
       {/* Strategy content — hidden when on todo tab */}
       {tab !== 'todo' && sub === 'overview' && (
+        <div className="space-y-6">
+        {tab === 'mps' && <Section title="Launch position — validate before scaling">
+          <p style={{ color: '#DDE5F2', fontSize: '14px', lineHeight: 1.6, margin: 0 }}>Crossbench helps people follow federal bills in plain English and record a support, oppose or abstain vote. It does not host comments. Participation is self-selected, not representative polling, an electorate survey or a public mandate.</p>
+          <p style={{ color: '#7E8AA3', fontSize: '13px', lineHeight: 1.6, margin: '12px 0 0' }}>The immediate goal is evidence: learn where people struggle, publish a transparent methodology, and make a small number of individually reviewed requests for feedback. Paid promotion stays deferred until that work proves a responsible message and useful experience.</p>
+          <a href="/admin/media" style={{ display: 'inline-block', color: '#4E8FD4', fontSize: '13px', fontWeight: 700, marginTop: '12px' }}>Open the source-linked media and civic feedback directory →</a>
+        </Section>}
         <Section title="Audience Personas">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
             {data.personas.map((p, i) => (
@@ -301,6 +301,7 @@ export default function MarketingPage() {
             ))}
           </div>
         </Section>
+        </div>
       )}
 
       {/* Channels */}
