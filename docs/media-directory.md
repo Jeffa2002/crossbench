@@ -1,5 +1,7 @@
 # Media research and manual sending
 
+Describe participation as voting on bills (support, oppose or abstain), not posting comments or sharing written views. Crossbench does not offer a commenting feature. Media feedback is a request for a reply to Jeff, not a claim that site users can comment.
+
 The protected `/admin/media` page holds 44 research contacts: the existing 26 plus 18 new routes researched on 8 September 2026. Twenty-four unique email addresses have public-source evidence. This is not delivery verification or consent to contact.
 
 `src/lib/media-research.json` records source URLs, checked dates, route types, pitch angles and cautions. Existing contact IDs are preserved. An email must match its evidence, have a valid non-future checked date and an HTTPS source to be labelled publicly listed. Evidence older than 90 days is labelled overdue for review. Rechecking requires reviewing the cited source, not merely changing its date.
