@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
 
 require('ts-node').register({ compilerOptions: { module: 'CommonJS', moduleResolution: 'node' } });
-const { MEDIA_CONTACTS, MEDIA_SENDING_ENABLED, mediaEmailStatus, mediaContactsCsv, buildMediaOutreachEmail } = require('../src/lib/media-outreach.ts');
+const { MEDIA_CONTACTS, BULK_MEDIA_SENDING_ENABLED, mediaEmailStatus, mediaContactsCsv, buildMediaOutreachEmail } = require('../src/lib/media-outreach.ts');
 const asOf = new Date('2026-09-08T12:00:00Z');
 const listed = MEDIA_CONTACTS.find(contact => contact.emailEvidence);
 
@@ -68,7 +68,7 @@ test('CSV exports source evidence and escapes spreadsheet formulas and quotes', 
   assert.match(csv, /"'=1\+1"/);
   assert.ok(csv.includes('"A ""quoted"", outlet"'));
   assert.ok(csv.includes(listed.emailEvidence.sourceUrl));
-  assert.match(csv, /Sending disabled; not approved/);
+  assert.match(csv, /Individual review and manual confirmation required/);
 });
 
 function runPreview(args) {
@@ -81,7 +81,7 @@ function runPreview(args) {
 }
 
 test('legacy media CLI is preview-only without credentials or database access', () => {
-  assert.equal(MEDIA_SENDING_ENABLED, false);
+  assert.equal(BULK_MEDIA_SENDING_ENABLED, false);
   const result = runPreview(['--sample-id=david-speers']);
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /PREVIEW ONLY/);

@@ -364,7 +364,7 @@ const ORIGINAL_CONTACTS: MediaContact[] = [
   },
 ];
 
-export const MEDIA_SENDING_ENABLED = false;
+export const BULK_MEDIA_SENDING_ENABLED = false;
 
 const refreshedAngles: Record<string, string> = {
   'david-speers': 'A sitting-week demonstration of how readers can follow a bill, with the limits of participant sentiment made explicit.',
@@ -449,7 +449,7 @@ export function escapeMediaHtml(value: string) {
 export function mediaContactsCsv(contacts: MediaContact[], asOf: Date) {
   const rows = [
     ['Name', 'Outlet', 'Email', 'Route type', 'Email source status', 'Checked date', 'Source URL', 'Pitch angle', 'Caution', 'Outreach status'],
-    ...contacts.map(contact => [contact.name, contact.outlet, contact.email ?? '', contact.routeType ?? '', mediaEmailStatus(contact, asOf), contact.emailEvidence?.checkedAt ?? '', contact.emailEvidence?.sourceUrl ?? contact.sourceUrl, contact.pitchAngle, contact.notes, 'Sending disabled; not approved']),
+    ...contacts.map(contact => [contact.name, contact.outlet, contact.email ?? '', contact.routeType ?? '', mediaEmailStatus(contact, asOf), contact.emailEvidence?.checkedAt ?? '', contact.emailEvidence?.sourceUrl ?? contact.sourceUrl, contact.pitchAngle, contact.notes, 'Individual review and manual confirmation required; not a delivery record']),
   ];
   return rows.map(row => row.map(value => {
     const safeValue = /^[\s]*[=+@-]|^[\t\r\n]/.test(value) ? `'${value}` : value;
