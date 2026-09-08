@@ -44,6 +44,9 @@ test('all drafts introduce Jeff and the early-stage idea, inviting feedback and 
     const draft = buildMediaOutreachEmail(contact);
     assert.ok(draft.plain.includes(contact.outlet), contact.id);
     assert.match(draft.plain, /I'm Jeff, the person behind Crossbench/);
+    assert.match(draft.plain, /vote on bills/);
+    assert.match(draft.plain, /vote to support or oppose a bill, or abstain/);
+    assert.doesNotMatch(draft.plain, /share their views|responses from participating users|comment|discussion forum/i);
     assert.match(draft.plain, /extremely early days/);
     assert.match(draft.plain, /haven't reached out to everyone yet or started marketing/);
     assert.match(draft.plain, /honest feedback/);

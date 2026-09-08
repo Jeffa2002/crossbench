@@ -463,8 +463,8 @@ export function buildMediaOutreachEmail(contact: MediaContact) {
   const subject = `Introducing Crossbench — early feedback from ${contact.outlet}?`.replace(/[\r\n]/g, ' ');
   const paragraphs = [
     greeting,
-    "I'm Jeff, the person behind Crossbench. I've come up with an idea to help everyday Australians follow federal legislation, understand what's being proposed and share their views.",
-    'Crossbench brings together bill information, plain-English summaries and responses from participating users. Those responses are self-selected, not representative polling.',
+    "I'm Jeff, the person behind Crossbench. I've come up with an idea to help everyday Australians follow federal legislation, understand what's being proposed and vote on bills.",
+    'Crossbench brings together bill information and plain-English summaries. Users can vote to support or oppose a bill, or abstain. These votes are self-selected, not representative polling.',
     "It's still extremely early days. We haven't reached out to everyone yet or started marketing, and I'm keen to hear honest feedback as we develop the idea.",
     `I'd really value your perspective at ${contact.outlet}. If you see potential, I'd also welcome your support—whether that's trying it, sharing it with a colleague, or considering coverage as it develops.`,
     'You can take a look at https://www.crossbench.io. Would you be open to a quick look or a short chat?',
