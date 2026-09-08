@@ -460,15 +460,15 @@ export function mediaContactsCsv(contacts: MediaContact[], asOf: Date) {
 export function buildMediaOutreachEmail(contact: MediaContact) {
   const named = contact.routeType?.startsWith('Named') ?? false;
   const greeting = named ? `Hi ${contact.name.split(/\s+/)[0]},` : `Hello ${contact.outlet} team,`;
-  const subject = `Crossbench briefing for ${contact.outlet}: following federal legislation`.replace(/[\r\n]/g, ' ');
+  const subject = `Introducing Crossbench — early feedback from ${contact.outlet}?`.replace(/[\r\n]/g, ' ');
   const paragraphs = [
     greeting,
-    'I am writing to introduce Crossbench, a civic platform that helps Australians follow federal bills through official bill links, plain-English summaries and responses from participating users.',
-    `The angle I would like to explore with you: ${contact.pitchAngle}`,
-    'Crossbench participation is self-selected, not representative polling. Platform responses must not be presented as the views of every voter in an electorate or as parliamentary votes.',
-    'Would a short walkthrough and methodology note be useful for your coverage? We can discuss what the platform can show and where its limitations need to be made explicit.',
-    'Useful starting points:\nBills: https://crossbench.io/bills\nMethodology: https://crossbench.io/methodology\nParliament: https://crossbench.io/parliament',
-    'Regards,\nCrossbench\nhttps://crossbench.io',
+    "I'm Jeff, the person behind Crossbench. I've come up with an idea to help everyday Australians follow federal legislation, understand what's being proposed and share their views.",
+    'Crossbench brings together bill information, plain-English summaries and responses from participating users. Those responses are self-selected, not representative polling.',
+    "It's still extremely early days. We haven't reached out to everyone yet or started marketing, and I'm keen to hear honest feedback as we develop the idea.",
+    `I'd really value your perspective at ${contact.outlet}. If you see potential, I'd also welcome your support—whether that's trying it, sharing it with a colleague, or considering coverage as it develops.`,
+    'You can take a look at https://www.crossbench.io. Would you be open to a quick look or a short chat?',
+    'Thanks,\nJeff\nCrossbench',
   ];
   const plain = paragraphs.join('\n\n');
   const html = paragraphs.map(paragraph => `<p>${escapeMediaHtml(paragraph).replace(/\n/g, '<br>')}</p>`).join('\n');
