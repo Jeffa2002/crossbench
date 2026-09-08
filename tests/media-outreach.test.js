@@ -39,10 +39,18 @@ test('public-source evidence ages into an explicit review state', () => {
   assert.equal(mediaEmailStatus(listed, new Date('2026-12-07T00:00:00Z')), 'Publicly listed');
 });
 
-test('all drafts use the individual angle and clearly qualify participation', () => {
+test('all drafts introduce Jeff and the early-stage idea, inviting feedback and optional support', () => {
   for (const contact of MEDIA_CONTACTS) {
     const draft = buildMediaOutreachEmail(contact);
-    assert.ok(draft.plain.includes(contact.pitchAngle), contact.id);
+    assert.ok(draft.plain.includes(contact.outlet), contact.id);
+    assert.match(draft.plain, /I'm Jeff, the person behind Crossbench/);
+    assert.match(draft.plain, /extremely early days/);
+    assert.match(draft.plain, /haven't reached out to everyone yet or started marketing/);
+    assert.match(draft.plain, /honest feedback/);
+    assert.match(draft.plain, /If you see potential, I'd also welcome your support/);
+    assert.match(draft.plain, /Thanks,\nJeff\nCrossbench$/);
+    assert.ok(draft.plain.split(/\s+/).length <= 210, contact.id);
+    assert.doesNotMatch(draft.plain, /The angle I would like to explore|Useful starting points/);
     assert.match(draft.plain, /self-selected, not representative polling/);
     assert.doesNotMatch(draft.plain, /before.*public launch|verified electorate|scientific population poll/);
     assert.ok(draft.subject.includes(contact.outlet));
@@ -56,7 +64,7 @@ test('desk greetings are not mistaken for personal journalist greetings', () => 
 });
 
 test('HTML drafts escape contact-controlled content', () => {
-  const draft = buildMediaOutreachEmail({ ...listed, name: '<img>', outlet: '<script>\r\nInjected', pitchAngle: '<img src=x onerror=alert(1)> & "quote"' });
+  const draft = buildMediaOutreachEmail({ ...listed, name: '<img>', outlet: '<script>\r\nInjected & "quote"', pitchAngle: '<img src=x onerror=alert(1)>' });
   assert.doesNotMatch(draft.html, /<img|<script>/);
   assert.match(draft.html, /&lt;img/);
   assert.match(draft.html, /&amp;/);

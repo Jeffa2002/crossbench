@@ -86,12 +86,15 @@ async function main() {
       await page.getByLabel('Find a contact, outlet or beat').fill('Pilbara');
       assert.equal(await page.locator('article').count(), 1);
       await page.getByRole('button', { name: 'Preview draft for Editorial desk', exact: true }).click();
-      assert.match(await page.getByLabel('Draft text', { exact: false }).inputValue(), /Pilbara communities/);
+      assert.match(await page.getByLabel('Draft text', { exact: false }).inputValue(), /I'm Jeff, the person behind Crossbench/);
+      assert.match(await page.getByLabel('Draft text', { exact: false }).inputValue(), /extremely early days/);
+      assert.match(await page.getByLabel('Draft text', { exact: false }).inputValue(), /haven't reached out to everyone yet or started marketing/);
       assert.match(await page.getByLabel('Draft text', { exact: false }).inputValue(), /self-selected, not representative polling/);
       await page.getByRole('button', { name: 'Copy draft', exact: true }).click();
       await page.getByText('Draft copied. Copying does not send email.', { exact: true }).waitFor();
-      assert.match(await page.evaluate(() => navigator.clipboard.readText()), /Pilbara communities/);
+      assert.match(await page.evaluate(() => navigator.clipboard.readText()), /honest feedback/);
       await page.getByRole('button', { name: 'Review single email', exact: true }).click();
+      assert.match(await page.getByLabel('Exact email to send').innerText(), /I'm Jeff, the person behind Crossbench/);
       assert.equal(await page.getByRole('button', { name: 'Confirm and send one email', exact: true }).isDisabled(), true);
       await page.getByRole('button', { name: 'Cancel — do not send', exact: true }).click();
       assert.equal(mediaPosts.length, initialPosts, 'Preview and cancel never send');
