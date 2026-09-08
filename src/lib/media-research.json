@@ -286,5 +286,41 @@
     "source_url": "https://pressgallery.net.au/",
     "pitch_angle": "Ask whether a short non-partisan briefing is appropriate",
     "caution": "Not a distribution list and not permission to email every gallery member"
+  },
+  {
+    "priority": "1",
+    "contact": "Rowan Dean",
+    "outlet": "The Spectator Australia",
+    "email": "editor@spectator.com.au",
+    "route_type": "Named political editor",
+    "relationship_to_existing_list": "New political media contact",
+    "verified_date": "2026-09-08",
+    "source_url": "https://www.spectator.com.au/about/contact-us/",
+    "pitch_angle": "A concise early-stage introduction and invitation to scrutinise Crossbench's neutral bill explainers and participation safeguards.",
+    "caution": "Use one tailored, factual approach; do not imply endorsement or claim participant votes are polling."
+  },
+  {
+    "priority": "2",
+    "contact": "Media team",
+    "outlet": "Transparency International Australia",
+    "email": "media@transparency.org.au",
+    "route_type": "Public-interest integrity organisation media desk",
+    "relationship_to_existing_list": "New civic feedback route",
+    "verified_date": "2026-09-08",
+    "source_url": "https://transparency.org.au/contact-us/",
+    "pitch_angle": "Request feedback on a transparent, non-partisan way to help people follow and vote on federal bills; invite methodology scrutiny, not endorsement.",
+    "caution": "Not a newsroom or an endorsement route. Do not describe participant votes as polling or imply a partnership."
+  },
+  {
+    "priority": "2",
+    "contact": "Media team",
+    "outlet": "Australian Democracy Network",
+    "email": "media@australiandemocracy.org.au",
+    "route_type": "Civic democracy organisation media desk",
+    "relationship_to_existing_list": "New civic feedback route",
+    "verified_date": "2026-09-08",
+    "source_url": "https://australiandemocracy.org.au/contact/",
+    "pitch_angle": "Request early feedback on Crossbench as a non-partisan legislative-participation tool, including wording and safeguards.",
+    "caution": "Not a journalist or an endorsement route. Individual confirmation remains required."
   }
 ]

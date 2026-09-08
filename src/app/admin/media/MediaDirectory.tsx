@@ -47,7 +47,7 @@ export default function MediaDirectory({ contacts, asOf }: { contacts: MediaCont
     <div className="min-w-0 space-y-6">
       <header>
         <h1 className="text-2xl font-bold">Media research & drafts</h1>
-        <p className="mt-2 text-sm text-[#B6C0D1]">Political reporters, editorial desks and regional routes, with source evidence and individual briefing angles.</p>
+        <p className="mt-2 text-sm text-[#B6C0D1]">Political reporters, editorial desks, regional newsrooms and clearly labelled civic feedback routes, with source evidence and individual briefing angles.</p>
         <button type="button" className={`${control} mt-3`} onClick={downloadContacts}>Download all contacts CSV</button>
       </header>
       <section className={`${panel} border-amber-700`} aria-label="Outreach safeguards">

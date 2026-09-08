@@ -28,7 +28,7 @@ const ORIGINAL_CONTACTS: MediaContact[] = [
     contactRoute: 'ABC News / Insiders editorial channels',
     sourceUrl: 'https://www.abc.net.au/news/david-speers/11841154',
     sourceLabel: 'ABC profile',
-    pitchAngle: 'Crossbench as a new data point for bill-by-bill electorate sentiment before Sunday panels and sitting-week interviews.',
+    pitchAngle: 'A sitting-week demonstration of how readers can follow a bill, with the limits of self-selected participant votes made explicit.',
     notes: 'High-reach national political audience. Strong fit for non-partisan bill and electorate signal stories.',
   },
   {
@@ -67,7 +67,7 @@ const ORIGINAL_CONTACTS: MediaContact[] = [
     contactRoute: 'ABC News Canberra bureau/editorial channels',
     sourceUrl: 'https://www.abc.net.au/news/jane-norman/5873958',
     sourceLabel: 'ABC profile',
-    pitchAngle: 'Electorate and chamber-level public sentiment on bills as a reporting aid during sitting weeks.',
+    pitchAngle: 'A practical federal-politics demonstration tied to the progress of a current bill and official source material.',
     notes: 'Strong fit for public-interest and Parliament House reporting.',
   },
   {
@@ -160,7 +160,7 @@ const ORIGINAL_CONTACTS: MediaContact[] = [
     contactRoute: 'Sky News newsroom/editorial channels',
     sourceUrl: 'https://www.skynews.com.au/the-team/andrew-clennell',
     sourceLabel: 'Sky News profile',
-    pitchAngle: 'New data and dashboards for how voters are responding to legislation and party/member sentiment.',
+    pitchAngle: 'A brief demonstration of a current federal bill and the difference between parliamentary votes and platform participation.',
     notes: 'Good fit for political-cycle and launch coverage.',
   },
   {
@@ -199,7 +199,7 @@ const ORIGINAL_CONTACTS: MediaContact[] = [
     contactRoute: 'Seven News Canberra bureau/editorial channels',
     sourceUrl: 'https://thewest.com.au/profile/mark-riley',
     sourceLabel: 'Seven West profile',
-    pitchAngle: 'A clean TV-friendly visual story: live electorate views on bills and the MPs invited to claim dashboards.',
+    pitchAngle: 'A TV-friendly walkthrough of a current bill using official documents and clearly labelled platform participation.',
     notes: 'Good fit for mainstream launch angle and visuals.',
   },
   {
@@ -225,7 +225,7 @@ const ORIGINAL_CONTACTS: MediaContact[] = [
     contactRoute: 'Nine News Canberra bureau/editorial channels',
     sourceUrl: 'https://www.nine.com.au/australia-news/videos/andrew-probyn-and-charles-croucher-break-down-the-2026-federal-budget/cmp2h3y1p000a0hqhm62ljnb9',
     sourceLabel: 'Nine coverage page',
-    pitchAngle: 'A concise launch story with visual dashboards for electorates, parties, and live bill sentiment.',
+    pitchAngle: 'A short visual briefing that separates bill progress from self-selected participant votes.',
     notes: 'Best approached with a short visual briefing, not a long text pitch.',
   },
   {
@@ -331,7 +331,7 @@ const ORIGINAL_CONTACTS: MediaContact[] = [
     contactRoute: 'australia@theguardian.com',
     sourceUrl: 'https://www.theguardian.com/info/2013/may/26/contact-guardian-australia',
     sourceLabel: 'Guardian Australia contact page',
-    pitchAngle: 'A story tip for the politics desk about Crossbench as a new public-interest bill sentiment source.',
+    pitchAngle: 'A story tip for the politics desk about Crossbench as a public-interest bill explainer and participation tool.',
     notes: 'General editorial route, not a named journalist address.',
   },
   {
@@ -345,7 +345,7 @@ const ORIGINAL_CONTACTS: MediaContact[] = [
     contactRoute: 'contact@9news.com.au',
     sourceUrl: 'https://www.nine.com.au/contact-us',
     sourceLabel: 'Nine contact page',
-    pitchAngle: 'A newsroom tip about a new civic platform with visual electorate and bill sentiment data.',
+    pitchAngle: 'A newsroom tip about a new civic platform with a factual bill explainer and clearly labelled participant voting.',
     notes: 'General newsroom route, not a named journalist address.',
   },
   {
@@ -459,6 +459,7 @@ export function mediaContactsCsv(contacts: MediaContact[], asOf: Date) {
 
 export function buildMediaOutreachEmail(contact: MediaContact) {
   const named = contact.routeType?.startsWith('Named') ?? false;
+  const mediaRoute = /editorial|journalist|news|pitch/i.test(contact.routeType ?? '');
   const greeting = named ? `Hi ${contact.name.split(/\s+/)[0]},` : `Hello ${contact.outlet} team,`;
   const subject = `Introducing Crossbench — early feedback from ${contact.outlet}?`.replace(/[\r\n]/g, ' ');
   const paragraphs = [
@@ -466,7 +467,7 @@ export function buildMediaOutreachEmail(contact: MediaContact) {
     "I'm Jeff, the person behind Crossbench. I've come up with an idea to help everyday Australians follow federal legislation, understand what's being proposed and vote on bills.",
     'Crossbench brings together bill information and plain-English summaries. Users can vote to support or oppose a bill, or abstain. These votes are self-selected, not representative polling.',
     "It's still extremely early days. We haven't reached out to everyone yet or started marketing, and I'm keen to hear honest feedback as we develop the idea.",
-    `I'd really value your perspective at ${contact.outlet}. If you see potential, I'd also welcome your support—whether that's trying it, sharing it with a colleague, or considering coverage as it develops.`,
+    `I'd really value your perspective at ${contact.outlet}. If you see potential, I'd also welcome your support—whether that's trying it, sharing it with a colleague, or ${mediaRoute ? 'considering coverage' : 'offering feedback on the approach'} as it develops.`,
     'You can take a look at https://www.crossbench.io. Would you be open to a quick look or a short chat?',
     'Thanks,\nJeff\nCrossbench',
   ];

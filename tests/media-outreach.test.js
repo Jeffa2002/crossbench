@@ -7,15 +7,18 @@ const { MEDIA_CONTACTS, BULK_MEDIA_SENDING_ENABLED, mediaEmailStatus, mediaConta
 const asOf = new Date('2026-09-08T12:00:00Z');
 const listed = MEDIA_CONTACTS.find(contact => contact.emailEvidence);
 
-test('media research preserves contacts and adds 18 unique sourced routes', () => {
-  assert.equal(MEDIA_CONTACTS.length, 44);
-  assert.equal(new Set(MEDIA_CONTACTS.map(contact => contact.id)).size, 44);
+test('media research preserves contacts and adds sourced media and civic feedback routes', () => {
+  assert.equal(MEDIA_CONTACTS.length, 47);
+  assert.equal(new Set(MEDIA_CONTACTS.map(contact => contact.id)).size, 47);
   const emails = MEDIA_CONTACTS.flatMap(contact => contact.email ? [contact.email.toLowerCase()] : []);
-  assert.equal(emails.length, 24);
-  assert.equal(new Set(emails).size, 24);
-  assert.equal(MEDIA_CONTACTS.filter(contact => mediaEmailStatus(contact, asOf) === 'Publicly listed').length, 24);
+  assert.equal(emails.length, 27);
+  assert.equal(new Set(emails).size, 27);
+  assert.equal(MEDIA_CONTACTS.filter(contact => mediaEmailStatus(contact, asOf) === 'Publicly listed').length, 27);
   assert.ok(MEDIA_CONTACTS.some(contact => contact.id === 'david-speers'));
   assert.ok(MEDIA_CONTACTS.some(contact => contact.email === 'news@pilbaramedia.com.au'));
+  assert.ok(MEDIA_CONTACTS.some(contact => contact.email === 'editor@spectator.com.au'));
+  assert.ok(MEDIA_CONTACTS.some(contact => contact.email === 'media@transparency.org.au'));
+  assert.ok(MEDIA_CONTACTS.some(contact => contact.email === 'media@australiandemocracy.org.au'));
 });
 
 test('a populated email alone does not establish public-source verification', () => {
@@ -64,6 +67,12 @@ test('all drafts introduce Jeff and the early-stage idea, inviting feedback and 
 test('desk greetings are not mistaken for personal journalist greetings', () => {
   assert.match(buildMediaOutreachEmail(MEDIA_CONTACTS.find(contact => contact.id === 'phillip-coorey')).plain, /^Hi Phillip,/);
   assert.match(buildMediaOutreachEmail(MEDIA_CONTACTS.find(contact => contact.id === 'guardian-australia-editorial')).plain, /^Hello Guardian Australia team,/);
+});
+
+test('civic feedback routes invite feedback rather than coverage', () => {
+  const draft = buildMediaOutreachEmail(MEDIA_CONTACTS.find(contact => contact.email === 'media@transparency.org.au'));
+  assert.match(draft.plain, /offering feedback on the approach/);
+  assert.doesNotMatch(draft.plain, /considering coverage/);
 });
 
 test('HTML drafts escape contact-controlled content', () => {
