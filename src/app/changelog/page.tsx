@@ -9,6 +9,21 @@ export const metadata: Metadata = {
 
 const updates = [
   {
+    date: '8 September 2026',
+    title: 'Clearer public information, stronger support, and a more dependable platform',
+    summary: 'Crossbench has been refined to make the product easier to understand and use, while improving support operations, security, and the reliability of the public site.',
+    items: [
+      'Refreshed the home, About, For MPs, Privacy, and bill-listing experiences with clearer plain-language copy, stronger independence and privacy information, clearer explanation that people vote on bills, improved search visibility, and more usable mobile layouts.',
+      'Added a founder profile and direct contact details on the About page, so visitors can see who is building Crossbench and how to get in touch.',
+      'Improved bill discovery with clearer bill cards, a more accessible search field, and cleaner plain-English summaries that avoid repeating the bill title.',
+      'Expanded support tools: replies can now include formatted content and attachments, longer messages are supported, and administrators can more clearly identify privacy- and security-related requests.',
+      'Added a carefully sourced media directory, tailored draft previews, and reviewed one-at-a-time outreach controls with audit records and repeat-send safeguards.',
+      'Strengthened administration and public-facing protections with hardened login and session handling, rate limits for sensitive actions, safer analytics and address-verification flows, and an updated security contact page.',
+      'Improved deployment reliability and search indexing by refreshing the sitemap automatically after a successful release.',
+      'Updated underlying dependencies and security fixes to keep the platform current and resilient.',
+    ],
+  },
+  {
     date: '12 June 2026',
     title: 'MP office staff access and richer web analytics',
     summary: 'Crossbench now supports delegated parliamentary office access and gives admins clearer visibility into acquisition, funnels, geography, traffic quality, and office engagement.',
